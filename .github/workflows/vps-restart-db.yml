@@ -1,0 +1,21 @@
+name: Restart DB
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  restart:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Restart PostgreSQL
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          script: |
+            sudo systemctl restart postgresql || true
+            pm2 restart all || true
