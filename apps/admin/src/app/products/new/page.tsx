@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, UploadCloud, Save, Plus, Trash2, X, Settings2, Sparkles, Loader2 } from "lucide-react";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
 
-const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "Custom"];
+const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "Free Size", "Custom"];
 
 export default function AddProductPage() {
   const { token } = useAdminAuth();
