@@ -1,0 +1,22 @@
+name: VPS Diagnostics
+on: workflow_dispatch
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Diagnostics on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          script: |
+            echo "=== MEMORY ==="
+            free -m
+            echo "=== PM2 STATUS ==="
+            pm2 status
+            echo "=== NGINX STATUS ==="
+            systemctl status nginx --no-pager || true
+            echo "=== DISK SPACE ==="
+            df -h
