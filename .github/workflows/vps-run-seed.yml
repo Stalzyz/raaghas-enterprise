@@ -1,0 +1,23 @@
+name: Run Seed
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Run Database Seeder on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          script: |
+            cd /var/www/raaghas_new/current/apps/api
+            npx ts-node scripts/seed_dummy_data.ts
