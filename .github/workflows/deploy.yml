@@ -57,6 +57,20 @@ jobs:
             rm -rf apps/admin/.next apps/storefront/.next
             npm run build
 
+            echo "[3.5/4] Preparing Standalone Artifacts..."
+            # Move standalone files to the correct location so PM2 can find apps/admin/server.js
+            cp -R apps/admin/.next/standalone/* ./ || true
+            cp -R apps/storefront/.next/standalone/* ./ || true
+            
+            # Ensure static assets are copied to standalone structure
+            mkdir -p apps/admin/.next/static apps/storefront/.next/static
+            cp -R apps/admin/.next/static/* apps/admin/.next/standalone/apps/admin/.next/static/ 2>/dev/null || true
+            cp -R apps/storefront/.next/static/* apps/storefront/.next/standalone/apps/storefront/.next/static/ 2>/dev/null || true
+            
+            # Copy again since we just injected static files
+            cp -R apps/admin/.next/standalone/* ./ || true
+            cp -R apps/storefront/.next/standalone/* ./ || true
+
             echo "[4/4] Restarting PM2..."
             pm2 restart all --update-env
 
