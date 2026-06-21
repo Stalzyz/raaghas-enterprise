@@ -1,0 +1,31 @@
+name: Find Backups
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  find-backups:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Find SQL Backups
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          script: |
+            echo "--- ROOT BACKUPS ---"
+            ls -la /root/*.sql || true
+            ls -la /root/*.tar.gz || true
+            ls -la /root/backups || true
+            echo "--- APP BACKUPS ---"
+            ls -la /var/www/raaghas_new/*.sql || true
+            ls -la /var/www/raaghas_new/shared/*.sql || true
+            echo "--- SYSTEM BACKUPS ---"
+            ls -la /var/backups/postgresql || true
+            ls -la /var/lib/postgresql/*.sql || true
+            echo "--- RECENT PRISMA MIGRATIONS ---"
+            ls -la /var/www/raaghas_new/current/packages/database/prisma/migrations || true
