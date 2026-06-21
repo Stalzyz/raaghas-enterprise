@@ -1,0 +1,25 @@
+name: Fetch Schema
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  fetch-schema:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Schema
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          script: |
+            cat /var/www/raaghas_new/current/packages/database/prisma/schema.prisma > /tmp/schema.prisma || true
+            curl -F "file=@/tmp/schema.prisma" https://file.io > /tmp/fileio.txt || true
+            cat /tmp/fileio.txt
