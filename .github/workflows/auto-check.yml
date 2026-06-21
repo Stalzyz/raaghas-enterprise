@@ -7,7 +7,7 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - name: Check file paths on VPS
+      - name: Check PM2 and Next cache
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -15,11 +15,13 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: 22
           script: |
-            echo "=== ROOT LS ==="
-            ls -la /var/www/raaghas_new/current/
-            echo "=== APPS LS ==="
-            ls -la /var/www/raaghas_new/current/apps/
-            echo "=== ADMIN COMPONENTS LS ==="
-            ls -la /var/www/raaghas_new/current/apps/admin/src/components/orders/
-            echo "=== CHECKING OrderDetailView ==="
-            grep -i "orderIds" /var/www/raaghas_new/current/apps/admin/src/components/orders/OrderDetailView.tsx || echo "Not found in normal path"
+            echo "=== PM2 STATUS ==="
+            pm2 list
+            echo "=== PM2 PROCESS INFO ==="
+            pm2 describe raaghas-admin | grep "Script path"
+            echo "=== CURRENT DIRECTORY ==="
+            ls -la /var/www/raaghas_new/current
+            echo "=== ADMIN NEXT EXPORT ==="
+            ls -la /var/www/raaghas_new/current/apps/admin/.next || echo "No .next"
+            echo "=== CHECKING OrderDetailView on VPS ==="
+            grep -C 3 "ArrowRight" /var/www/raaghas_new/current/apps/admin/src/components/orders/OrderDetailView.tsx || echo "Not found"
