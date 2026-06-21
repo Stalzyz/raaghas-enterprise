@@ -57,8 +57,8 @@ jobs:
             rm -rf apps/admin/.next apps/storefront/.next
             npm run build
 
-            echo "[4/4] Reloading PM2..."
-            pm2 reload all --update-env
+            echo "[4/4] Restarting PM2..."
+            pm2 restart all --update-env
 
             echo "========================================="
             echo "  Deploy Successful! ✅"
