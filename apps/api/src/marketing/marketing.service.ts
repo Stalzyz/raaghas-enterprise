@@ -586,10 +586,10 @@ export class MarketingService {
 
   async generateFacebookXmlFeed(): Promise<string> {
     const products = await this.prisma.product.findMany({
-      where: { status: 'PUBLISHED' },
+      where: { status: 'Active' },
       include: {
         variants: true,
-        media: { orderBy: { order: 'asc' }, take: 1 }
+        images: { orderBy: { position: 'asc' }, take: 1 }
       }
     });
 
@@ -601,21 +601,21 @@ export class MarketingService {
       const title = this.escapeXml(p.title);
       const description = this.escapeXml(p.description || p.title);
       const link = `https://raaghas.in/products/${p.handle}`;
-      const imageLink = p.media && p.media.length > 0 ? this.escapeXml(p.media[0].url) : 'https://raaghas.in/logo-dark.svg';
+      const imageLink = p.images && p.images.length > 0 ? this.escapeXml(p.images[0].url) : 'https://raaghas.in/logo-dark.svg';
       const brand = 'Raaghas';
 
       for (const variant of p.variants) {
         // Facebook requires unique IDs per variant if you sell variations
         const variantId = variant.id;
-        const variantTitle = this.escapeXml(`${p.title} - ${variant.title}`);
-        const price = variant.price;
-        const inventory = variant.inventoryQuantity > 0 ? 'in stock' : 'out of stock';
-        const salePrice = variant.compareAtPrice && variant.compareAtPrice > variant.price 
+        const variantTitleParts = [variant.option1Value, variant.option2Value, variant.option3Value].filter(Boolean).join(' ');
+        const variantTitle = this.escapeXml(`${p.title} ${variantTitleParts ? '- ' + variantTitleParts : ''}`);
+        const inventory = variant.inventory > 0 ? 'in stock' : 'out of stock';
+        const salePrice = variant.mrp && Number(variant.mrp) > Number(variant.price) 
           ? `<g:sale_price>${variant.price} INR</g:sale_price>` 
           : '';
 
         // If there's a specific price to show, we show the highest as standard, and sale as the current.
-        const basePrice = variant.compareAtPrice || variant.price;
+        const basePrice = variant.mrp || variant.price;
 
         itemsXml += `
     <item>
@@ -653,7 +653,7 @@ export class MarketingService {
         case '<': return '&lt;';
         case '>': return '&gt;';
         case '&': return '&amp;';
-        case '\\'': return '&apos;';
+        case "'": return '&apos;';
         case '"': return '&quot;';
         default: return c;
       }
