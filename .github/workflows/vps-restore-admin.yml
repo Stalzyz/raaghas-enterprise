@@ -1,0 +1,49 @@
+name: Restore Admin
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Restore Admin User
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          script: |
+            cd /var/www/raaghas_new/current
+            cat << 'SCRIPT' > restore_admin.ts
+            const { PrismaClient } = require('./packages/database/generated-client');
+            const bcrypt = require('bcrypt');
+
+            const prisma = new PrismaClient();
+
+            async function main() {
+              const email = 'admin@raaghas.in';
+              const pass = 'admin123';
+              const hashedPassword = await bcrypt.hash(pass, 10);
+              
+              await prisma.user.upsert({
+                where: { email },
+                update: { password: hashedPassword, role: 'SUPER_ADMIN' },
+                create: {
+                  email,
+                  name: 'Super Admin',
+                  password: hashedPassword,
+                  role: 'SUPER_ADMIN',
+                }
+              });
+              console.log('Admin restored!');
+            }
+
+            main().catch(console.error).finally(() => prisma.$disconnect());
+            SCRIPT
+            
+            npx ts-node restore_admin.ts
+            rm restore_admin.ts
