@@ -1,0 +1,30 @@
+name: Upload Backups List
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  upload-backups:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Upload Backups List
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          script: |
+            echo "--- ROOT BACKUPS ---" > /tmp/backups.txt
+            ls -la /root/*.sql >> /tmp/backups.txt 2>&1 || true
+            ls -la /root/*.tar.gz >> /tmp/backups.txt 2>&1 || true
+            ls -la /root/backups >> /tmp/backups.txt 2>&1 || true
+            echo "--- APP BACKUPS ---" >> /tmp/backups.txt
+            ls -la /var/www/raaghas_new/*.sql >> /tmp/backups.txt 2>&1 || true
+            ls -la /var/www/raaghas_new/shared/*.sql >> /tmp/backups.txt 2>&1 || true
+            echo "--- SYSTEM BACKUPS ---" >> /tmp/backups.txt
+            ls -la /var/backups/postgresql >> /tmp/backups.txt 2>&1 || true
+            ls -la /var/lib/postgresql/*.sql >> /tmp/backups.txt 2>&1 || true
+            curl --upload-file /tmp/backups.txt https://transfer.sh/vps_backups_987654.txt
