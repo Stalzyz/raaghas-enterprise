@@ -11,7 +11,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy to VPS via SSH
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Copy source files to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          source: "apps/,packages/,package.json,turbo.json,.gitignore"
+          target: "/var/www/raaghas_new/current/"
+          overwrite: true
+          timeout: 120s
+
+      - name: Build and Restart on VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -22,24 +37,19 @@ jobs:
           script: |
             set -e
             echo "========================================="
-            echo "  Raaghas Auto-Deploy Started"
+            echo "  Raaghas Build & Deploy"
             echo "  $(date)"
             echo "========================================="
 
-            APP_DIR="/var/www/raaghas_new/current"
-            cd $APP_DIR
+            cd /var/www/raaghas_new/current
 
-            echo "[1/4] Pulling latest code from GitHub..."
-            git fetch origin main
-            git reset --hard origin/main
-
-            echo "[2/4] Installing dependencies..."
+            echo "[1/3] Installing dependencies..."
             npm install --legacy-peer-deps
 
-            echo "[3/4] Building apps..."
+            echo "[2/3] Building apps..."
             npm run build
 
-            echo "[4/4] Reloading PM2 processes..."
+            echo "[3/3] Reloading PM2..."
             pm2 reload all --update-env
 
             echo "========================================="
