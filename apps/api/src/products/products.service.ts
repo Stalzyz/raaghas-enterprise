@@ -989,13 +989,14 @@ export class ProductService {
         
         // Taxes & Meta
         if (item.hsnCode !== undefined) productData.hsnCode = item.hsnCode;
-        if (item.taxRate !== undefined) productData.taxRate = Number(item.taxRate);
+        if (item.taxRate !== undefined && !isNaN(Number(item.taxRate))) productData.taxRate = Number(item.taxRate);
         if (item.taxInclusive !== undefined) productData.taxInclusive = item.taxInclusive === true || item.taxInclusive === 'true';
         if (item.tags !== undefined) productData.tags = item.tags;
         if (item.searchKeywords !== undefined) productData.searchKeywords = item.searchKeywords;
         if (item.seoTitle !== undefined) productData.seoTitle = item.seoTitle;
         if (item.metaDescription !== undefined) productData.metaDescription = item.metaDescription;
         if (item.metaKeywords !== undefined) productData.metaKeywords = item.metaKeywords;
+        if (item.sizeGuideId !== undefined) productData.sizeGuideId = item.sizeGuideId === "" ? null : item.sizeGuideId;
         
         if (item.status !== undefined) {
            productData.status = item.status;
@@ -1008,12 +1009,12 @@ export class ProductService {
         
         // Update primary variant
         const variantData: any = {};
-        if (item.price !== undefined) variantData.price = Number(item.price);
-        if (item.mrp !== undefined) variantData.mrp = Number(item.mrp);
-        if (item.costPrice !== undefined) variantData.costPrice = Number(item.costPrice);
+        if (item.price !== undefined && !isNaN(Number(item.price))) variantData.price = Number(item.price);
+        if (item.mrp !== undefined && !isNaN(Number(item.mrp))) variantData.mrp = Number(item.mrp);
+        if (item.costPrice !== undefined && !isNaN(Number(item.costPrice))) variantData.costPrice = Number(item.costPrice);
         if (item.sku !== undefined) variantData.sku = (item.sku || "").toString().trim() === "" ? null : item.sku.toString().trim();
         if (item.barcode !== undefined) variantData.barcode = (item.barcode || "").toString().trim() === "" ? null : item.barcode.toString().trim();
-        if (item.inventory !== undefined) variantData.inventory = Number(item.inventory);
+        if (item.inventory !== undefined && !isNaN(Number(item.inventory))) variantData.inventory = Number(item.inventory);
         
         if (Object.keys(variantData).length > 0) {
           const variants = await tx.variant.findMany({ where: { productId: item.id }, take: 1, orderBy: { id: 'asc' } });

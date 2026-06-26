@@ -793,9 +793,9 @@ export class PaymentsService implements OnModuleInit {
       try {
         const rzp = await this.getRazorpayInstance();
         const payments = await rzp.orders.fetchPayments(providerOrderId);
-        const successfulPayment = payments.items.find((p: any) => p.status === 'captured');
+        const successfulPayment = payments.items.find((p: any) => p.status === 'captured' || p.status === 'authorized');
         if (successfulPayment) {
-          this.logger.warn(`Attempted to cancel intent ${providerOrderId} but payment was already captured. Confirming instead.`);
+          this.logger.warn(`Attempted to cancel intent ${providerOrderId} but payment was already captured/authorized. Confirming instead.`);
           await this._confirmOrderFromWebhook(providerOrderId, successfulPayment.id, 'RAZORPAY');
           return { success: true, message: 'Payment was captured, order confirmed' };
         }

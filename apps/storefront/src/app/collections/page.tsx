@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { API_URL } from "@/lib/api";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";

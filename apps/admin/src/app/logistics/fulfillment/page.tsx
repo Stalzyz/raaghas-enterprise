@@ -90,72 +90,50 @@ export default function FulfillmentDesk() {
         <head>
           <title>Packing Slips</title>
           <style>
-            body { font-family: sans-serif; margin: 0; padding: 20px; }
-            .slip { page-break-after: always; padding: 40px; border: 2px dashed #ccc; margin-bottom: 20px; border-radius: 10px; }
-            .header { display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 20px; }
-            .brand { font-size: 24px; font-weight: bold; font-family: serif; }
-            .items { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            .items th, .items td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-            .items th { background: #f9f9f9; }
-            @media print { .slip { border: none; } }
+            body { font-family: sans-serif; margin: 0; padding: 0; }
+            .slip { page-break-after: always; padding: 40px; margin: 0 auto; max-width: 800px; box-sizing: border-box; }
+            @media print { .slip { border: none; margin: 0; padding: 40px; } }
           </style>
         </head>
         <body>
-          ${selectedOrdersData.map(order => `
+          ${selectedOrdersData.map(order => {
+             const addr = typeof order.shippingAddress === 'string' ? JSON.parse(order.shippingAddress || '{}') : (order.shippingAddress || {});
+             return `
             <div class="slip">
-              <div class="header">
-                <div class="brand"><img src="/logo-dark.svg" alt="Raaghas Logo" style="height: 48px; width: auto; object-fit: contain;" /></div>
-                <div style="text-align: right;">
-                  <h2>PACKING SLIP</h2>
-                  <p>Order #${order.id.slice(-8).toUpperCase()}</p>
-                  <p>Date: ${new Date().toLocaleDateString()}</p>
-                </div>
-              </div>
-              <div style="display: flex; gap: 40px; margin-bottom: 30px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
                 <div style="flex: 1;">
-                  <h3>Ship To:</h3>
-                  <p><strong>${order.customerName}</strong></p>
-                  <p>${typeof order.shippingAddress === 'string' ? order.shippingAddress : JSON.stringify(order.shippingAddress || '')}</p>
-                  <p>${order.customerPhone || order.customerEmail}</p>
+                  <h3 style="margin: 0 0 10px 0; font-size: 16px; font-weight: bold;">SHIP TO</h3>
+                  <div style="font-size: 14px; line-height: 1.5; color: #000;">
+                    <div>${order.customerName}</div>
+                    <div>${addr.line1 || addr.address || addr.address1 || ''}</div>
+                    ${addr.line2 || addr.address2 ? `<div>${addr.line2 || addr.address2}</div>` : ''}
+                    <div>${addr.city || ''} ${addr.state || addr.province || ''}</div>
+                    <div>${addr.postalCode || addr.pincode || addr.zip || ''}</div>
+                    <div>${addr.country || 'India'}</div>
+                    <div style="margin-top: 5px;">${addr.phone || order.customerPhone || ''}</div>
+                  </div>
                 </div>
                 <div style="flex: 1; text-align: right;">
-                  <h3>From:</h3>
-                  <p><strong>Raaghas</strong></p>
-                  <p>Salem, India</p>
+                  <h1 style="margin: 0; font-size: 24px; font-weight: normal; color: #333; letter-spacing: 1px;">RAAGHAS CLOTHING</h1>
                 </div>
               </div>
-              ${useSimplifiedSlip ? `
-              <h3>Items Included:</h3>
-              <ul style="line-height: 1.8; font-size: 16px;">
-                ${(order.items || []).map((item: any) => `
-                  <li><strong>${item.quantity}x</strong> ${item.productName || item.variant?.product?.title || 'Product'} - ${item.variant?.option1Value || ''} (SKU: ${item.sku || item.variant?.sku || 'N/A'})</li>
-                `).join('')}
-              </ul>
-              ` : `
-              <h3>Items to Pack:</h3>
-              <table class="items">
-                <thead>
-                  <tr>
-                    <th>Item Description</th>
-                    <th>SKU</th>
-                    <th>Quantity</th>
-                    <th>Packed</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${(order.items || []).map((item: any) => `
-                    <tr>
-                      <td>${item.productName || item.variant?.product?.title || 'Product'} - ${item.variant?.option1Value || ''}</td>
-                      <td>${item.sku || item.variant?.sku || 'N/A'}</td>
-                      <td>${item.quantity}</td>
-                      <td style="width: 50px; text-align: center;"><div style="width:20px; height:20px; border:1px solid #000; margin:0 auto;"></div></td>
-                    </tr>
-                  `).join('')}
-                </tbody>
-              </table>
-              `}
+
+              <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 60px;">
+                <div style="flex: 1; border-top: 1px solid #000; padding-top: 15px; margin-right: 40px;">
+                  <div style="font-size: 14px; line-height: 1.5; text-align: left; color: #000;">
+                    <div>Thank you for shopping with us!</div>
+                    <div>Raaghas Clothing</div>
+                    <div>Salem:636001,Phno 6360664805</div>
+                    <div>www.raaghasclothing.com</div>
+                  </div>
+                </div>
+                <div style="text-align: right; font-size: 14px; line-height: 1.5; color: #000;">
+                  <div>Order ${order.formattedOrderNumber || order.orderNumber || order.id.slice(-4)}</div>
+                  <div>${new Date(order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                </div>
+              </div>
             </div>
-          `).join('')}
+          `}).join('')}
           <script>
             window.onload = () => { window.print(); window.close(); }
           </script>

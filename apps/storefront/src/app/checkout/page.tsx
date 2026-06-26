@@ -454,6 +454,7 @@ export default function CheckoutPage() {
       // ── Step 4: Open Razorpay modal ───────────────────────────────────────
       // We hide our processing overlay here so Razorpay modal is visible
       setProcessing(false);
+      let paymentHandled = false;
 
       const options = {
         key: data.paymentPayload.keyId,
@@ -464,6 +465,7 @@ export default function CheckoutPage() {
         image: "https://raaghas.in/logo.png",
         order_id: data.providerOrderId,
         handler: async function (response: any) {
+          paymentHandled = true;
           // Payment success — verify with backend
           setProcessing(true);
           setProcessingMsg("Verifying your payment...");
@@ -542,6 +544,7 @@ export default function CheckoutPage() {
         },
         modal: {
           ondismiss: function () {
+            if (paymentHandled) return;
             // User closed the modal — unlock UI and cancel intent
             setProcessing(false);
             fetch(`${API_URL}/api/v1/payments/cancel-intent`, {
