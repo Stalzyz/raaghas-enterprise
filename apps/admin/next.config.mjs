@@ -9,7 +9,6 @@ const nextConfig = {
   output: 'standalone',
   outputFileTracingRoot: path.resolve(__dirname, "../../"),
   experimental: {},
-  webpack: (config) => config,
   typescript: {
     ignoreBuildErrors: true,
   },

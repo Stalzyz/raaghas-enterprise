@@ -166,7 +166,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-wine hover:bg-wine-dark text-ivory rounded-2xl py-4 text-xs font-bold uppercase tracking-widest shadow-xl shadow-wine/20 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full bg-theme-text hover:bg-theme-text/90 text-white dark:text-black rounded-2xl py-4 text-xs font-bold uppercase tracking-widest shadow-xl shadow-theme-text/20 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Continue <ArrowRight className="w-4 h-4" /></>}
               </button>
@@ -216,7 +216,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
                 <button
                   type="submit"
                   disabled={loading || otp.length < 4}
-                  className="w-full bg-wine hover:bg-wine-dark text-ivory rounded-2xl py-4 text-xs font-bold uppercase tracking-widest shadow-xl shadow-wine/20 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full bg-theme-text hover:bg-theme-text/90 text-white dark:text-black rounded-2xl py-4 text-xs font-bold uppercase tracking-widest shadow-xl shadow-theme-text/20 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Sign In <ShieldCheck className="w-4 h-4" /></>}
                 </button>

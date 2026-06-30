@@ -20,7 +20,6 @@ import {
   Check
 } from "lucide-react";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
-import { useRouter } from "next/navigation";
 
 export default function ProductManagement() {
   const { token } = useAdminAuth();
@@ -46,6 +45,7 @@ export default function ProductManagement() {
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'price_asc' | 'price_desc'>('newest');
   const [selectAllInventory, setSelectAllInventory] = useState(false);
+  const [isSettingTax, setIsSettingTax] = useState(false);
 
   const currentPage = Number(searchParams.get("page") || "1");
   const setCurrentPage = (p: number) => {
@@ -173,6 +173,29 @@ export default function ProductManagement() {
       alert('Error performing bulk action');
     } finally {
       setIsBulkLoading(false);
+    }
+  };
+
+  const handleSetDefaultTax = async () => {
+    if (!confirm("This will set taxRate = 5% and taxInclusive = true for ALL products. Continue?")) return;
+    setIsSettingTax(true);
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1');
+      const res = await fetch(`${baseUrl}/products/set-default-tax`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ taxRate: 5 })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        alert(`Done! Updated ${data.updated} products to 5% GST.`);
+      } else {
+        alert("Failed to update tax rates.");
+      }
+    } catch (err) {
+      alert("Error updating tax rates.");
+    } finally {
+      setIsSettingTax(false);
     }
   };
 
@@ -359,11 +382,19 @@ export default function ProductManagement() {
             >
                <UploadCloud size={18} /> Import CSV
             </button>
-            <button 
+            <button
               onClick={() => handleExportCSV(selectedIds.length > 0 ? selectedIds : undefined)}
               className="flex items-center gap-2 px-6 py-2 bg-white border border-gray-200 text-charcoal rounded-lg text-sm font-bold shadow-sm hover:bg-gray-50 transition-all"
             >
                <FileSpreadsheet size={18} /> Export CSV
+            </button>
+            <button
+              onClick={handleSetDefaultTax}
+              disabled={isSettingTax}
+              className="flex items-center gap-2 px-6 py-2 bg-white border border-amber-200 text-amber-700 rounded-lg text-sm font-bold shadow-sm hover:bg-amber-50 transition-all disabled:opacity-50"
+              title="Set 5% GST on all products"
+            >
+               {isSettingTax ? "Updating..." : "Set 5% GST (All)"}
             </button>
             <Link 
               href="/products/new"
@@ -608,6 +639,12 @@ export default function ProductManagement() {
                             <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-100 rounded-xl shadow-xl z-50 py-2 animate-in fade-in zoom-in-95 duration-200">
                                <button onClick={() => router.push(`/products/${p.id}`)} className="w-full text-left px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-50 flex items-center gap-3">
                                   <ExternalLink size={14} /> Edit Details
+                               </button>
+                               <button 
+                                 onClick={() => window.open(`/inventory?search=${p.id}`, '_blank')}
+                                 className="w-full text-left px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-50 flex items-center gap-3"
+                               >
+                                  <Package size={14} /> Restock Inventory
                                </button>
                                <button 
                                  onClick={async () => {

@@ -72,6 +72,7 @@ export class OrdersService {
 
     return this.prisma.order.findMany({
       where: whereClause,
+      take: 100, // HARD LIMIT to prevent fetching excessive orders per user
       include: {
         items: {
           include: {
@@ -214,6 +215,7 @@ export class OrdersService {
 
     const orders = await this.prisma.order.findMany({
       where,
+      take: 100, // HARD LIMIT to prevent OOM. Admin should use date filters for older orders.
       include: {
         items: {
           include: {
@@ -984,22 +986,24 @@ export class OrdersService {
       return { success: false, message: 'No customer email provided' };
     }
 
+    const settings = await this.prisma.storeSettings.findUnique({ where: { id: 'global' } });
+
     // Generate Invoice PDF
     const formattedInvoice = {
       type: 'RETAIL',
       invoiceNumber: (order.formattedOrderNumber || `INV-${order.id.slice(-6).toUpperCase()}`),
       date: order.createdAt.toISOString(),
       seller: { 
-        name: 'Raaghas', 
-        address: 'Salem, India', 
-        state: 'Telangana', 
-        gst: '33AABCU9603R1ZX', 
-        email: 'info@raaghas.com' 
+        name: settings?.storeName || 'Raaghas', 
+        address: settings?.businessAddress || 'Salem, India', 
+        state: settings?.businessState || 'Telangana', 
+        gst: settings?.gstNumber || '33AABCU9603R1ZX', 
+        email: settings?.supportEmail || 'info@raaghas.com' 
       },
       buyer: { 
         name: order.customerName, 
         contact: order.customerName, 
-        address: 'N/A', 
+        address: order.shippingAddress ? (typeof order.shippingAddress === 'string' ? JSON.parse(order.shippingAddress).address1 || 'N/A' : (order.shippingAddress as any).address1 || 'N/A') : 'N/A', 
         gst: 'N/A', 
         phone: order.customerPhone || 'N/A' 
       },

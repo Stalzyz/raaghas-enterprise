@@ -133,7 +133,7 @@ export function Header({ settings, theme: themeConfig, menu }: { settings: any, 
                   </button>
                   
                   {/* Account Dropdown */}
-                  <div className="absolute top-full right-0 pt-4 hidden group-hover:block transition-all w-48">
+                  <div className="absolute top-full right-0 pt-4 hidden group-hover:block transition-all w-48 z-[200]">
                     <div className="bg-theme-surface border border-theme-border shadow-2xl rounded-2xl p-2 animate-in fade-in slide-in-from-top-2">
                        <Link href="/account" className="flex items-center justify-between px-4 py-3 hover:bg-theme-bg rounded-xl transition-all">
                           <span className="text-[10px] font-bold uppercase tracking-widest text-theme-text">Account</span>

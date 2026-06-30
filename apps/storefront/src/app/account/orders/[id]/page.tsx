@@ -27,6 +27,24 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
   const [order, setOrder] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  function getSmartStatus(order: any) {
+    if (order.status === 'PAYMENT_PENDING') {
+      const ageInMinutes = (Date.now() - new Date(order.createdAt).getTime()) / (1000 * 60);
+      return ageInMinutes > 30 ? 'ABANDONED' : 'PAYMENT_PENDING';
+    }
+    if (order.status === 'CANCELLED' && order.paymentId) {
+      return 'FAILED'; // Usually a gateway failure
+    }
+    return order.status;
+  }
+
+  function getDisplayStatus(status: string) {
+    if (status === 'PAYMENT_PENDING') return 'Awaiting Payment';
+    if (status === 'FAILED') return 'Payment Failed';
+    if (status === 'ABANDONED') return 'Abandoned';
+    return status;
+  }
+
   useEffect(() => {
     if (!authLoading) {
       if (isAuthenticated) {
@@ -87,14 +105,20 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
                          </h1>
                          <p className="text-xs text-charcoal/40 font-medium">Placed on {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString()}</p>
                       </div>
-                      <div className={`px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border ${
-                        order.status === 'DELIVERED' ? 'bg-green-50 text-green-600 border-green-100' :
-                        order.status === 'SHIPPED' ? 'bg-purple-50 text-purple-600 border-purple-100' :
-                        order.status === 'CANCELLED' ? 'bg-red-50 text-red-600 border-red-100' :
-                        'bg-orange-50 text-orange-600 border-orange-100'
-                      }`}>
-                         {order.status}
-                      </div>
+                      {(() => {
+                        const smartStatus = getSmartStatus(order);
+                        return (
+                          <div className={`px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border ${
+                            smartStatus === 'DELIVERED' ? 'bg-green-50 text-green-600 border-green-100' :
+                            smartStatus === 'SHIPPED' ? 'bg-purple-50 text-purple-600 border-purple-100' :
+                            (smartStatus === 'CANCELLED' || smartStatus === 'FAILED') ? 'bg-red-50 text-red-600 border-red-100' :
+                            smartStatus === 'ABANDONED' ? 'bg-gray-100 text-gray-500 border-gray-200' :
+                            'bg-orange-50 text-orange-600 border-orange-100'
+                          }`}>
+                            {getDisplayStatus(smartStatus)}
+                          </div>
+                        );
+                      })()}
                    </div>
 
                    {/* Journey Timeline */}
@@ -114,7 +138,7 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
                             { label: "Dispatched", desc: "In Transit", step: 'SHIPPED', icon: <Truck size={14} /> },
                             { label: "Arrived", desc: "Home", step: 'DELIVERED', icon: <MapPin size={14} /> }
                          ].map((step, idx) => {
-                            const active = order.status === step.step || (idx === 0 && order.status !== 'PENDING') || (idx === 1 && (order.status === 'SHIPPED' || order.status === 'DELIVERED')) || (idx === 2 && order.status === 'DELIVERED');
+                            const active = order.status === step.step || order.status === 'PAYMENT_PENDING' || (idx === 0 && order.status !== 'PENDING' && order.status !== 'PAYMENT_PENDING' && order.status !== 'ABANDONED') || (idx === 1 && (order.status === 'SHIPPED' || order.status === 'DELIVERED')) || (idx === 2 && order.status === 'DELIVERED');
                             return (
                                <div key={idx} className="flex flex-col items-center text-center gap-3">
                                   <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${active ? 'bg-wine text-white shadow-xl' : 'bg-white border text-gray-200'}`}>
@@ -205,11 +229,11 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
                       {order.items.map((item: any, idx: number) => (
                         <div key={idx} className="p-8 flex items-center gap-8 group">
                            <div className="w-20 h-28 bg-beige rounded-2xl overflow-hidden border border-charcoal/5 shrink-0 shadow-sm transition-transform group-hover:scale-105 duration-500">
-                              <img src={item.variant.product.images?.[0]?.url} alt="" className="w-full h-full object-cover" />
+                              <img src={item.variant?.product?.images?.[0]?.url} alt="" className="w-full h-full object-cover" />
                            </div>
                            <div className="flex-1 space-y-1">
-                              <h4 className="text-lg font-serif text-charcoal group-hover:text-wine transition-colors">{item.variant.product.title}</h4>
-                              <p className="text-[10px] font-bold uppercase tracking-widest text-charcoal/40">SKU: {item.variant.sku} · Size: {item.variant.option1Value}</p>
+                              <h4 className="text-lg font-serif text-charcoal group-hover:text-wine transition-colors">{item.variant?.product?.title || "Product Unavailable"}</h4>
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-charcoal/40">SKU: {item.variant?.sku || "N/A"} · Size: {item.variant?.option1Value || "N/A"}</p>
                            </div>
                            <div className="text-right space-y-1">
                               <p className="text-[10px] font-bold uppercase tracking-widest text-charcoal/30">Qty: {item.quantity}</p>

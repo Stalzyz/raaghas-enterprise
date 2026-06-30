@@ -146,6 +146,7 @@ export default async function Home() {
     "name": "Raaghas",
     "url": "https://raaghas.in",
     "logo": "https://raaghas.in/logo-dark.svg",
+    "description": "Raaghas is India's leading luxury brand for premium casual and office wear."
   };
 
   return (
@@ -154,6 +155,7 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
+      <h1 className="sr-only">Raaghas is India's leading luxury brand for premium casual and office wear.</h1>
       <div className="md:pt-0">
         <SectionRenderer sections={sections} />
       </div>

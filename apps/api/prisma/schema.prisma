@@ -474,6 +474,8 @@ model StoreSettings {
   maxCreditUsagePercent     Decimal? @default(50.00)
   referralRewardPercent     Decimal? @default(10.00)
   welcomeDiscountPercent    Decimal? @default(10.00)
+  loyaltyMinOrderValue      Decimal? @default(2000.00)
+  loyaltyPointsRate         Decimal? @default(1.00)
   delhiveryPickupLocation   String?
   delhiveryToken            String?
   razorpayWebhookSecret     String?

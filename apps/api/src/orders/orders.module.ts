@@ -10,15 +10,7 @@ import { GrowthModule } from '../growth/growth.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [
-    InventoryModule, 
-    MarketingModule, 
-    MailModule, 
-    WholesaleModule, 
-    GrowthModule, 
-    NotificationsModule,
-    forwardRef(() => PaymentsModule)
-  ],
+  imports: [InventoryModule, MarketingModule, MailModule, WholesaleModule, GrowthModule, NotificationsModule, forwardRef(() => PaymentsModule)],
   controllers: [OrdersController],
   providers: [OrdersService],
   exports: [OrdersService],

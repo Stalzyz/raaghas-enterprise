@@ -12,11 +12,12 @@ import {
   Truck, 
   CheckCircle2, 
   ShieldCheck,
-  Star,
   Award,
   Package,
   ArrowRight,
-  Loader2
+  Loader2,
+  LogOut,
+  Star
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -51,7 +52,7 @@ function AccountDashboardContent() {
   const searchParams = useSearchParams();
   const isPreview = searchParams.get('preview') === 'true';
   
-  const { getToken, user: authUser, isAuthenticated, loading: authLoading } = useAuth();
+  const { getToken, user: authUser, isAuthenticated, loading: authLoading, logout } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -100,7 +101,7 @@ function AccountDashboardContent() {
     <div className="min-h-screen bg-[var(--bg)] pb-32">
        
        {/* ─── ELITE WELCOME HERO ─── */}
-       <div className="pt-32 pb-20 px-6 md:px-12 bg-[var(--surface)] border-b border-[var(--border)]">
+       <div className="pb-20 px-6 md:px-12 bg-[var(--surface)] border-b border-[var(--border)]">
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-10">
              <div className="flex items-center gap-8">
                 <div className="w-24 h-24 rounded-full border-4 border-ivory shadow-lg overflow-hidden shrink-0 bg-wine flex items-center justify-center text-ivory text-3xl font-serif">
@@ -328,6 +329,10 @@ function AccountDashboardContent() {
                       <CheckCircle2 size={20} className="text-theme-text/20 group-hover:text-wine transition-all" />
                       <span className="text-sm font-bold text-theme-text">Help & Support</span>
                    </Link>
+                   <button onClick={logout} className="w-full flex items-center gap-4 p-4 hover:bg-red-500/10 rounded-2xl transition-all group text-left">
+                      <LogOut size={20} className="text-red-500/50 group-hover:text-red-600 transition-all" />
+                      <span className="text-sm font-bold text-red-500">Sign Out</span>
+                   </button>
                 </div>
              </div>
 

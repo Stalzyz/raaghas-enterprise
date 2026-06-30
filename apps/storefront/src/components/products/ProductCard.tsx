@@ -34,8 +34,9 @@ export default function ProductCard({ product }: ProductCardProps) {
   useEffect(() => setMounted(true), []);
   const isWishlisted = isInWishlist(product.id);
   const price = Number(product.price || 0);
-  const compareAtPrice = product.compareAtPrice ? Number(product.compareAtPrice) : null;
-  const savings = compareAtPrice ? compareAtPrice - price : 0;
+  const rawCompare = product.compareAtPrice || (product as any).mrp;
+  const compareAtPrice = rawCompare ? Number(rawCompare) : null;
+  const savings = compareAtPrice && compareAtPrice > price ? compareAtPrice - price : 0;
   
   const hasVariants = product.variants && product.variants.length > 0;
   const variants: any[] = product.variants || [];
@@ -207,7 +208,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         </h3>
         <div className="flex items-center gap-3 font-serif">
           <span className="text-sm text-theme-text font-bold italic">₹{price.toLocaleString()}</span>
-          {compareAtPrice && (
+          {compareAtPrice && compareAtPrice > price && (
             <span className="text-xs text-theme-text-muted line-through">₹{compareAtPrice.toLocaleString()}</span>
           )}
         </div>

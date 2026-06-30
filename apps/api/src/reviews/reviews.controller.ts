@@ -31,6 +31,12 @@ export class ReviewsController {
     return this.reviewsService.getProductReviews(productId);
   }
 
+  @Get('eligibility/:productId')
+  @UseGuards(AuthGuard)
+  async checkEligibility(@Param('productId') productId: string, @Req() req: any) {
+    return this.reviewsService.checkEligibility(productId, req.user.id);
+  }
+
   @Post()
   @UseGuards(AuthGuard)
   async createReview(@Body() body: any, @Req() req: any) {

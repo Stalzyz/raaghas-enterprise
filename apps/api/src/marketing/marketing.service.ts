@@ -359,8 +359,8 @@ export class MarketingService {
     });
     return {
       apiUrl: settings?.graftyApiUrl || "https://grafty.pro/api/integrations/v1/event",
-      apiKey: settings?.graftyApiKey,
-      workspaceId: settings?.graftyWorkspaceId,
+      apiKey: settings?.graftyApiKey || settings?.whatsappApiKey,
+      workspaceId: settings?.graftyWorkspaceId || settings?.whatsappAppId,
     };
   }
 
@@ -637,7 +637,7 @@ export class MarketingService {
 
         itemsXml += `
     <item>
-      <g:id>${variantId}</g:id>
+      <g:id>${variant.sku || variantId}</g:id>
       <g:title>${variantTitle}</g:title>
       <g:description>${description}</g:description>
       <g:link>${link}</g:link>
@@ -650,7 +650,7 @@ ${additionalImages}
       <g:price>${regularPrice}</g:price>
       ${salePriceTag}
       ${skuTag}
-      <g:google_product_category>Apparel &amp; Accessories &gt; Clothing</g:google_product_category>
+      <g:google_product_category>Apparel &gt; Clothing &gt; Casual and office wear</g:google_product_category>
       <g:item_group_id>${p.id}</g:item_group_id>
     </item>`;
       }

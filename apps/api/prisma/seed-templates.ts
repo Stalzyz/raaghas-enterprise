@@ -18,7 +18,7 @@ async function main() {
   </div>
   <p>We will notify you once your exquisite pieces are shipped.</p>
   <div style="margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px; text-align: center; color: #888; font-size: 12px;">
-    Raaghas Pvt Ltd | Salem, India
+    {{store.storeName}} | {{store.businessAddress}}
   </div>
 </div>`,
     },
@@ -36,7 +36,7 @@ async function main() {
   </div>
   <p>You can track your package using the tracking link on your dashboard.</p>
   <div style="margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px; text-align: center; color: #888; font-size: 12px;">
-    Raaghas Pvt Ltd | Salem, India
+    {{store.storeName}} | {{store.businessAddress}}
   </div>
 </div>`,
     },
@@ -51,7 +51,7 @@ async function main() {
   <p>Our logistics partner will contact you shortly to arrange a pickup. Please ensure the items are packed in their original condition with all tags attached.</p>
   <p>Once we receive and inspect the items, your refund will be processed to your original payment method.</p>
   <div style="margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px; text-align: center; color: #888; font-size: 12px;">
-    Raaghas Pvt Ltd | Salem, India
+    {{store.storeName}} | {{store.businessAddress}}
   </div>
 </div>`,
     }

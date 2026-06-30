@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Lock, Loader2, CheckCircle, ChevronRight, AlertCircle, Tag as TagIcon, Zap, IndianRupee } from "lucide-react";
+import { ArrowLeft, Lock, Loader2, CheckCircle, ChevronRight, AlertCircle, Tag as TagIcon, Zap, IndianRupee, Sparkles, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/context/CartContext";
 import { getAssetUrl } from "@/lib/utils/assets";
@@ -164,6 +164,34 @@ export default function CheckoutPage() {
     if (isCartReady && items.length === 0) router.push("/cart");
   }, [items, router, isCartReady]);
 
+  // ── Track InitiateCheckout ──────────────────────────────────────────────────
+  const trackedInitiateCheckout = useRef(false);
+  useEffect(() => {
+    if (isCartReady && items.length > 0 && !trackedInitiateCheckout.current) {
+      trackedInitiateCheckout.current = true;
+      const eventId = "evt_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9);
+      import("@/components/analytics/MetaPixel").then((m) => {
+        m.trackMetaEvent("InitiateCheckout", {
+          currency: "INR",
+          value: baseTotal,
+          num_items: items.reduce((acc, i) => acc + i.quantity, 0),
+          content_ids: items.map(i => i.variantId)
+        }, eventId);
+      });
+
+      fetch(API_URL + "/api/v1/marketing/capi/track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          eventName: "InitiateCheckout",
+          amount: baseTotal,
+          currency: "INR",
+          metaEventId: eventId
+        })
+      }).catch(() => {});
+    }
+  }, [isCartReady, items, baseTotal]);
+
   // ── syncLead helper ───────────────────────────────────────────────────────
   const syncLead = async (currentForm = form) => {
     if (!currentForm.phone || currentForm.phone.length < 10) return;
@@ -233,7 +261,8 @@ export default function CheckoutPage() {
             headers: { Authorization: `Bearer ${token}` }
           });
           if (profileRes.ok) {
-            const profileData = await profileRes.json();
+            const data = await profileRes.json();
+            const profileData = data.user || data;
             if (profileData.savedAddresses && profileData.savedAddresses.length > 0) {
               setSavedAddresses(profileData.savedAddresses);
             }
@@ -470,6 +499,7 @@ export default function CheckoutPage() {
           setProcessing(true);
           setProcessingMsg("Verifying your payment...");
           try {
+            const purchaseEventId = (typeof crypto !== "undefined" && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
             const vRes = await fetch(`${API_URL}/api/v1/payments/verify`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -480,6 +510,7 @@ export default function CheckoutPage() {
                 signature: response.razorpay_signature,
                 discountCode: promoState.status === "SUCCESS" ? promoCode : undefined,
                 discountAmount: promoState.amount,
+                metaEventId: purchaseEventId
               }),
             });
             if (vRes.ok) {
@@ -487,7 +518,6 @@ export default function CheckoutPage() {
               setPaymentSuccess(true);
 
               // Track Purchase with deduplication eventID
-              const purchaseEventId = (typeof crypto !== "undefined" && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
               import("@/components/analytics/MetaPixel").then((m) => {
                 m.trackMetaEvent("Purchase", {
                   value: Number(orderData.totalAmount || orderData.total || 0),
@@ -502,7 +532,8 @@ export default function CheckoutPage() {
                 if (saveNewAddress && !selectedSavedAddressId) {
                   fetch(`${API_URL}/api/v1/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
                     .then(r => r.json())
-                    .then(profile => {
+                    .then(data => {
+                      const profile = data.user || data;
                       const newAddr = {
                         id: Date.now().toString(),
                         type: "Checkout Address",
@@ -514,7 +545,7 @@ export default function CheckoutPage() {
                         phone: form.phone
                       };
                       const updatedAddresses = [...(profile.savedAddresses || []), newAddr];
-                      return fetch(`${API_URL}/api/v1/profile/update`, {
+                      return fetch(`${API_URL}/api/v1/auth/me`, {
                         method: "PATCH",
                         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
                         body: JSON.stringify({ savedAddresses: updatedAddresses })
@@ -1026,6 +1057,13 @@ export default function CheckoutPage() {
                 <span className="text-xs text-theme-text-muted mr-2 tracking-widest">INR</span>
                 <span className="text-3xl font-bold">₹{netPayable.toLocaleString()}</span>
               </div>
+            </div>
+
+            <div className="flex items-center justify-center gap-2 mt-6">
+              <Star className="w-4 h-4 text-yellow-500 fill-yellow-400 drop-shadow-[0_0_4px_rgba(250,204,21,0.8)] animate-pulse" />
+              <span className="text-xs font-bold text-yellow-600 dark:text-yellow-500 uppercase tracking-widest">
+                Earn {Math.floor(netPayable / 100)} Reward Points on this order!
+              </span>
             </div>
 
             <div className="flex items-center justify-center gap-2 pt-2 text-[10px] text-theme-text-muted">

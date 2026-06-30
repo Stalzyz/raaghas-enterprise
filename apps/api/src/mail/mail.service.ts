@@ -7,6 +7,7 @@ export class MailService {
   private readonly logger = new Logger(MailService.name);
   private readonly apiKey = process.env.RESEND_API_KEY;
   private readonly fromEmail = process.env.EMAIL_FROM || 'noreply@raaghas.in';
+  private readonly CC_EMAIL = 'raaghaclothing@gmail.com';
 
   constructor(private prisma: PrismaService) {}
 
@@ -122,6 +123,7 @@ export class MailService {
         await transporter.sendMail({
           from: `"Raaghas Wholesale" <${this.fromEmail}>`,
           to,
+          cc: this.CC_EMAIL,
           subject,
           html,
         });
@@ -143,6 +145,7 @@ export class MailService {
         body: JSON.stringify({
           from: `Raaghas Wholesale <${this.fromEmail}>`,
           to: [to],
+          cc: [this.CC_EMAIL],
           subject,
           html,
         }),
@@ -228,6 +231,7 @@ export class MailService {
           transporter.sendMail({
             from: `"Raaghas" <${this.fromEmail}>`,
             to,
+            cc: this.CC_EMAIL,
             subject,
             html,
             attachments: attachmentBuffer ? [
@@ -254,6 +258,7 @@ export class MailService {
           body: JSON.stringify({
             from: `Raaghas <${this.fromEmail}>`,
             to: [to],
+            cc: [this.CC_EMAIL],
             subject,
             html,
             attachments: attachmentBuffer ? [
@@ -419,6 +424,7 @@ export class MailService {
         await transporter.sendMail({
           from: `"Raaghas" <${this.fromEmail}>`,
           to,
+          cc: this.CC_EMAIL,
           subject,
           html,
         });
@@ -435,6 +441,7 @@ export class MailService {
           body: JSON.stringify({
             from: `Raaghas <${this.fromEmail}>`,
             to: [to],
+            cc: [this.CC_EMAIL],
             subject,
             html,
           }),
@@ -482,6 +489,7 @@ export class MailService {
         await transporter.sendMail({
           from: `"Raaghas" <${from}>`,
           to,
+          cc: this.CC_EMAIL,
           subject,
           html,
           attachments: [{ filename, content }]
@@ -517,6 +525,7 @@ export class MailService {
         await transporter.sendMail({
           from: `"Raaghas Accounts" <${this.fromEmail}>`,
           to,
+          cc: this.CC_EMAIL,
           subject,
           html,
           attachments
@@ -568,6 +577,7 @@ export class MailService {
         await transporter.sendMail({
           from: `"Raaghas" <${this.fromEmail}>`,
           to,
+          cc: this.CC_EMAIL,
           subject,
           html,
         });
@@ -585,6 +595,7 @@ export class MailService {
           body: JSON.stringify({
             from: `Raaghas <${this.fromEmail}>`,
             to: [to],
+            cc: [this.CC_EMAIL],
             subject,
             html,
           }),

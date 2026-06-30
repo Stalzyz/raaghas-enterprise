@@ -204,8 +204,8 @@ export default function AutomatedOffers() {
         setRules(prev => prev.filter(r => r.id !== id));
         showToast("success", "Rule deleted.");
       }
-    } catch {
-      showToast("error", "Failed to delete rule.");
+    } catch (e: any) {
+      showToast("error", "Error: " + e.message);
     } finally {
       setDeletingId(null);
     }
@@ -276,7 +276,7 @@ export default function AutomatedOffers() {
                       <h3 className="font-bold text-charcoal">{rule.name}</h3>
                       {rule.description && <p className="text-xs text-gray-400 mt-0.5">{rule.description}</p>}
                     </div>
-                    <div className="flex gap-3 items-center">
+                    <div className="flex gap-3 items-center relative z-10">
                       <span className="px-2 py-0.5 bg-gray-100 rounded-lg text-[10px] font-bold text-charcoal">Priority {rule.priority}</span>
                       <button
                         onClick={() => handleToggle(rule)}

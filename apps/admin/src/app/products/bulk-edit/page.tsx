@@ -355,18 +355,7 @@ function BulkEditContent() {
                   </td>
                   {renderInput(p.id, "bundleIds", "text", "w-40")}
                   {renderInput(p.id, "featuredCoupon", "text", "w-32")}
-                  <td className="px-3 py-2 border-r bg-white">
-                    <select
-                      value={editedItems[p.id]?.sizeGuideId || ""}
-                      onChange={(e) => handleChange(p.id, 'sizeGuideId', e.target.value || null)}
-                      className="w-32 border p-1 rounded focus:ring-1 focus:ring-wine outline-none text-xs"
-                    >
-                      <option value="">No Size Guide</option>
-                      {(Array.isArray(sizeGuides) ? sizeGuides : []).map(sg => (
-                        <option key={sg.id} value={sg.id}>{sg.title}</option>
-                      ))}
-                    </select>
-                  </td>
+                  {renderInput(p.id, "sizeGuideId", "text", "w-32")}
                 </tr>
               ))}
             </tbody>

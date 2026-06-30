@@ -66,9 +66,10 @@ export default function GSTReportsPage() {
   const exportCSV = () => {
     if (!taxData.reports || taxData.reports.length === 0) return;
     
-    const headers = ["Order ID", "Customer Name", "Customer Email", "Date", "Taxable Value (INR)", "CGST (INR)", "SGST (INR)", "Total GST (INR)", "Total Amount (INR)", "Payment Method"];
+    const headers = ["Invoice Number", "Order Number", "Customer Name", "Customer Email", "Date", "Taxable Value (INR)", "CGST (INR)", "SGST (INR)", "Total GST (INR)", "Total Amount (INR)", "Payment Method"];
     const rows = taxData.reports.map((r: any) => [
-      r.orderId.toUpperCase(),
+      r.invoiceNumber || r.orderId.slice(-8).toUpperCase(),
+      r.formattedOrderNumber || r.orderId.slice(-8).toUpperCase(),
       r.customerName,
       r.customerEmail,
       new Date(r.date).toLocaleDateString(),
@@ -194,7 +195,8 @@ export default function GSTReportsPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="text-[10px] uppercase font-bold tracking-widest text-gray-400 border-b border-gray-50">
-                <th className="px-8 py-5">Order ID</th>
+                <th className="px-8 py-5">Invoice No.</th>
+                <th className="px-8 py-5">Order No.</th>
                 <th className="px-8 py-5">Customer</th>
                 <th className="px-8 py-5">Date</th>
                 <th className="px-8 py-5 text-right">Taxable Value</th>
@@ -207,7 +209,7 @@ export default function GSTReportsPage() {
             <tbody className="divide-y divide-gray-50">
               {filteredReports.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-8 py-20 text-center">
+                  <td colSpan={9} className="px-8 py-20 text-center">
                     <div className="flex flex-col items-center justify-center text-gray-300 gap-3">
                       <FileText size={40} />
                       <p className="text-xs font-bold uppercase tracking-wider">No taxable sales found in this period</p>
@@ -218,7 +220,10 @@ export default function GSTReportsPage() {
                 filteredReports.map((r: any) => (
                   <tr key={r.orderId} className="hover:bg-gray-50/50 transition-colors">
                     <td className="px-8 py-5 font-mono text-xs font-bold text-wine">
-                      #{r.orderId.slice(-8).toUpperCase()}
+                      {r.invoiceNumber || r.orderId.slice(-8).toUpperCase()}
+                    </td>
+                    <td className="px-8 py-5 font-mono text-xs font-bold text-charcoal">
+                      #{r.formattedOrderNumber || r.orderId.slice(-8).toUpperCase()}
                     </td>
                     <td className="px-8 py-5">
                       <p className="text-xs font-bold text-charcoal">{r.customerName}</p>

@@ -2,19 +2,20 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { 
-  Save, 
-  ChevronLeft, 
-  Image as ImageIcon, 
-  Trash2, 
-  Plus, 
-  Package, 
-  Tag, 
-  Layout, 
+import {
+  Save,
+  ChevronLeft,
+  Image as ImageIcon,
+  Trash2,
+  Plus,
+  Package,
+  Tag,
+  Layout,
   Loader2,
   CheckCircle2,
   AlertCircle,
-  Upload
+  Upload,
+  Sparkles
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
@@ -200,17 +201,24 @@ export default function EditProductPage() {
             <p className="text-[10px] uppercase font-bold text-gray-400 tracking-widest mt-0.5">Edit Sanctuary Item</p>
           </div>
         </div>
-        
-        <button 
-          onClick={handleSave}
-          disabled={saving}
-          className={`px-8 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2 shadow-lg active:scale-95 ${
-            success ? 'bg-green-500 text-white shadow-green-200' : 'bg-wine text-ivory hover:bg-charcoal shadow-wine/20'
-          }`}
-        >
-          {saving ? <Loader2 className="animate-spin" size={16} /> : success ? <CheckCircle2 size={16} /> : <Save size={16} />}
-          {success ? "Saved Successfully" : saving ? "Synchronizing..." : "Save Changes"}
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => window.open(`/inventory?search=${product.id}`, '_blank')}
+            className="px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-widest bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 transition-all flex items-center gap-2 shadow-sm"
+          >
+            <Package size={16} /> Restock
+          </button>
+          <button 
+            onClick={handleSave}
+            disabled={saving}
+            className={`px-8 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2 shadow-lg active:scale-95 ${
+              success ? 'bg-green-500 text-white shadow-green-200' : 'bg-wine text-ivory hover:bg-charcoal shadow-wine/20'
+            }`}
+          >
+            {saving ? <Loader2 className="animate-spin" size={16} /> : success ? <CheckCircle2 size={16} /> : <Save size={16} />}
+            {success ? "Saved Successfully" : saving ? "Synchronizing..." : "Save Changes"}
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -401,28 +409,56 @@ export default function EditProductPage() {
                     </span>
                   )}
                 </label>
-                <div className="max-h-48 overflow-y-auto space-y-2 border border-gray-100 rounded-xl p-3 bg-gray-50">
-                  {(Array.isArray(collections) ? collections : []).filter(Boolean).map((c: any) => (
-                    <label key={c.id} className="flex items-center gap-3 cursor-pointer group">
-                      <input
-                        type="checkbox"
-                        checked={selectedCollectionIds.includes(c.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedCollectionIds(prev => [...prev, c.id]);
-                          } else {
-                            setSelectedCollectionIds(prev => prev.filter(id => id !== c.id));
-                          }
-                        }}
-                        className="w-4 h-4 rounded accent-wine"
-                      />
-                      <span className="text-sm font-medium text-charcoal group-hover:text-wine transition-colors">{c.title}</span>
-                    </label>
-                  ))}
-                  {collections.length === 0 && (
-                    <p className="text-xs text-gray-400 text-center py-2">No collections found</p>
-                  )}
-                </div>
+                {collections.length === 0 ? (
+                  <p className="text-xs text-gray-400 text-center py-3 border border-gray-100 rounded-xl bg-gray-50">No collections found</p>
+                ) : (
+                  <div className="border border-gray-100 rounded-xl overflow-hidden bg-gray-50 max-h-64 overflow-y-auto">
+                    {/* Shop by Category */}
+                    {(Array.isArray(collections) ? collections : []).filter((c: any) => c.isVirtual).length > 0 && (
+                      <div>
+                        <p className="px-3 py-2 text-[9px] font-bold uppercase tracking-[0.25em] text-gray-400 bg-gray-100 border-b border-gray-200 sticky top-0">
+                          Shop by Category
+                        </p>
+                        {(Array.isArray(collections) ? collections : []).filter((c: any) => c.isVirtual).map((c: any) => (
+                          <label key={c.id} className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-white transition-colors group">
+                            <input
+                              type="checkbox"
+                              checked={selectedCollectionIds.includes(c.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) setSelectedCollectionIds(prev => [...prev, c.id]);
+                                else setSelectedCollectionIds(prev => prev.filter(id => id !== c.id));
+                              }}
+                              className="w-3.5 h-3.5 rounded accent-wine flex-shrink-0"
+                            />
+                            <span className="text-xs font-medium text-charcoal group-hover:text-wine transition-colors">{c.title}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                    {/* Shop by Collection */}
+                    {(Array.isArray(collections) ? collections : []).filter((c: any) => !c.isVirtual).length > 0 && (
+                      <div>
+                        <p className="px-3 py-2 text-[9px] font-bold uppercase tracking-[0.25em] text-gray-400 bg-gray-100 border-b border-gray-200 border-t sticky top-0">
+                          Shop by Collection
+                        </p>
+                        {(Array.isArray(collections) ? collections : []).filter((c: any) => !c.isVirtual).map((c: any) => (
+                          <label key={c.id} className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-white transition-colors group">
+                            <input
+                              type="checkbox"
+                              checked={selectedCollectionIds.includes(c.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) setSelectedCollectionIds(prev => [...prev, c.id]);
+                                else setSelectedCollectionIds(prev => prev.filter(id => id !== c.id));
+                              }}
+                              className="w-3.5 h-3.5 rounded accent-wine flex-shrink-0"
+                            />
+                            <span className="text-xs font-medium text-charcoal group-hover:text-wine transition-colors">{c.title}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
              </div>
 
              <div>
@@ -438,6 +474,25 @@ export default function EditProductPage() {
                    ))}
                 </select>
              </div>
+          </section>
+
+          {/* Loyalty Credit Points Preview */}
+          <section className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-3xl border border-amber-100 p-6 shadow-sm">
+            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-amber-700 mb-3">
+              <Sparkles size={14} /> Loyalty Credits
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-amber-700 font-medium">Customer earns on purchase</p>
+                <p className="text-2xl font-bold text-amber-800 mt-1">
+                  {Math.floor((product.variants?.[0]?.price || 0) * 0.02)} pts
+                </p>
+                <p className="text-[10px] text-amber-600 mt-1">2% of ₹{Number(product.variants?.[0]?.price || 0).toLocaleString()} = {Math.floor((product.variants?.[0]?.price || 0) * 0.02)} credit points</p>
+              </div>
+              <div className="w-14 h-14 bg-amber-100 rounded-2xl flex items-center justify-center text-amber-600 text-2xl font-bold border border-amber-200">
+                ✦
+              </div>
+            </div>
           </section>
 
           {/* GST / Tax Settings */}

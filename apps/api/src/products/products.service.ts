@@ -31,10 +31,12 @@ export class ProductService {
     ageGroup?: string;
   }) {
     try {
-      const { ids, type, collection, search, limit, page, minPrice, maxPrice, tags, sizes, inStock, combo, returnMeta, sort, adminMode } = query;
+      const { ids, type, collection, search, limit: rawLimit, page: rawPage, minPrice, maxPrice, tags, sizes, inStock, combo, returnMeta, sort, adminMode } = query;
       
-      // Fix: skip should be 0 if page is 1
-      const skip = (page && limit && page > 0) ? (page - 1) * limit : 0;
+      // Fix: enforce a default limit of 50 to prevent OOM.
+      const limit = rawLimit ? Number(rawLimit) : 50;
+      const page = rawPage ? Number(rawPage) : 1;
+      const skip = (page > 0) ? (page - 1) * limit : 0;
       
       // Build the "where" clause
       const where: any = {
@@ -154,6 +156,7 @@ export class ProductService {
         // Fetch all matching products, sort in memory, and paginate
         const allProducts = await this.prisma.product.findMany({
           where,
+          take: 1000, // HARD CAP: Prevents entire database from loading into memory during JS sort.
           include: {
             variants: { include: { reservations: true } },
             images: { orderBy: { position: 'asc' } },
@@ -167,7 +170,7 @@ export class ProductService {
           return sort === 'price_asc' ? priceA - priceB : priceB - priceA;
         });
         
-        products = limit ? allProducts.slice(skip, skip + Number(limit)) : allProducts;
+        products = allProducts.slice(skip, skip + limit);
       } else {
         products = await this.prisma.product.findMany({
           where,
@@ -177,8 +180,8 @@ export class ProductService {
             collections: true,
           },
           orderBy,
-          skip: limit ? skip : undefined,
-          take: limit ? Number(limit) : undefined,
+          skip,
+          take: limit,
         });
       }
 
@@ -479,12 +482,19 @@ export class ProductService {
           }
 
           // 2. Process Variants
+          const baseSku = firstRow.SKU?.toString() || firstRow['Variant SKU']?.toString() || product.handle;
           for (const vRow of productRows) {
             let sku = vRow.SKU?.toString() || vRow['Variant SKU']?.toString();
             if (!sku) {
-               // Fallback: If no SKU provided, generate a predictable one based on the handle and first option
-               const optionVal = vRow['Option1 Value'] || vRow.Size || 'base';
-               sku = `${product.handle}-var-${optionVal.toString().toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+               // Fallback: If no SKU provided, inherit parent's SKU and append options
+               const optionsStr = [
+                 vRow['Option1 Value'] || vRow.Size, 
+                 vRow['Option2 Value'] || vRow.Color, 
+                 vRow['Option3 Value'] || vRow.Secondary_Color
+               ].filter(Boolean).join('-');
+               
+               const optionVal = optionsStr || 'base';
+               sku = `${baseSku}-var-${optionVal.toString().toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
             }
 
             const variantPayload: any = {
@@ -954,6 +964,13 @@ export class ProductService {
     });
   }
 
+  async setDefaultTax(taxRate: number) {
+    const result = await (this.prisma as any).product.updateMany({
+      data: { taxRate, taxInclusive: true }
+    });
+    return { updated: result.count, taxRate };
+  }
+
   async bulkUpdateItems(items: any[]) {
     return (this.prisma as any).$transaction(async (tx: any) => {
       let updatedCount = 0;
@@ -989,18 +1006,36 @@ export class ProductService {
         
         // Taxes & Meta
         if (item.hsnCode !== undefined) productData.hsnCode = item.hsnCode;
-        if (item.taxRate !== undefined && !isNaN(Number(item.taxRate))) productData.taxRate = Number(item.taxRate);
+        if (item.taxRate !== undefined) productData.taxRate = Number(item.taxRate);
         if (item.taxInclusive !== undefined) productData.taxInclusive = item.taxInclusive === true || item.taxInclusive === 'true';
         if (item.tags !== undefined) productData.tags = item.tags;
         if (item.searchKeywords !== undefined) productData.searchKeywords = item.searchKeywords;
         if (item.seoTitle !== undefined) productData.seoTitle = item.seoTitle;
         if (item.metaDescription !== undefined) productData.metaDescription = item.metaDescription;
         if (item.metaKeywords !== undefined) productData.metaKeywords = item.metaKeywords;
-        if (item.sizeGuideId !== undefined) productData.sizeGuideId = item.sizeGuideId === "" ? null : item.sizeGuideId;
         
         if (item.status !== undefined) {
            productData.status = item.status;
            productData.published = item.status === 'Active' || item.status === 'PUBLISHED' || item.status === 'ACTIVE';
+        }
+        if (item.bundleIds !== undefined) productData.bundleIds = item.bundleIds;
+        if (item.featuredCoupon !== undefined) productData.featuredCoupon = item.featuredCoupon;
+        
+        if (item.sizeGuideId !== undefined) {
+          if (item.sizeGuideId && typeof item.sizeGuideId === 'string' && item.sizeGuideId.trim() !== '') {
+            const val = item.sizeGuideId.trim();
+            const sg = await tx.sizeGuide.findFirst({
+              where: {
+                OR: [
+                  { id: val },
+                  { name: { equals: val, mode: 'insensitive' } }
+                ]
+              }
+            });
+            productData.sizeGuideId = sg ? sg.id : null;
+          } else {
+            productData.sizeGuideId = null;
+          }
         }
         
         if (Object.keys(productData).length > 0) {
@@ -1009,12 +1044,12 @@ export class ProductService {
         
         // Update primary variant
         const variantData: any = {};
-        if (item.price !== undefined && !isNaN(Number(item.price))) variantData.price = Number(item.price);
-        if (item.mrp !== undefined && !isNaN(Number(item.mrp))) variantData.mrp = Number(item.mrp);
-        if (item.costPrice !== undefined && !isNaN(Number(item.costPrice))) variantData.costPrice = Number(item.costPrice);
+        if (item.price !== undefined) variantData.price = Number(item.price);
+        if (item.mrp !== undefined) variantData.mrp = Number(item.mrp);
+        if (item.costPrice !== undefined) variantData.costPrice = Number(item.costPrice);
         if (item.sku !== undefined) variantData.sku = (item.sku || "").toString().trim() === "" ? null : item.sku.toString().trim();
         if (item.barcode !== undefined) variantData.barcode = (item.barcode || "").toString().trim() === "" ? null : item.barcode.toString().trim();
-        if (item.inventory !== undefined && !isNaN(Number(item.inventory))) variantData.inventory = Number(item.inventory);
+        if (item.inventory !== undefined) variantData.inventory = Number(item.inventory);
         
         if (Object.keys(variantData).length > 0) {
           const variants = await tx.variant.findMany({ where: { productId: item.id }, take: 1, orderBy: { id: 'asc' } });
@@ -1098,6 +1133,7 @@ export class ProductService {
       const category = id.replace('virtual-', '');
       const products = await this.prisma.product.findMany({
         where: { category },
+        take: 200, // Safeguard limit to prevent OOM on large virtual collections
         include: { images: true, variants: true }
       });
       return {
@@ -1112,6 +1148,7 @@ export class ProductService {
       where: { id },
       include: {
         products: {
+          take: 200, // Safeguard limit to prevent OOM
           include: {
             images: true,
             variants: true

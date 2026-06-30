@@ -1,0 +1,1 @@
+sed -i '' 's/const sorted = \[\.\.\.sections\]\.sort((a, b) => a\.order - b\.order);/const sorted = [...sections].sort((a, b) => a.order - b.order).map(s => ({...s, content: s.content || {}, style: s.style || {}, settings: s.settings || {}}));/g' apps/storefront/src/components/sections/SectionRenderer.tsx

@@ -32,7 +32,7 @@ export function Footer({
   const showPaymentIcons = footerConfig?.bottomBar?.showPaymentIcons !== false;
 
   return (
-    <footer className="bg-theme-surface text-theme-text pt-20 pb-32 md:pb-24 px-6 md:px-12 mt-auto border-t border-theme-border">
+    <footer className="bg-theme-surface text-theme-text pt-20 pb-[300px] md:pb-24 px-6 md:px-12 mt-auto border-t border-theme-border">
       <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12">
         <div className="col-span-2 md:col-span-1 lg:col-span-2 space-y-4">
           <p className="text-2xl font-serif tracking-widest uppercase">
@@ -130,8 +130,13 @@ export function Footer({
           )}
         </div>
         <div className="flex flex-col items-end gap-1 text-right">
-          <a href="https://wa.me/9843199556" target="_blank" rel="noopener noreferrer" className="hover:text-theme-text transition-colors text-[9px] sm:text-[10px]">
-            Website Design & Development by Grekam Visuals
+          <a 
+            href="https://wa.me/919042583701?text=Hi%20Grekam%20Visuals,%20I%20want%20to%20build%20an%20e-commerce%20store%20for%20my%20business!" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="hover:text-theme-text transition-all text-[9px] sm:text-[10px] flex items-center gap-1 group"
+          >
+            Want a store like this? WhatsApp Grekam Visuals to build yours <span className="group-hover:translate-x-1 transition-transform inline-block">→</span>
           </a>
         </div>
       </div>

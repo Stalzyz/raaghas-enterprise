@@ -21,7 +21,6 @@ import { AiService } from './ai/ai.service';
 import { MarketingModule } from './marketing/marketing.module';
 import { NavigationController } from './navigation/navigation.controller';
 import { CmsController } from './cms/cms.controller';
-import { ThemePresetsController } from './cms/presets.controller';
 import { RolesController } from './auth/roles/roles.controller';
 import { UsersController } from './auth/users/users.controller';
 import { APP_GUARD } from '@nestjs/core';
@@ -87,7 +86,6 @@ import { BackupModule } from './backup/backup.module';
     ProductController, 
     NavigationController,
     CmsController,
-    ThemePresetsController,
     RolesController,
     UsersController,
   ],

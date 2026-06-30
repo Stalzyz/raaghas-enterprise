@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
-import { 
-  ArrowLeft, Mail, Calendar, User, ShoppingBag, 
-  MapPin, Star, Heart, CreditCard, Sparkles, Loader2 
+import {
+  ArrowLeft, Mail, Calendar, User, ShoppingBag,
+  MapPin, Star, Heart, CreditCard, Sparkles, Loader2, Phone, Edit2, Check, X
 } from "lucide-react";
 import Link from "next/link";
 
@@ -19,6 +19,9 @@ export default function CustomerDetailPage() {
   const [customer, setCustomer] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [editingPhone, setEditingPhone] = useState(false);
+  const [phoneValue, setPhoneValue] = useState("");
+  const [savingPhone, setSavingPhone] = useState(false);
 
   useEffect(() => {
     if (!token || !params.id) return;
@@ -35,6 +38,7 @@ export default function CustomerDetailPage() {
         
         const data = await res.json();
         setCustomer(data);
+        setPhoneValue(data.phone || "");
       } catch (err: any) {
         console.error(err);
         setError(err.message || "Failed to load customer");
@@ -71,6 +75,28 @@ export default function CustomerDetailPage() {
     );
   }
 
+  const savePhone = async () => {
+    if (!token) return;
+    setSavingPhone(true);
+    try {
+      const res = await fetch(`${API_URL}/customers/${customer.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ phone: phoneValue })
+      });
+      if (res.ok) {
+        setCustomer({ ...customer, phone: phoneValue });
+        setEditingPhone(false);
+      } else {
+        alert("Failed to save phone number");
+      }
+    } catch (err) {
+      alert("Error saving phone number");
+    } finally {
+      setSavingPhone(false);
+    }
+  };
+
   const totalSpent = customer.orders?.reduce((acc: number, o: any) => acc + Number(o.totalAmount || 0), 0) || 0;
   const addresses = customer.savedAddresses ? (typeof customer.savedAddresses === 'string' ? JSON.parse(customer.savedAddresses) : customer.savedAddresses) : [];
 
@@ -84,9 +110,35 @@ export default function CustomerDetailPage() {
           </button>
           <div>
             <h1 className="text-3xl font-serif text-charcoal">{customer.name || 'Anonymous Customer'}</h1>
-            <p className="text-sm text-gray-500 mt-1 font-medium flex items-center gap-2">
+            <p className="text-sm text-gray-500 mt-1 font-medium flex items-center gap-2 flex-wrap">
               <Mail size={14} /> {customer.email}
-              {customer.phone && <span className="ml-2">• {customer.phone}</span>}
+              <span className="ml-2 flex items-center gap-2">
+                <Phone size={14} />
+                {editingPhone ? (
+                  <span className="flex items-center gap-1">
+                    <input
+                      type="tel"
+                      value={phoneValue}
+                      onChange={e => setPhoneValue(e.target.value)}
+                      className="border border-gray-200 rounded-lg px-2 py-0.5 text-sm w-36 outline-none focus:border-wine"
+                      placeholder="+91 9876543210"
+                    />
+                    <button onClick={savePhone} disabled={savingPhone} className="p-1 text-green-600 hover:bg-green-50 rounded">
+                      {savingPhone ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                    </button>
+                    <button onClick={() => { setEditingPhone(false); setPhoneValue(customer.phone || ""); }} className="p-1 text-red-500 hover:bg-red-50 rounded">
+                      <X size={14} />
+                    </button>
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1">
+                    <span>{customer.phone || <span className="text-gray-300 italic">No phone</span>}</span>
+                    <button onClick={() => setEditingPhone(true)} className="p-1 text-gray-400 hover:text-wine rounded transition-colors">
+                      <Edit2 size={12} />
+                    </button>
+                  </span>
+                )}
+              </span>
             </p>
           </div>
         </div>
@@ -118,6 +170,35 @@ export default function CustomerDetailPage() {
               <div className="flex justify-between border-b border-gray-50 pb-2">
                 <span className="text-gray-400">Role</span>
                 <span className="px-2 py-0.5 bg-gray-100 rounded text-xs font-bold">{customer.role}</span>
+              </div>
+              <div className="flex justify-between items-center border-b border-gray-50 pb-2">
+                <span className="text-gray-400 flex items-center gap-1"><Phone size={13} /> Phone</span>
+                <div className="flex items-center gap-1">
+                  {editingPhone ? (
+                    <>
+                      <input
+                        type="tel"
+                        value={phoneValue}
+                        onChange={e => setPhoneValue(e.target.value)}
+                        className="border border-gray-200 rounded-lg px-2 py-0.5 text-xs w-32 outline-none focus:border-wine"
+                        placeholder="+91 9876543210"
+                      />
+                      <button onClick={savePhone} disabled={savingPhone} className="p-1 text-green-600 hover:bg-green-50 rounded">
+                        {savingPhone ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+                      </button>
+                      <button onClick={() => { setEditingPhone(false); setPhoneValue(customer.phone || ""); }} className="p-1 text-red-500 hover:bg-red-50 rounded">
+                        <X size={12} />
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-charcoal font-medium">{customer.phone || <span className="text-gray-300 italic text-xs">—</span>}</span>
+                      <button onClick={() => setEditingPhone(true)} className="p-1 text-gray-300 hover:text-wine rounded transition-colors">
+                        <Edit2 size={11} />
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
               <div className="flex justify-between border-b border-gray-50 pb-2">
                 <span className="text-gray-400">Joined</span>

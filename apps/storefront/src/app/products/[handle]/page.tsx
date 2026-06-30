@@ -75,25 +75,49 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
     isOutOfStock: (product.variants?.[0]?.availableStock ?? product.variants?.[0]?.inventory ?? 0) <= 0
   };
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    "name": product.title,
-    "image": (product.images || []).map((img: any) => img.url),
-    "description": product.description,
-    "sku": product.variants?.[0]?.sku,
-    "brand": {
-      "@type": "Brand",
-      "name": "Raaghas"
+  const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "name": product.title,
+      "image": (product.images || []).map((img: any) => img.url),
+      "description": product.description || "Premium ethnic wear from Raaghas, India's leading luxury brand for premium casual and office wear.",
+      "sku": product.variants?.[0]?.sku,
+      "brand": {
+        "@type": "Brand",
+        "name": "Raaghas"
+      },
+      "offers": {
+        "@type": "Offer",
+        "url": `${process.env.NEXT_PUBLIC_APP_URL || 'https://raaghas.in'}/products/${product.handle}`,
+        "priceCurrency": "INR",
+        "price": product.variants?.[0]?.price,
+        "availability": (product.variants?.[0]?.availableStock ?? product.variants?.[0]?.inventory ?? 0) > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+      }
     },
-    "offers": {
-      "@type": "Offer",
-      "url": `${process.env.NEXT_PUBLIC_APP_URL || 'https://raaghas.in'}/products/${product.handle}`,
-      "priceCurrency": "INR",
-      "price": product.variants?.[0]?.price,
-      "availability": (product.variants?.[0]?.availableStock ?? product.variants?.[0]?.inventory ?? 0) > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is the recommended care for this fabric?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "For our premium fabrics, we recommend dry cleaning or a gentle hand wash with mild detergent to preserve the luxury and longevity of the garment."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How long does shipping take?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Standard shipping takes 3-5 business days across India. All our pieces are carefully packaged to ensure they reach you in pristine condition."
+          }
+        }
+      ]
     }
-  };
+  ];
 
   const breadcrumbItems = [
     { label: "Home", href: "/" },

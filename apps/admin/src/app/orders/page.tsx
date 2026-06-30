@@ -34,16 +34,30 @@ import { PackingSlipModal } from "@/components/modals/PackingSlipModal";
 import { OrderDetailView } from "@/components/orders/OrderDetailView";
 import { format } from "date-fns";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 const STATUS_CONFIG: any = {
-  PENDING: { label: "Pending", color: "bg-amber-50 text-amber-600 border-amber-100" },
+  PAYMENT_PENDING: { label: "Awaiting Payment", color: "bg-amber-50 text-amber-600 border-amber-100" },
+  ABANDONED: { label: "Abandoned", color: "bg-gray-100 text-gray-500 border-gray-200" },
   CONFIRMED: { label: "Confirmed", color: "bg-blue-50 text-blue-600 border-blue-100" },
   PROCESSING: { label: "Processing", color: "bg-indigo-50 text-indigo-600 border-indigo-100" },
   SHIPPED: { label: "Shipped", color: "bg-purple-50 text-purple-600 border-purple-100" },
   DELIVERED: { label: "Delivered", color: "bg-green-50 text-green-600 border-green-100" },
   CANCELLED: { label: "Cancelled", color: "bg-red-50 text-red-600 border-red-100" },
+  CREATED: { label: "Created", color: "bg-gray-50 text-gray-500 border-gray-100" },
+  FAILED: { label: "Failed", color: "bg-red-50 text-red-400 border-red-100" },
+  REFUNDED: { label: "Refunded", color: "bg-purple-50 text-purple-400 border-purple-100" },
 };
+
+function getSmartStatus(order: any) {
+  if (order.status === 'PAYMENT_PENDING') {
+    const ageInMinutes = (Date.now() - new Date(order.createdAt).getTime()) / (1000 * 60);
+    return ageInMinutes > 30 ? 'ABANDONED' : 'PAYMENT_PENDING';
+  }
+  if (order.status === 'CANCELLED' && order.paymentId) {
+    return 'FAILED';
+  }
+  return order.status;
+}
 
 export default function OrdersPage() {
   const { token } = useAdminAuth();
@@ -53,7 +67,7 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const activeTab = searchParams.get("tab") || "ACTIVE";
+  const activeTab = searchParams.get("tab") || "CONFIRMED";
   const setActiveTab = (tab: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", tab);
@@ -78,11 +92,19 @@ export default function OrdersPage() {
   const [isBulkFulfillModalOpen, setIsBulkFulfillModalOpen] = useState(false);
   const [packingSlipOrders, setPackingSlipOrders] = useState<any[]>([]);
   const [isPackingSlipOpen, setIsPackingSlipOpen] = useState(false);
-
-
+  const [storeSettings, setStoreSettings] = useState<any>(null);
 
   useEffect(() => {
     if (!token) return;
+    const fetchSettings = async () => {
+      try {
+        const apiBase = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1');
+        const res = await fetch(`${apiBase}/settings`, { headers: { Authorization: `Bearer ${token}` } });
+        if (res.ok) setStoreSettings(await res.json());
+      } catch (err) {}
+    };
+    fetchSettings();
+    
     const timer = setTimeout(() => {
       fetchOrders();
     }, 500);
@@ -174,25 +196,9 @@ export default function OrdersPage() {
     if (ordersToExport.length === 0) return;
 
     const headers = [
-      "Order Number", "Email", "Customer Name", "Payment Status", "Paid at",
-      "Fulfillment Status", "Fulfilled at", "Accepts Marketing", "Currency",
-      "Subtotal", "Shipping Charges", "Tax Value", "Order Value",
-      "Discount Code", "Discount Amount", "Shipping Method",
-      "Order Date", "Quantity", "Product Name", "Unit Price",
-      "Lineitem sku", "Lineitem fulfillment status", "Billing Name", "Billing Street",
-      "Billing Address1", "Billing Address2", "Billing Company", "Billing City",
-      "Billing Zip", "Billing Province", "Billing Country", "Billing Phone",
-      "Shipping Name", "Shipping Street", "Shipping Address1", "Shipping Address2",
-      "Shipping Company", "Shipping City", "Shipping Zip", "Shipping Province",
-      "Shipping Country", "Shipping Phone", "Notes", "Note Attributes",
-      "Cancelled at", "Payment Method", "Payment Reference ID", "Refunded Amount",
-      "Vendor", "Outstanding Balance", "Employee", "Location", "Device ID",
-      "Id", "Tags", "Risk Level", "Source", "Lineitem discount",
-      "Tax 1 Name", "Tax 1 Value", "Tax 2 Name", "Tax 2 Value", "Tax 3 Name",
-      "Tax 3 Value", "Tax 4 Name", "Tax 4 Value", "Tax 5 Name", "Tax 5 Value",
-      "Customer Phone Number", "Receipt Number", "Duties", "Billing Province Name",
-      "Shipping Province Name", "Payment ID", "Payment Terms Name",
-      "Next Payment Due At", "Payment References"
+      "Order Number", "Order Date", "Customer Name", "Customer Phone Number",
+      "Payment Status", "Payment Reference ID", "Product Name", "Quantity",
+      "Unit Price", "Order Value", "Shipping Charges", "Tax value"
     ];
 
     const escapeCSV = (val: any) => {
@@ -229,75 +235,17 @@ export default function OrdersPage() {
 
         const row = [
           orderName,                                                            // Order Number
-          isFirst ? email : "",                                                 // Email
+          createdAt,                                                            // Order Date
           isFirst ? o.customerName || "" : "",                                  // Customer Name
-          isFirst ? financialStatus : "",                                        // Payment Status
-          isFirst ? paidAt : "",                                                 // Paid at
-          isFirst ? fulfillmentStatus : "",                                      // Fulfillment Status
-          isFirst ? fulfilledAt : "",                                            // Fulfilled at
-          isFirst ? "no" : "",                                                   // Accepts Marketing
-          isFirst ? "INR" : "",                                                  // Currency
-          isFirst ? o.totalAmount : "",                                          // Subtotal
-          isFirst ? "0" : "",                                                    // Shipping Charges
-          isFirst ? "0" : "",                                                    // Tax Value
-          isFirst ? o.totalAmount : "",                                          // Order Value
-          "",                                                                    // Discount Code
-          "0",                                                                   // Discount Amount
-          isFirst ? "Standard Shipping" : "",                                    // Shipping Method
-          createdAt,                                                             // Order Date
-          item.quantity || "1",                                                  // Quantity
-          item.variant?.product?.title || "Custom Item",                        // Product Name
-          item.price || "0",                                                     // Unit Price
-          item.variant?.sku || "",                                               // Lineitem sku
-          "pending",                                                             // Lineitem fulfillment status
-          isFirst ? bName : "",                                                  // Billing Name
-          isFirst ? `${bAddress.address1 || ''} ${bAddress.address2 || ''}`.trim() : "", // Billing Street
-          isFirst ? bAddress.address1 || "" : "",                               // Billing Address1
-          isFirst ? bAddress.address2 || "" : "",                               // Billing Address2
-          "",                                                                    // Billing Company
-          isFirst ? bAddress.city || "" : "",                                   // Billing City
-          isFirst ? bAddress.pincode || "" : "",                                // Billing Zip
-          isFirst ? bAddress.state || "" : "",                                  // Billing Province
-          isFirst ? bAddress.country || "IN" : "",                              // Billing Country
-          isFirst ? bAddress.phone || phone : "",                               // Billing Phone
-          isFirst ? sName : "",                                                  // Shipping Name
-          isFirst ? `${sAddress.address1 || ''} ${sAddress.address2 || ''}`.trim() : "", // Shipping Street
-          isFirst ? sAddress.address1 || "" : "",                               // Shipping Address1
-          isFirst ? sAddress.address2 || "" : "",                               // Shipping Address2
-          "",                                                                    // Shipping Company
-          isFirst ? sAddress.city || "" : "",                                   // Shipping City
-          isFirst ? sAddress.pincode || "" : "",                                // Shipping Zip
-          isFirst ? sAddress.state || "" : "",                                  // Shipping Province
-          isFirst ? sAddress.country || "IN" : "",                              // Shipping Country
-          isFirst ? sAddress.phone || phone : "",                               // Shipping Phone
-          isFirst ? o.notes || "" : "",                                          // Notes
-          "",                                                                    // Note Attributes
-          isFirst && o.status === 'CANCELLED' ? createdAt : "",                 // Cancelled at
-          isFirst ? o.paymentMethod || "manual" : "",                           // Payment Method
+          isFirst ? phone : "",                                                 // Customer Phone Number
+          isFirst ? financialStatus : "",                                       // Payment Status
           isFirst ? o.paymentId || "" : "",                                     // Payment Reference ID
-          "0",                                                                   // Refunded Amount
-          "Raaghas",                                                             // Vendor
-          "0",                                                                   // Outstanding Balance
-          "",                                                                    // Employee
-          "",                                                                    // Location
-          "",                                                                    // Device ID
-          o.id,                                                                  // Id
-          isFirst ? (o.tags?.join(",") || "") : "",                             // Tags
-          isFirst ? o.riskLevel || "Low" : "",                                  // Risk Level
-          isFirst ? o.source || "web" : "",                                     // Source
-          "0",                                                                   // Lineitem discount
-          isFirst ? "GST" : "",                                                  // Tax 1 Name
-          isFirst ? "0" : "",                                                    // Tax 1 Value
-          "", "", "", "", "", "", "", "",                                        // Tax 2-5
-          isFirst ? phone : "",                                                  // Customer Phone Number
-          "",                                                                    // Receipt Number
-          "",                                                                    // Duties
-          isFirst ? bAddress.state || "" : "",                                  // Billing Province Name
-          isFirst ? sAddress.state || "" : "",                                  // Shipping Province Name
-          isFirst ? o.paymentId || "" : "",                                     // Payment ID
-          "",                                                                    // Payment Terms Name
-          "",                                                                    // Next Payment Due At
-          ""                                                                     // Payment References
+          item.variant?.product?.title || item.title || "Custom Item",          // Product Name
+          item.quantity || "1",                                                 // Quantity
+          item.price || "0",                                                    // Unit Price
+          isFirst ? o.totalAmount : "",                                         // Order Value
+          isFirst ? o.shippingAmount || "0" : "",                               // Shipping Charges
+          isFirst ? o.taxAmount || "0" : ""                                     // Tax value
         ];
 
         rows.push(row.map(escapeCSV));
@@ -387,13 +335,13 @@ export default function OrdersPage() {
             <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
               <div className="flex bg-gray-100/80 p-1 rounded-xl overflow-x-auto no-scrollbar">
                 {[
-                  { key: "ACTIVE", label: "Active Orders" },
-                  { key: "PENDING", label: "Pending" },
                   { key: "CONFIRMED", label: "Confirmed" },
+                  { key: "PAYMENT_PENDING", label: "Pending" },
                   { key: "PROCESSING", label: "Processing" },
                   { key: "SHIPPED", label: "Shipped" },
                   { key: "DELIVERED", label: "Delivered" },
                   { key: "CANCELLED", label: "Cancelled" },
+                  { key: "ACTIVE", label: "Active Orders" },
                 ].map(({ key, label }) => (
                   <button
                     key={key}
@@ -468,7 +416,11 @@ export default function OrdersPage() {
                       </td>
                       <td className="px-6 py-5">
                         <div className="flex flex-col">
-                          <span className="text-xs font-bold text-gray-900 tracking-widest uppercase">#{order.formattedOrderNumber || (order.orderNumber != null ? String(order.orderNumber + 1000) : order.id.slice(-8).toUpperCase())}</span>
+                          {order.status === 'CANCELLED' ? (
+                            <span className="text-xs font-bold text-gray-400 tracking-widest uppercase line-through">{order.id.slice(-8).toUpperCase()}</span>
+                          ) : (
+                            <span className="text-xs font-bold text-gray-900 tracking-widest uppercase">#{order.formattedOrderNumber || (order.orderNumber != null ? String(order.orderNumber + 1000) : order.id.slice(-8).toUpperCase())}</span>
+                          )}
                           <span className="text-[9px] text-gray-400 font-bold uppercase tracking-[0.2em] mt-1">{order.source}</span>
                         </div>
                       </td>
@@ -527,9 +479,14 @@ export default function OrdersPage() {
                         </div>
                       </td>
                       <td className="px-6 py-5">
-                        <span className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest border ${STATUS_CONFIG[order.status]?.color || 'bg-gray-50 text-gray-500'}`}>
-                          {STATUS_CONFIG[order.status]?.label || order.status}
-                        </span>
+                        {(() => {
+                          const smartStatus = getSmartStatus(order);
+                          return (
+                            <span className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest border ${STATUS_CONFIG[smartStatus]?.color || 'bg-gray-50 text-gray-500'}`}>
+                              {STATUS_CONFIG[smartStatus]?.label || smartStatus}
+                            </span>
+                          );
+                        })()}
                       </td>
                       <td className="px-6 py-5">
                         <div className="flex flex-col gap-1">
@@ -560,20 +517,24 @@ export default function OrdersPage() {
                       </td>
                       <td className="px-6 py-5 text-right">
                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setPackingSlipOrders([order]); setIsPackingSlipOpen(true); }}
-                            className="p-2 hover:bg-white hover:shadow-md rounded-lg text-gray-400 hover:text-charcoal transition-all"
-                            title="Print Packing Slip"
-                          >
-                            <Printer size={16} />
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setSelectedOrderForInvoice(order); setIsInvoiceModalOpen(true); }}
-                            className="p-2 hover:bg-white hover:shadow-md rounded-lg text-gray-400 hover:text-wine transition-all"
-                            title="Generate Invoice"
-                          >
-                            <FileText size={16} />
-                          </button>
+                          {order.status !== 'CANCELLED' && (
+                            <>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setPackingSlipOrders([order]); setIsPackingSlipOpen(true); }}
+                                className="p-2 hover:bg-white hover:shadow-md rounded-lg text-gray-400 hover:text-charcoal transition-all"
+                                title="Print Packing Slip"
+                              >
+                                <Printer size={16} />
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setSelectedOrderForInvoice(order); setIsInvoiceModalOpen(true); }}
+                                className="p-2 hover:bg-white hover:shadow-md rounded-lg text-gray-400 hover:text-wine transition-all"
+                                title="Generate Invoice"
+                              >
+                                <FileText size={16} />
+                              </button>
+                            </>
+                          )}
                           <Link
                             href={`/orders/${order.id}`}
                             className="p-2 hover:bg-white hover:shadow-md rounded-lg text-gray-400 hover:text-charcoal transition-all"
@@ -782,6 +743,7 @@ export default function OrdersPage() {
         isOpen={isPackingSlipOpen}
         onClose={() => setIsPackingSlipOpen(false)}
         orders={packingSlipOrders}
+        storeSettings={storeSettings}
       />
     </div>
   );

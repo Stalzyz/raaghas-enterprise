@@ -46,17 +46,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; googleClientId?
     setLoading(false);
   }, []);
 
-  const logout = () => {
+  const logout = React.useCallback(() => {
     Cookies.remove("auth_token");
     localStorage.removeItem("user");
     setUser(null);
     setToken(null);
     window.location.href = "/sign-in";
-  };
+  }, []);
 
-  const getToken = async () => {
+  const getToken = React.useCallback(async () => {
     return Cookies.get("auth_token") || null;
-  };
+  }, []);
 
   const value = {
     user,

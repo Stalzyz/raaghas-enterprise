@@ -66,7 +66,7 @@ export default function WishlistPage() {
                 handle: product.handle,
                 title: product.title,
                 price: product.variants?.[0]?.price || '0',
-                compareAtPrice: product.variants?.[0]?.compareAtPrice,
+                compareAtPrice: product.variants?.[0]?.mrp,
                 imageUrl: product.images?.[0]?.url || 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b',
                 category: product.category || product.type,
                 variants: product.variants

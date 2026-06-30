@@ -47,7 +47,46 @@ export class LogisticsService {
     return { threshold: 1899 };
   }
 
+  private normalizeStateName(state: string): string {
+    const stateMap: Record<string, string> = {
+      'andrapradesh': 'Andhra Pradesh',
+      'andhrapradesh': 'Andhra Pradesh',
+      'andhra pradesh': 'Andhra Pradesh',
+      'andra pradesh': 'Andhra Pradesh',
+      'andrapadesh': 'Andhra Pradesh',
+      'andhra padesh': 'Andhra Pradesh',
+      'ap': 'Andhra Pradesh',
+      'tamilnadu': 'Tamil Nadu',
+      'tamil nadu': 'Tamil Nadu',
+      'tn': 'Tamil Nadu',
+      'maharastra': 'Maharashtra',
+      'maharashtra': 'Maharashtra',
+      'mh': 'Maharashtra',
+      'karnataka': 'Karnataka',
+      'ka': 'Karnataka',
+      'kerela': 'Kerala',
+      'kerala': 'Kerala',
+      'kl': 'Kerala',
+      'telangana': 'Telangana',
+      'ts': 'Telangana',
+      'delhincr': 'Delhi',
+      'delhi': 'Delhi',
+      'dl': 'Delhi',
+      'west bengal': 'West Bengal',
+      'wb': 'West Bengal',
+      'uttar pradesh': 'Uttar Pradesh',
+      'up': 'Uttar Pradesh',
+      'rajasthan': 'Rajasthan',
+      'rj': 'Rajasthan',
+    };
+    const key = state.toLowerCase().trim();
+    return stateMap[key] || state;
+  }
+
   async getShippingOptions(state: string, cartTotal: number, items: any[] = []) {
+    // Normalize state name to handle common typos and abbreviations
+    const normalizedState = this.normalizeStateName(state);
+
     // 1. Fetch exact product details from database for accurate category/collection rules
     const productIds = items.map(i => i.id || i.productId).filter(Boolean);
     const dbProducts = await this.prisma.product.findMany({
@@ -72,10 +111,15 @@ export class LogisticsService {
     }
 
     const zones = await this.prisma.shippingZone.findMany({
-      where: { 
+      where: {
         isActive: true,
         OR: [
-          { regions: { has: state } },
+          { regions: { has: normalizedState } },
+          { regions: { has: normalizedState.toLowerCase() } },
+          { regions: { has: normalizedState.toUpperCase() } },
+          { regions: { has: state } },  // original in case already correct
+          { regions: { has: state.toLowerCase() } },
+          { regions: { has: state.toUpperCase() } },
           { regions: { isEmpty: true } }
         ]
       },
@@ -86,7 +130,7 @@ export class LogisticsService {
     let selectedZones = zones;
     if (zones.length === 0) {
       selectedZones = await this.prisma.shippingZone.findMany({
-        where: { 
+        where: {
           isActive: true,
           name: { in: ['National', 'India', 'All'] }
         },

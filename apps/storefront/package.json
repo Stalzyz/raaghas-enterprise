@@ -6,7 +6,7 @@
     "dev": "npm run css && next dev -p 6001 --webpack",
     "build": "npm run css && NODE_OPTIONS='--max-old-space-size=4096' next build --webpack && cp -r public .next/standalone/apps/storefront/public",
     "css": "tailwindcss -i ./src/app/globals.css -o ./public/compiled.css --minify || true",
-    "start": "next start -p 6009",
+    "start": "next start -p 7009",
     "lint": "next lint"
   },
   "dependencies": {

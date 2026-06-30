@@ -67,7 +67,7 @@ export default function PageEditor() {
   const { token } = useAdminAuth();
   const params = useParams();
   const router = useRouter();
-  const handle = params.slug as string;
+  const handle = (params?.slug as string) || 'new';
   
   const [pageData, setPageData] = useState<any>(null);
   const [sections, setSections] = useState<Section[]>([]);

@@ -3,32 +3,41 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "npm run css && next dev -p 6002 --webpack",
-    "build": "npx tailwindcss -i ./src/app/globals.css -o ./public/compiled.css --minify || echo 'Tailwind skipped' && NODE_OPTIONS='--max-old-space-size=4096' next build --webpack && cp -r public .next/standalone/apps/admin/ 2>/dev/null || true && cp -r .next/static .next/standalone/apps/admin/.next/ 2>/dev/null || true",
+    "dev": "npm run css && next dev -p 6002",
+    "build": "npx tailwindcss -i ./src/app/globals.css -o ./public/compiled.css --minify || echo 'Tailwind skipped' && NODE_OPTIONS='--max-old-space-size=4096' next build && cp -r public .next/standalone/apps/admin/ 2>/dev/null || true && cp -r .next/static .next/standalone/apps/admin/.next/ 2>/dev/null || true",
     "css": "npx tailwindcss -i ./src/app/globals.css -o ./public/compiled.css --minify || echo 'Tailwind skipped'",
-    "start": "next start -p 6010",
+    "start": "next start -p 7010",
     "lint": "next lint"
   },
   "dependencies": {
-    "clsx": "latest",
+    "clsx": "^2.1.1",
+    "d3-array": "^3.2.4",
+    "d3-color": "^3.1.0",
+    "d3-format": "^3.1.2",
+    "d3-interpolate": "^3.0.1",
+    "d3-path": "^3.1.0",
+    "d3-scale": "^4.0.2",
+    "d3-shape": "^3.2.0",
+    "d3-time": "^3.1.0",
+    "d3-time-format": "^4.1.0",
     "date-fns": "^4.2.1",
-    "framer-motion": "latest",
-    "lucide-react": "latest",
-    "next": "latest",
-    "react": "latest",
-    "react-dom": "latest",
-    "recharts": "latest",
-    "tailwind-merge": "latest"
+    "framer-motion": "^11.18.2",
+    "lucide-react": "^0.474.0",
+    "next": "^14.2.29",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^2.15.3",
+    "tailwind-merge": "^2.6.0"
   },
   "devDependencies": {
-    "@types/node": "latest",
-    "@types/react": "latest",
-    "@types/react-dom": "latest",
+    "@types/node": "^20.17.10",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
     "autoprefixer": "^10.4.0",
-    "eslint": "latest",
-    "eslint-config-next": "latest",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.29",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
-    "typescript": "latest"
+    "typescript": "^5.7.3"
   }
 }

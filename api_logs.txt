@@ -1,0 +1,244 @@
+[TAILING] Tailing last 200 lines for [raaghas-api] process (change the value with --lines option)
+/root/.pm2/logs/raaghas-api-out.log last 200 lines:
+165|raagha | [32m[Nest] 4025662  - [39m06/08/2026, 11:12:12 AM [32m    LOG[39m [38;5;3m[SettingsService] [39m[32m[SettingsService] Updating settings with payload keys: storeName, tagline, supportEmail, supportPhone, footerCopyright, instagramUrl, facebookUrl, whatsappApiUrl, whatsappApiKey, whatsappAppId, graftyApiUrl, graftyApiKey, graftyWorkspaceId, bankName, accountNumber, ifscCode, accountName, gstNumber, businessAddress, businessState, defaultGstRate, activePaymentGateway, razorpayKeyId, razorpayKeySecret, returnWindowDays, requireImagesForReturn, autoApproveLowValue, phonepeMerchantId, phonepeMerchantUserId, phonepeSaltKey, phonepeSaltIndex, metaPixelId, metaCapiToken, googleAuthSecret, googleClientId, googleClientSecret, customHeadHtml, customGlobalCss, customFooterHtml, logoUrl, twitterUrl, pinterestUrl, youtubeUrl, bankBranch, googleAnalyticsId, googleSearchConsoleKey, whatsappPhoneNumberId, whatsappBusinessAccountId, referralRewardPercent, welcomeDiscountPercent, maxCreditUsagePercent, smtpHost, smtpPort, smtpUser, smtpPass, smtpSecure, customShippingRules, openAiApiKey, aiAssistantEnabled[39m
+165|raagha | [32m[Nest] 4025662  - [39m06/08/2026, 11:30:00 AM [32m    LOG[39m [38;5;3m[MarketingService] [39m[32mNudge 1 cron: found 1 leads to process[39m
+165|raagha | [32m[Nest] 4025662  - [39m06/08/2026, 11:30:00 AM [32m    LOG[39m [38;5;3m[MarketingService] [39m[32mNudge 1 cron: found 1 leads to process[39m
+165|raagha | [33m[Nest] 4025662  - [39m06/08/2026, 11:30:00 AM [33m   WARN[39m [38;5;3m[GraftyService] [39m[33mSkipping WhatsApp Nudge for ABANDONED_CART - Grafty credentials missing in database/environment.[39m
+165|raagha | [33m[Nest] 4025662  - [39m06/08/2026, 11:30:00 AM [33m   WARN[39m [38;5;3m[GraftyService] [39m[33mSkipping WhatsApp Nudge for ABANDONED_CART - Grafty credentials missing in database/environment.[39m
+165|raagha | [32m[Nest] 4025662  - [39m06/08/2026, 12:00:00 PM [32m    LOG[39m [38;5;3m[MarketingService] [39m[32mNudge 2 cron: Disabled per user request (only sending single nudge).[39m
+165|raagha | [32m[Nest] 4025662  - [39m06/08/2026, 12:00:00 PM [32m    LOG[39m [38;5;3m[MarketingService] [39m[32mNudge 2 cron: Disabled per user request (only sending single nudge).[39m
+165|raagha | [32m[Nest] 4025662  - [39m06/08/2026, 12:00:00 PM [32m    LOG[39m [38;5;3m[MarketingService] [39m[32mNudge 1 cron: found 1 leads to process[39m
+165|raagha | [32m[Nest] 4025662  - [39m06/08/2026, 12:00:00 PM [32m    LOG[39m [38;5;3m[MarketingService] [39m[32mNudge 1 cron: found 1 leads to process[39m
+165|raagha | [33m[Nest] 4025662  - [39m06/08/2026, 12:00:00 PM [33m   WARN[39m [38;5;3m[GraftyService] [39m[33mSkipping WhatsApp Nudge for ABANDONED_CART - Grafty credentials missing in database/environment.[39m
+165|raagha | [33m[Nest] 4025662  - [39m06/08/2026, 12:00:00 PM [33m   WARN[39m [38;5;3m[GraftyService] [39m[33mSkipping WhatsApp Nudge for ABANDONED_CART - Grafty credentials missing in database/environment.[39m
+165|raagha | [32m[Nest] 4025662  - [39m06/08/2026, 12:30:00 PM [32m    LOG[39m [38;5;3m[MarketingService] [39m[32mNudge 1 cron: found 1 leads to process[39m
+165|raagha | [32m[Nest] 4025662  - [39m06/08/2026, 12:30:00 PM [32m    LOG[39m [38;5;3m[MarketingService] [39m[32mNudge 1 cron: found 1 leads to process[39m
+165|raagha | [33m[Nest] 4025662  - [39m06/08/2026, 12:30:00 PM [33m   WARN[39m [38;5;3m[GraftyService] [39m[33mSkipping WhatsApp Nudge for ABANDONED_CART - Grafty credentials missing in database/environment.[39m
+165|raagha | [33m[Nest] 4025662  - [39m06/08/2026, 12:30:00 PM [33m   WARN[39m [38;5;3m[GraftyService] [39m[33mSkipping WhatsApp Nudge for ABANDONED_CART - Grafty credentials missing in database/environment.[39m
+165|raagha | [32m[Nest] 4025662  - [39m06/08/2026, 1:00:00 PM [32m    LOG[39m [38;5;3m[MarketingService] [39m[32mNudge 2 cron: Disabled per user request (only sending single nudge).[39m
+165|raagha | [32m[Nest] 4025662  - [39m06/08/2026, 1:00:00 PM [32m    LOG[39m [38;5;3m[MarketingService] [39m[32mNudge 2 cron: Disabled per user request (only sending single nudge).[39m
+165|raagha | [32m[Nest] 4025662  - [39m06/08/2026, 1:00:00 PM [32m    LOG[39m [38;5;3m[MarketingService] [39m[32mNudge 1 cron: found 1 leads to process[39m
+165|raagha | [33m[Nest] 4025662  - [39m06/08/2026, 1:00:00 PM [33m   WARN[39m [38;5;3m[GraftyService] [39m[33mSkipping WhatsApp Nudge for ABANDONED_CART - Grafty credentials missing in database/environment.[39m
+165|raagha | [32m[Nest] 4025662  - [39m06/08/2026, 1:00:00 PM [32m    LOG[39m [38;5;3m[MarketingService] [39m[32mNudge 1 cron: found 1 leads to process[39m
+165|raagha | [33m[Nest] 4025662  - [39m06/08/2026, 1:00:00 PM [33m   WARN[39m [38;5;3m[GraftyService] [39m[33mSkipping WhatsApp Nudge for ABANDONED_CART - Grafty credentials missing in database/environment.[39m
+165|raagha | [32m[Nest] 4025662  - [39m06/08/2026, 1:03:20 PM [32m    LOG[39m [38;5;3m[ImageOptimizer] [39m[32mOptimizing image: 32b5b0338b99c5104150ed9109227740a4.jpg -> 32b5b0338b99c5104150ed9109227740a4.webp[39m
+165|raagha | [32m[Nest] 4025662  - [39m06/08/2026, 1:03:20 PM [32m    LOG[39m [38;5;3m[ImageOptimizer] [39m[32mOptimization complete: /var/www/raaghas_new/uploads/32b5b0338b99c5104150ed9109227740a4.webp[39m
+165|raagha | [32m[Nest] 4025662  - [39m06/08/2026, 1:03:31 PM [32m    LOG[39m [38;5;3m[ImageOptimizer] [39m[32mOptimizing image: fb1042e6c1010c24e1276bfb56ad99f0e7c.jpeg -> fb1042e6c1010c24e1276bfb56ad99f0e7c.webp[39m
+165|raagha | [32m[Nest] 4025662  - [39m06/08/2026, 1:03:32 PM [32m    LOG[39m [38;5;3m[ImageOptimizer] [39m[32mOptimization complete: /var/www/raaghas_new/uploads/fb1042e6c1010c24e1276bfb56ad99f0e7c.webp[39m
+165|raagha | [32m[Nest] 4025662  - [39m06/08/2026, 1:07:32 PM [32m    LOG[39m [38;5;3m[ImageOptimizer] [39m[32mOptimizing image: 604741eb6907419c4110f618a17836801.png -> 604741eb6907419c4110f618a17836801.webp[39m
+165|raagha | [32m[Nest] 4025662  - [39m06/08/2026, 1:07:33 PM [32m    LOG[39m [38;5;3m[ImageOptimizer] [39m[32mOptimization complete: /var/www/raaghas_new/uploads/604741eb6907419c4110f618a17836801.webp[39m
+165|raagha | [32m[Nest] 4025662  - [39m06/08/2026, 1:09:59 PM [32m    LOG[39m [38;5;3m[ImageOptimizer] [39m[32mOptimizing image: 2ce3764c86890fb5c6c9e2578ab38630.jpg -> 2ce3764c86890fb5c6c9e2578ab38630.webp[39m
+165|raagha | [32m[Nest] 4025662  - [39m06/08/2026, 1:09:59 PM [32m    LOG[39m [38;5;3m[ImageOptimizer] [39m[32mOptimization complete: /var/www/raaghas_new/uploads/2ce3764c86890fb5c6c9e2578ab38630.webp[39m
+165|raagha | [32m[Nest] 4025662  - [39m06/08/2026, 1:30:00 PM [32m    LOG[39m [38;5;3m[MarketingService] [39m[32mNudge 1 cron: found 1 leads to process[39m
+165|raagha | [33m[Nest] 4025662  - [39m06/08/2026, 1:30:00 PM [33m   WARN[39m [38;5;3m[GraftyService] [39m[33mSkipping WhatsApp Nudge for ABANDONED_CART - Grafty credentials missing in database/environment.[39m
+165|raagha | [32m[Nest] 4025662  - [39m06/08/2026, 1:30:00 PM [32m    LOG[39m [38;5;3m[MarketingService] [39m[32mNudge 1 cron: found 1 leads to process[39m
+165|raagha | [33m[Nest] 4025662  - [39m06/08/2026, 1:30:00 PM [33m   WARN[39m [38;5;3m[GraftyService] [39m[33mSkipping WhatsApp Nudge for ABANDONED_CART - Grafty credentials missing in database/environment.[39m
+165|raagha | [32m[Nest] 4025662  - [39m06/08/2026, 2:00:00 PM [32m    LOG[39m [38;5;3m[MarketingService] [39m[32mNudge 2 cron: Disabled per user request (only sending single nudge).[39m
+165|raagha | [32m[Nest] 4025662  - [39m06/08/2026, 2:00:00 PM [32m    LOG[39m [38;5;3m[MarketingService] [39m[32mNudge 1 cron: found 1 leads to process[39m
+165|raagha | [32m[Nest] 4025662  - [39m06/08/2026, 2:00:00 PM [32m    LOG[39m [38;5;3m[MarketingService] [39m[32mNudge 1 cron: found 1 leads to process[39m
+165|raagha | [32m[Nest] 4025662  - [39m06/08/2026, 2:00:00 PM [32m    LOG[39m [38;5;3m[MarketingService] [39m[32mNudge 2 cron: Disabled per user request (only sending single nudge).[39m
+165|raagha | [33m[Nest] 4025662  - [39m06/08/2026, 2:00:00 PM [33m   WARN[39m [38;5;3m[GraftyService] [39m[33mSkipping WhatsApp Nudge for ABANDONED_CART - Grafty credentials missing in database/environment.[39m
+165|raagha | [33m[Nest] 4025662  - [39m06/08/2026, 2:00:00 PM [33m   WARN[39m [38;5;3m[GraftyService] [39m[33mSkipping WhatsApp Nudge for ABANDONED_CART - Grafty credentials missing in database/environment.[39m
+
+/root/.pm2/logs/raaghas-api-error.log last 200 lines:
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:42:31
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-proxy.js:9:17
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:44 PM [31m  ERROR[39m [38;5;3m[AuthGuard] [39m[31mAuthentication failed: invalid signature[39m
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:44 PM [31m  ERROR[39m [38;5;3m[GlobalExceptionFilter] [39m[31m[GET] /api/v1/wishlist - Status: 401 - Error: Invalid or expired token[39m
+165|raagha | UnauthorizedException: Invalid or expired token
+165|raagha |     at AuthGuard.canActivate (/var/www/raaghas_new/apps/api/src/auth/auth.guard.ts:50:30)
+165|raagha |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+165|raagha |     at async GuardsConsumer.tryActivate (/var/www/raaghas_new/node_modules/@nestjs/core/guards/guards-consumer.js:22:17)
+165|raagha |     at async canActivateFn (/var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:135:33)
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:42:31
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-proxy.js:9:17
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:45 PM [31m  ERROR[39m [38;5;3m[AuthGuard] [39m[31mAuthentication failed: invalid signature[39m
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:45 PM [31m  ERROR[39m [38;5;3m[GlobalExceptionFilter] [39m[31m[GET] /api/v1/wishlist - Status: 401 - Error: Invalid or expired token[39m
+165|raagha | UnauthorizedException: Invalid or expired token
+165|raagha |     at AuthGuard.canActivate (/var/www/raaghas_new/apps/api/src/auth/auth.guard.ts:50:30)
+165|raagha |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+165|raagha |     at async GuardsConsumer.tryActivate (/var/www/raaghas_new/node_modules/@nestjs/core/guards/guards-consumer.js:22:17)
+165|raagha |     at async canActivateFn (/var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:135:33)
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:42:31
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-proxy.js:9:17
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:45 PM [31m  ERROR[39m [38;5;3m[AuthGuard] [39m[31mAuthentication failed: invalid signature[39m
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:45 PM [31m  ERROR[39m [38;5;3m[GlobalExceptionFilter] [39m[31m[GET] /api/v1/wishlist - Status: 401 - Error: Invalid or expired token[39m
+165|raagha | UnauthorizedException: Invalid or expired token
+165|raagha |     at AuthGuard.canActivate (/var/www/raaghas_new/apps/api/src/auth/auth.guard.ts:50:30)
+165|raagha |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+165|raagha |     at async GuardsConsumer.tryActivate (/var/www/raaghas_new/node_modules/@nestjs/core/guards/guards-consumer.js:22:17)
+165|raagha |     at async canActivateFn (/var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:135:33)
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:42:31
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-proxy.js:9:17
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:45 PM [31m  ERROR[39m [38;5;3m[AuthGuard] [39m[31mAuthentication failed: invalid signature[39m
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:45 PM [31m  ERROR[39m [38;5;3m[GlobalExceptionFilter] [39m[31m[GET] /api/v1/wishlist - Status: 401 - Error: Invalid or expired token[39m
+165|raagha | UnauthorizedException: Invalid or expired token
+165|raagha |     at AuthGuard.canActivate (/var/www/raaghas_new/apps/api/src/auth/auth.guard.ts:50:30)
+165|raagha |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+165|raagha |     at async GuardsConsumer.tryActivate (/var/www/raaghas_new/node_modules/@nestjs/core/guards/guards-consumer.js:22:17)
+165|raagha |     at async canActivateFn (/var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:135:33)
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:42:31
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-proxy.js:9:17
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:45 PM [31m  ERROR[39m [38;5;3m[AuthGuard] [39m[31mAuthentication failed: invalid signature[39m
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:45 PM [31m  ERROR[39m [38;5;3m[GlobalExceptionFilter] [39m[31m[GET] /api/v1/wishlist - Status: 401 - Error: Invalid or expired token[39m
+165|raagha | UnauthorizedException: Invalid or expired token
+165|raagha |     at AuthGuard.canActivate (/var/www/raaghas_new/apps/api/src/auth/auth.guard.ts:50:30)
+165|raagha |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+165|raagha |     at async GuardsConsumer.tryActivate (/var/www/raaghas_new/node_modules/@nestjs/core/guards/guards-consumer.js:22:17)
+165|raagha |     at async canActivateFn (/var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:135:33)
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:42:31
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-proxy.js:9:17
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:49 PM [31m  ERROR[39m [38;5;3m[AuthGuard] [39m[31mAuthentication failed: invalid signature[39m
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:49 PM [31m  ERROR[39m [38;5;3m[GlobalExceptionFilter] [39m[31m[GET] /api/v1/wishlist - Status: 401 - Error: Invalid or expired token[39m
+165|raagha | UnauthorizedException: Invalid or expired token
+165|raagha |     at AuthGuard.canActivate (/var/www/raaghas_new/apps/api/src/auth/auth.guard.ts:50:30)
+165|raagha |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+165|raagha |     at async GuardsConsumer.tryActivate (/var/www/raaghas_new/node_modules/@nestjs/core/guards/guards-consumer.js:22:17)
+165|raagha |     at async canActivateFn (/var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:135:33)
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:42:31
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-proxy.js:9:17
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:49 PM [31m  ERROR[39m [38;5;3m[AuthGuard] [39m[31mAuthentication failed: invalid signature[39m
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:49 PM [31m  ERROR[39m [38;5;3m[GlobalExceptionFilter] [39m[31m[GET] /api/v1/wishlist - Status: 401 - Error: Invalid or expired token[39m
+165|raagha | UnauthorizedException: Invalid or expired token
+165|raagha |     at AuthGuard.canActivate (/var/www/raaghas_new/apps/api/src/auth/auth.guard.ts:50:30)
+165|raagha |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+165|raagha |     at async GuardsConsumer.tryActivate (/var/www/raaghas_new/node_modules/@nestjs/core/guards/guards-consumer.js:22:17)
+165|raagha |     at async canActivateFn (/var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:135:33)
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:42:31
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-proxy.js:9:17
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:49 PM [31m  ERROR[39m [38;5;3m[AuthGuard] [39m[31mAuthentication failed: invalid signature[39m
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:49 PM [31m  ERROR[39m [38;5;3m[GlobalExceptionFilter] [39m[31m[GET] /api/v1/wishlist - Status: 401 - Error: Invalid or expired token[39m
+165|raagha | UnauthorizedException: Invalid or expired token
+165|raagha |     at AuthGuard.canActivate (/var/www/raaghas_new/apps/api/src/auth/auth.guard.ts:50:30)
+165|raagha |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+165|raagha |     at async GuardsConsumer.tryActivate (/var/www/raaghas_new/node_modules/@nestjs/core/guards/guards-consumer.js:22:17)
+165|raagha |     at async canActivateFn (/var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:135:33)
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:42:31
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-proxy.js:9:17
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:49 PM [31m  ERROR[39m [38;5;3m[AuthGuard] [39m[31mAuthentication failed: invalid signature[39m
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:49 PM [31m  ERROR[39m [38;5;3m[GlobalExceptionFilter] [39m[31m[GET] /api/v1/wishlist - Status: 401 - Error: Invalid or expired token[39m
+165|raagha | UnauthorizedException: Invalid or expired token
+165|raagha |     at AuthGuard.canActivate (/var/www/raaghas_new/apps/api/src/auth/auth.guard.ts:50:30)
+165|raagha |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+165|raagha |     at async GuardsConsumer.tryActivate (/var/www/raaghas_new/node_modules/@nestjs/core/guards/guards-consumer.js:22:17)
+165|raagha |     at async canActivateFn (/var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:135:33)
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:42:31
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-proxy.js:9:17
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:49 PM [31m  ERROR[39m [38;5;3m[AuthGuard] [39m[31mAuthentication failed: invalid signature[39m
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:49 PM [31m  ERROR[39m [38;5;3m[GlobalExceptionFilter] [39m[31m[GET] /api/v1/wishlist - Status: 401 - Error: Invalid or expired token[39m
+165|raagha | UnauthorizedException: Invalid or expired token
+165|raagha |     at AuthGuard.canActivate (/var/www/raaghas_new/apps/api/src/auth/auth.guard.ts:50:30)
+165|raagha |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+165|raagha |     at async GuardsConsumer.tryActivate (/var/www/raaghas_new/node_modules/@nestjs/core/guards/guards-consumer.js:22:17)
+165|raagha |     at async canActivateFn (/var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:135:33)
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:42:31
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-proxy.js:9:17
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:52 PM [31m  ERROR[39m [38;5;3m[AuthGuard] [39m[31mAuthentication failed: invalid signature[39m
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:52 PM [31m  ERROR[39m [38;5;3m[GlobalExceptionFilter] [39m[31m[GET] /api/v1/wishlist - Status: 401 - Error: Invalid or expired token[39m
+165|raagha | UnauthorizedException: Invalid or expired token
+165|raagha |     at AuthGuard.canActivate (/var/www/raaghas_new/apps/api/src/auth/auth.guard.ts:50:30)
+165|raagha |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+165|raagha |     at async GuardsConsumer.tryActivate (/var/www/raaghas_new/node_modules/@nestjs/core/guards/guards-consumer.js:22:17)
+165|raagha |     at async canActivateFn (/var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:135:33)
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:42:31
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-proxy.js:9:17
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:52 PM [31m  ERROR[39m [38;5;3m[AuthGuard] [39m[31mAuthentication failed: invalid signature[39m
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:52 PM [31m  ERROR[39m [38;5;3m[GlobalExceptionFilter] [39m[31m[GET] /api/v1/wishlist - Status: 401 - Error: Invalid or expired token[39m
+165|raagha | UnauthorizedException: Invalid or expired token
+165|raagha |     at AuthGuard.canActivate (/var/www/raaghas_new/apps/api/src/auth/auth.guard.ts:50:30)
+165|raagha |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+165|raagha |     at async GuardsConsumer.tryActivate (/var/www/raaghas_new/node_modules/@nestjs/core/guards/guards-consumer.js:22:17)
+165|raagha |     at async canActivateFn (/var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:135:33)
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:42:31
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-proxy.js:9:17
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:52 PM [31m  ERROR[39m [38;5;3m[AuthGuard] [39m[31mAuthentication failed: invalid signature[39m
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:52 PM [31m  ERROR[39m [38;5;3m[GlobalExceptionFilter] [39m[31m[GET] /api/v1/wishlist - Status: 401 - Error: Invalid or expired token[39m
+165|raagha | UnauthorizedException: Invalid or expired token
+165|raagha |     at AuthGuard.canActivate (/var/www/raaghas_new/apps/api/src/auth/auth.guard.ts:50:30)
+165|raagha |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+165|raagha |     at async GuardsConsumer.tryActivate (/var/www/raaghas_new/node_modules/@nestjs/core/guards/guards-consumer.js:22:17)
+165|raagha |     at async canActivateFn (/var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:135:33)
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:42:31
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-proxy.js:9:17
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:52 PM [31m  ERROR[39m [38;5;3m[AuthGuard] [39m[31mAuthentication failed: invalid signature[39m
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:52 PM [31m  ERROR[39m [38;5;3m[GlobalExceptionFilter] [39m[31m[GET] /api/v1/wishlist - Status: 401 - Error: Invalid or expired token[39m
+165|raagha | UnauthorizedException: Invalid or expired token
+165|raagha |     at AuthGuard.canActivate (/var/www/raaghas_new/apps/api/src/auth/auth.guard.ts:50:30)
+165|raagha |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+165|raagha |     at async GuardsConsumer.tryActivate (/var/www/raaghas_new/node_modules/@nestjs/core/guards/guards-consumer.js:22:17)
+165|raagha |     at async canActivateFn (/var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:135:33)
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:42:31
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-proxy.js:9:17
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:52 PM [31m  ERROR[39m [38;5;3m[AuthGuard] [39m[31mAuthentication failed: invalid signature[39m
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:52 PM [31m  ERROR[39m [38;5;3m[GlobalExceptionFilter] [39m[31m[GET] /api/v1/wishlist - Status: 401 - Error: Invalid or expired token[39m
+165|raagha | UnauthorizedException: Invalid or expired token
+165|raagha |     at AuthGuard.canActivate (/var/www/raaghas_new/apps/api/src/auth/auth.guard.ts:50:30)
+165|raagha |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+165|raagha |     at async GuardsConsumer.tryActivate (/var/www/raaghas_new/node_modules/@nestjs/core/guards/guards-consumer.js:22:17)
+165|raagha |     at async canActivateFn (/var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:135:33)
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:42:31
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-proxy.js:9:17
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:52 PM [31m  ERROR[39m [38;5;3m[AuthGuard] [39m[31mAuthentication failed: invalid signature[39m
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:52 PM [31m  ERROR[39m [38;5;3m[GlobalExceptionFilter] [39m[31m[GET] /api/v1/wishlist - Status: 401 - Error: Invalid or expired token[39m
+165|raagha | UnauthorizedException: Invalid or expired token
+165|raagha |     at AuthGuard.canActivate (/var/www/raaghas_new/apps/api/src/auth/auth.guard.ts:50:30)
+165|raagha |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+165|raagha |     at async GuardsConsumer.tryActivate (/var/www/raaghas_new/node_modules/@nestjs/core/guards/guards-consumer.js:22:17)
+165|raagha |     at async canActivateFn (/var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:135:33)
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:42:31
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-proxy.js:9:17
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:52 PM [31m  ERROR[39m [38;5;3m[AuthGuard] [39m[31mAuthentication failed: invalid signature[39m
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:52 PM [31m  ERROR[39m [38;5;3m[GlobalExceptionFilter] [39m[31m[GET] /api/v1/wishlist - Status: 401 - Error: Invalid or expired token[39m
+165|raagha | UnauthorizedException: Invalid or expired token
+165|raagha |     at AuthGuard.canActivate (/var/www/raaghas_new/apps/api/src/auth/auth.guard.ts:50:30)
+165|raagha |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+165|raagha |     at async GuardsConsumer.tryActivate (/var/www/raaghas_new/node_modules/@nestjs/core/guards/guards-consumer.js:22:17)
+165|raagha |     at async canActivateFn (/var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:135:33)
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:42:31
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-proxy.js:9:17
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:52 PM [31m  ERROR[39m [38;5;3m[AuthGuard] [39m[31mAuthentication failed: invalid signature[39m
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:52 PM [31m  ERROR[39m [38;5;3m[GlobalExceptionFilter] [39m[31m[GET] /api/v1/wishlist - Status: 401 - Error: Invalid or expired token[39m
+165|raagha | UnauthorizedException: Invalid or expired token
+165|raagha |     at AuthGuard.canActivate (/var/www/raaghas_new/apps/api/src/auth/auth.guard.ts:50:30)
+165|raagha |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+165|raagha |     at async GuardsConsumer.tryActivate (/var/www/raaghas_new/node_modules/@nestjs/core/guards/guards-consumer.js:22:17)
+165|raagha |     at async canActivateFn (/var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:135:33)
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:42:31
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-proxy.js:9:17
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:52 PM [31m  ERROR[39m [38;5;3m[AuthGuard] [39m[31mAuthentication failed: invalid signature[39m
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:52 PM [31m  ERROR[39m [38;5;3m[GlobalExceptionFilter] [39m[31m[GET] /api/v1/wishlist - Status: 401 - Error: Invalid or expired token[39m
+165|raagha | UnauthorizedException: Invalid or expired token
+165|raagha |     at AuthGuard.canActivate (/var/www/raaghas_new/apps/api/src/auth/auth.guard.ts:50:30)
+165|raagha |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+165|raagha |     at async GuardsConsumer.tryActivate (/var/www/raaghas_new/node_modules/@nestjs/core/guards/guards-consumer.js:22:17)
+165|raagha |     at async canActivateFn (/var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:135:33)
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:42:31
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-proxy.js:9:17
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:53 PM [31m  ERROR[39m [38;5;3m[AuthGuard] [39m[31mAuthentication failed: invalid signature[39m
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:53 PM [31m  ERROR[39m [38;5;3m[GlobalExceptionFilter] [39m[31m[GET] /api/v1/wishlist - Status: 401 - Error: Invalid or expired token[39m
+165|raagha | UnauthorizedException: Invalid or expired token
+165|raagha |     at AuthGuard.canActivate (/var/www/raaghas_new/apps/api/src/auth/auth.guard.ts:50:30)
+165|raagha |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+165|raagha |     at async GuardsConsumer.tryActivate (/var/www/raaghas_new/node_modules/@nestjs/core/guards/guards-consumer.js:22:17)
+165|raagha |     at async canActivateFn (/var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:135:33)
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:42:31
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-proxy.js:9:17
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:53 PM [31m  ERROR[39m [38;5;3m[AuthGuard] [39m[31mAuthentication failed: invalid signature[39m
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:53 PM [31m  ERROR[39m [38;5;3m[GlobalExceptionFilter] [39m[31m[GET] /api/v1/wishlist - Status: 401 - Error: Invalid or expired token[39m
+165|raagha | UnauthorizedException: Invalid or expired token
+165|raagha |     at AuthGuard.canActivate (/var/www/raaghas_new/apps/api/src/auth/auth.guard.ts:50:30)
+165|raagha |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+165|raagha |     at async GuardsConsumer.tryActivate (/var/www/raaghas_new/node_modules/@nestjs/core/guards/guards-consumer.js:22:17)
+165|raagha |     at async canActivateFn (/var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:135:33)
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:42:31
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-proxy.js:9:17
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:53 PM [31m  ERROR[39m [38;5;3m[AuthGuard] [39m[31mAuthentication failed: invalid signature[39m
+165|raagha | [31m[Nest] 4025662  - [39m06/08/2026, 2:05:53 PM [31m  ERROR[39m [38;5;3m[GlobalExceptionFilter] [39m[31m[GET] /api/v1/wishlist - Status: 401 - Error: Invalid or expired token[39m
+165|raagha | UnauthorizedException: Invalid or expired token
+165|raagha |     at AuthGuard.canActivate (/var/www/raaghas_new/apps/api/src/auth/auth.guard.ts:50:30)
+165|raagha |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+165|raagha |     at async GuardsConsumer.tryActivate (/var/www/raaghas_new/node_modules/@nestjs/core/guards/guards-consumer.js:22:17)
+165|raagha |     at async canActivateFn (/var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:135:33)
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-execution-context.js:42:31
+165|raagha |     at async /var/www/raaghas_new/node_modules/@nestjs/core/router/router-proxy.js:9:17
+

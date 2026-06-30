@@ -1,0 +1,76 @@
+
+      <html>
+        <head>
+          <title>Packing Slips</title>
+          <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+          <style>
+            @media print {
+              .page-break { page-break-after: always; }
+              body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            }
+          </style>
+        </head>
+        <body class="bg-white">
+          ${r.map((e,t)=>{let s,a=e.shippingAddr||("string"==typeof(s=e.shippingAddress)?JSON.parse(s||"{}"):s||{}),l="";return!P&&e.items&&e.items.length>0&&(l=`
+                <div class="mt-8 border-t border-gray-200 pt-8">
+                  <h3 class="text-sm font-bold uppercase tracking-widest text-gray-400 mb-4">Items to Pack</h3>
+                  <table class="w-full text-left text-sm">
+                    <thead>
+                      <tr class="border-b border-gray-200">
+                        <th class="pb-2">Product</th>
+                        <th class="pb-2">SKU</th>
+                        <th class="pb-2 text-center">Qty</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                      ${e.items.map(e=>`
+                        <tr>
+                          <td class="py-3 font-medium text-gray-900">${e.productName||e.variant?.product?.title||"Product"} <span class="text-gray-400 text-xs ml-2">${e.variant?.option1Value||""}</span></td>
+                          <td class="py-3 text-gray-500">${e.sku||e.variant?.sku||"N/A"}</td>
+                          <td class="py-3 text-center font-bold">${e.quantity}</td>
+                        </tr>
+                      `).join("")}
+                    </tbody>
+                  </table>
+                </div>
+              `),`
+            <div class="${t<r.length-1?"page-break":""} p-10 max-w-4xl mx-auto">
+              <div class="flex justify-between items-start mb-10 border-b pb-10 border-gray-200">
+                <div>
+                  <img src="${$?.logoUrl||"/logo-dark.svg"}" alt="Logo" class="h-10 mb-4 object-contain" />
+                  <h3 class="text-sm font-bold uppercase tracking-widest text-gray-400 mb-2">From</h3>
+                  <h1 class="font-bold text-gray-900 text-base">${$?.storeName||"Raaghas Clothing"}</h1>
+                  <div class="text-sm text-gray-600">
+                    <p>${$?.storeAddress||""}</p>
+                    <p class="mt-2">Phone: ${$?.supportPhone||""}</p>
+                    <p>${$?.supportEmail||""}</p>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <h3 class="text-sm font-bold uppercase tracking-widest text-gray-400 mb-2">Ship To</h3>
+                  <p class="text-base font-bold text-gray-900">${a.name||e.customerName}</p>
+                  <div class="text-sm text-gray-600">
+                    <div>${a.address1||a.line1||a.address||""}</div>
+                    ${a.address2?`<div>${a.address2}</div>`:""}
+                    <div>${a.city||""}, ${a.province||a.state||""} ${a.zip||a.postalCode||a.pincode||a.pinCode||""}</div>
+                    <div>${a.country||"India"}</div>
+                  </div>
+                  ${a.phone||a.phoneNumber||e.customerPhone?`<p class="text-sm font-bold text-gray-900 mt-2">Phone: ${a.phone||a.phoneNumber||e.customerPhone}</p>`:""}
+                </div>
+              </div>
+
+              ${l}
+
+              <div class="text-center mt-12 pt-8 border-t border-gray-200">
+                <p class="text-sm text-gray-500 font-bold uppercase">Order: #${e.formattedOrderNumber||e.orderNumber||e.id.slice(-10).toUpperCase()}</p>
+                <p class="text-xs text-gray-400">Date: ${new Date(e.createdAt).toLocaleDateString()}</p>
+                <p class="text-xs font-bold text-gray-400 mt-4 tracking-widest uppercase">PLEASE RETURN TO SENDER IF UNDELIVERED</p>
+              </div>
+            </div>
+            `}).join("")}
+          <script>
+            window.onload = () => { setTimeout(() => { window.print(); window.close(); }, 500); }
+          </script>
+        </body>
+      </html>
+    

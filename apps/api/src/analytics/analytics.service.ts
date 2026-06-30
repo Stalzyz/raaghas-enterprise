@@ -135,8 +135,16 @@ export class AnalyticsService {
         createdAt: { gte: startDate, lte: endDate },
         financialStatus: 'paid',
         status: { not: 'CANCELLED' }
-      }
+      },
     });
+
+    // Fetch all invoices linked to these orders via referenceId
+    const orderIds = orders.map(o => o.id);
+    const invoices = await this.prisma.invoice.findMany({
+      where: { referenceId: { in: orderIds } },
+      select: { referenceId: true, invoiceNumber: true }
+    });
+    const invoiceMap = new Map(invoices.map(inv => [inv.referenceId, inv.invoiceNumber]));
 
     let totalRevenue = 0;
     let totalTaxableValue = 0;
@@ -144,15 +152,20 @@ export class AnalyticsService {
 
     const itemsReport = orders.map(o => {
       const orderTotal = Number(o.totalAmount || 0);
-      const orderTax = Number(o.taxes || 0);
+      const orderTax = Number((o as any).taxes || 0);
       const orderTaxable = orderTotal - orderTax;
 
       totalRevenue += orderTotal;
       totalTaxCollected += orderTax;
       totalTaxableValue += orderTaxable;
 
+      const formattedNum = (o as any).formattedOrderNumber || ((o as any).orderNumber != null ? `RGS-${Number((o as any).orderNumber) + 1000}` : null);
+      const invoiceNumber = invoiceMap.get(o.id) || formattedNum || o.id.slice(-8).toUpperCase();
+
       return {
         orderId: o.id,
+        invoiceNumber,
+        formattedOrderNumber: formattedNum || o.id.slice(-8).toUpperCase(),
         customerName: o.customerName,
         customerEmail: o.customerEmail,
         date: o.createdAt,

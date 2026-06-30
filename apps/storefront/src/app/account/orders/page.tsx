@@ -8,20 +8,42 @@ import { motion } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 
 const statusColors: any = {
-  PENDING: "bg-orange-50 text-orange-600 border-orange-100",
+  PAYMENT_PENDING: "bg-orange-50 text-orange-600 border-orange-100",
+  ABANDONED: "bg-gray-100 text-gray-500 border-gray-200",
   CONFIRMED: "bg-blue-50 text-blue-600 border-blue-100",
   SHIPPED: "bg-purple-50 text-purple-600 border-purple-100",
   DELIVERED: "bg-green-50 text-green-600 border-green-100",
   CANCELLED: "bg-red-50 text-red-600 border-red-100",
+  FAILED: "bg-red-50 text-red-600 border-red-100",
 };
 
 const statusIcons: any = {
-  PENDING: <Clock size={14} />,
+  PAYMENT_PENDING: <Clock size={14} />,
+  ABANDONED: <XCircle size={14} />,
   CONFIRMED: <CheckCircle2 size={14} />,
   SHIPPED: <Truck size={14} />,
   DELIVERED: <CheckCircle2 size={14} />,
   CANCELLED: <XCircle size={14} />,
+  FAILED: <XCircle size={14} />,
 };
+
+function getSmartStatus(order: any) {
+  if (order.status === 'PAYMENT_PENDING') {
+    const ageInMinutes = (Date.now() - new Date(order.createdAt).getTime()) / (1000 * 60);
+    return ageInMinutes > 30 ? 'ABANDONED' : 'PAYMENT_PENDING';
+  }
+  if (order.status === 'CANCELLED' && order.paymentId) {
+    return 'FAILED'; // Usually a gateway failure
+  }
+  return order.status;
+}
+
+function getDisplayStatus(status: string) {
+  if (status === 'PAYMENT_PENDING') return 'Awaiting Payment';
+  if (status === 'FAILED') return 'Payment Failed';
+  if (status === 'ABANDONED') return 'Abandoned';
+  return status;
+}
 
 const MOCK_ORDERS = [
   {
@@ -129,7 +151,7 @@ function MyOrdersPageContent() {
                     <div className="flex -space-x-4">
                        {order.items.slice(0, 3).map((item: any) => (
                          <div key={item.id} className="w-20 h-28 bg-gray-100 border-2 border-white rounded-lg overflow-hidden shadow-sm shrink-0">
-                           <img src={item.variant.product.images?.[0]?.url} alt="" className="w-full h-full object-cover" />
+                           <img src={item.variant?.product?.images?.[0]?.url} alt="" className="w-full h-full object-cover" />
                          </div>
                        ))}
                     </div>
@@ -149,9 +171,14 @@ function MyOrdersPageContent() {
 
                     {/* Status & Action */}
                     <div className="flex flex-row md:flex-col items-center md:items-end gap-4 w-full md:w-auto">
-                       <span className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest border flex items-center gap-2 ${statusColors[order.status]}`}>
-                          {statusIcons[order.status]} {order.status}
-                       </span>
+                       {(() => {
+                         const smartStatus = getSmartStatus(order);
+                         return (
+                           <span className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest border flex items-center gap-2 ${statusColors[smartStatus] || statusColors.CONFIRMED}`}>
+                              {statusIcons[smartStatus]} {getDisplayStatus(smartStatus)}
+                           </span>
+                         )
+                       })()}
                        <span className="text-wine text-xs font-bold uppercase tracking-widest group-hover:translate-x-1 transition-transform flex items-center gap-1">
                           Track Details <ChevronRight size={14} />
                        </span>

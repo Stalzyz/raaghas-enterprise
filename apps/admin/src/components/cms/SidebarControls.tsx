@@ -345,7 +345,7 @@ function SectionItem({ section, idx, isFirst, isLast, onSelect, onMove, onRemove
       </div>
       <div className="flex-1 min-w-0">
         <p className={`text-[11px] font-bold uppercase tracking-wide truncate ${section.hidden ? 'text-gray-300' : 'text-charcoal'}`}>
-          {meta?.label || section.type}
+          {section.content?.adminLabel || meta?.label || section.type}
         </p>
       </div>
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -613,6 +613,11 @@ function EditorContent({ section, activeTab, onUpdate }: { section: Section; act
   if (activeTab === "content") {
     return (
       <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
+        <div className="space-y-2 pb-6 border-b border-gray-100">
+           {renderField("Sidebar Label (Internal)", content.adminLabel, "adminLabel")}
+           <p className="text-[9px] text-gray-400 italic mt-1 pl-1">Rename this section to organize your sidebar.</p>
+        </div>
+
         {/* HERO */}
         {type === "HERO" && (
           <div className="space-y-6">

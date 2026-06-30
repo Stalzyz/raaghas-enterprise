@@ -33,10 +33,29 @@ import { ReturnExchangeModal } from "@/components/modals/ReturnExchangeModal";
 
 const CARRIERS = ["Delhivery", "BlueDart", "Pickrr", "Professional Couriers", "Express", "DHL", "FedEx"];
 
+function getSmartStatus(order: any) {
+  if (order.status === 'PAYMENT_PENDING') {
+    const ageInMinutes = (Date.now() - new Date(order.createdAt).getTime()) / (1000 * 60);
+    return ageInMinutes > 30 ? 'ABANDONED' : 'PAYMENT_PENDING';
+  }
+  if (order.status === 'CANCELLED' && order.paymentId) {
+    return 'FAILED';
+  }
+  return order.status;
+}
+
+function getDisplayStatus(status: string) {
+  if (status === 'PAYMENT_PENDING') return 'Awaiting Payment';
+  if (status === 'FAILED') return 'Payment Failed';
+  if (status === 'ABANDONED') return 'Abandoned';
+  return status;
+}
+
 export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => void }) {
   const { token } = useAdminAuth();
   const router = useRouter();
   const [order, setOrder] = useState<any>(null);
+  const [storeSettings, setStoreSettings] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -46,6 +65,11 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
 
   // Print Modals State
   const [isPackingSlipModalOpen, setIsPackingSlipModalOpen] = useState(false);
+
+  const handlePrintSlip = () => {
+    if (!order) return;
+    setIsPackingSlipModalOpen(true);
+  };
 
   // Return Exchange Modal State
   const [isReturnExchangeModalOpen, setIsReturnExchangeModalOpen] = useState(false);
@@ -83,7 +107,12 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
   useEffect(() => {
     if (!token) return;
     fetchOrder();
-    
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1');
+    fetch(`${baseUrl}/settings`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setStoreSettings(data); })
+      .catch(() => {});
+
     if (typeof window !== 'undefined') {
       try {
         const saved = localStorage.getItem("admin_order_sequence");
@@ -448,8 +477,8 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
             </div>
           )}
          <div className="flex gap-2">
-            <button 
-              onClick={() => setIsPackingSlipModalOpen(true)}
+            <button
+              onClick={handlePrintSlip}
               className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-all shadow-sm"
             >
                <Package size={16} /> Print Packing Slip
@@ -478,15 +507,21 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
                      <h1 className="text-4xl font-bold tracking-tight text-charcoal">#{order.formattedOrderNumber || order.orderNumber || order.id.slice(-10).toUpperCase()}</h1>
                      <p className="text-xs text-gray-400 font-medium flex items-center gap-2"><Calendar size={12} /> Placed on {new Date(order.createdAt).toLocaleString()}</p>
                      <div className="flex flex-wrap gap-2">
-                       <div className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border border-l-4 ${
-                         order.status === 'DELIVERED' ? 'bg-green-50 text-green-600 border-green-100 border-l-green-600' :
-                         order.status === 'SHIPPED' ? 'bg-purple-50 text-purple-600 border-purple-100 border-l-purple-600' :
-                         order.status === 'CANCELLED' ? 'bg-red-50 text-red-600 border-red-100 border-l-red-600' :
-                         order.status === 'RTO' ? 'bg-gray-50 text-gray-600 border-gray-100 border-l-gray-600' :
-                         'bg-orange-50 text-orange-600 border-orange-100 border-l-orange-600'
-                       }`}>
-                          {order.status}
-                       </div>
+                       {(() => {
+                         const smartStatus = getSmartStatus(order);
+                         return (
+                           <div className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border border-l-4 ${
+                             smartStatus === 'DELIVERED' ? 'bg-green-50 text-green-600 border-green-100 border-l-green-600' :
+                             smartStatus === 'SHIPPED' ? 'bg-purple-50 text-purple-600 border-purple-100 border-l-purple-600' :
+                             (smartStatus === 'CANCELLED' || smartStatus === 'FAILED') ? 'bg-red-50 text-red-600 border-red-100 border-l-red-600' :
+                             smartStatus === 'ABANDONED' ? 'bg-gray-100 text-gray-500 border-gray-200 border-l-gray-500' :
+                             smartStatus === 'RTO' ? 'bg-gray-50 text-gray-600 border-gray-100 border-l-gray-600' :
+                             'bg-orange-50 text-orange-600 border-orange-100 border-l-orange-600'
+                           }`}>
+                              {getDisplayStatus(smartStatus)}
+                           </div>
+                         );
+                       })()}
                        {order.financialStatus && (
                           <div className="flex items-center gap-2">
                             <div className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border border-l-4 ${
@@ -1242,7 +1277,8 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
       <PackingSlipModal 
         isOpen={isPackingSlipModalOpen}
         onClose={() => setIsPackingSlipModalOpen(false)}
-        order={order}
+        orders={[order]}
+        storeSettings={storeSettings}
       />
 
       {isReturnExchangeModalOpen && selectedReturnExchangeItem && (

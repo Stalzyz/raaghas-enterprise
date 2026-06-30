@@ -82,4 +82,21 @@ export class ReviewsService {
       }
     });
   }
+
+  async checkEligibility(productId: string, userId: string) {
+    const hasPurchased = await this.prisma.orderItem.findFirst({
+      where: {
+        variant: {
+          productId: productId
+        },
+        order: {
+          userId: userId,
+          status: {
+            in: ['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED']
+          }
+        }
+      }
+    });
+    return !!hasPurchased;
+  }
 }

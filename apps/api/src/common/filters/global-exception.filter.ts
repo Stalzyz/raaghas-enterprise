@@ -43,17 +43,23 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       if (process.env.NODE_ENV !== 'production') detail = exception.message;
     }
 
-    response.status(status).json({
+    const isDev = process.env.NODE_ENV !== 'production';
+
+    const payload: any = {
       success: false,
       statusCode: status,
       timestamp: new Date().toISOString(),
       path: request.url,
       message: Array.isArray(message) ? message[0] : message,
-      luxuryMessage: "DIAGNOSTIC MODE: Error details below.",
-      errorName: exception.name,
-      errorMessage: exception.message,
-      errorStack: exception.stack,
-      detail: detail || exception.message,
-    });
+    };
+
+    if (isDev) {
+      payload.errorName = exception.name;
+      payload.errorMessage = exception.message;
+      payload.errorStack = exception.stack;
+      payload.detail = detail || exception.message;
+    }
+
+    response.status(status).json(payload);
   }
 }

@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
+import { PackingSlipModal } from "@/components/modals/PackingSlipModal";
 
 export default function FulfillmentDesk() {
   const { token } = useAdminAuth();
@@ -17,10 +18,31 @@ export default function FulfillmentDesk() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [packedItems, setPackedItems] = useState<string[]>([]);
   const [useSimplifiedSlip, setUseSimplifiedSlip] = useState(false);
+  const [storeSettings, setStoreSettings] = useState<any>(null);
+  const [isPackingSlipOpen, setIsPackingSlipOpen] = useState(false);
+  const [packingSlipOrders, setPackingSlipOrders] = useState<any[]>([]);
 
   useEffect(() => {
-    if (token) fetchOrders();
+    if (token) {
+      fetchOrders();
+      fetchStoreSettings();
+    }
   }, [token]);
+
+  const fetchStoreSettings = async () => {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1');
+      const res = await fetch(`${baseUrl}/settings`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setStoreSettings(data);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const fetchOrders = async () => {
     try {
@@ -74,74 +96,35 @@ export default function FulfillmentDesk() {
     }
   };
 
+  const parseAddress = (addr: any) => {
+    if (!addr) return {};
+    if (typeof addr === 'string') {
+      try { return JSON.parse(addr); } catch { return { address1: addr }; }
+    }
+    return addr;
+  };
+
+  const formatAddress = (addr: any) => {
+    const a = parseAddress(addr);
+    return [
+      a.address1 || a.line1 || a.street || '',
+      a.address2 || a.line2 || '',
+      a.city || '',
+      (a.state || a.province || '') + (a.pincode || a.zip || a.postalCode ? ' ' + (a.pincode || a.zip || a.postalCode) : ''),
+      a.country || 'India'
+    ].filter(Boolean).join(', ');
+  };
+
   const handlePrintSlips = (idsToPrint?: any) => {
     const actualIds = Array.isArray(idsToPrint) ? idsToPrint : selectedIds;
     const selectedOrdersData = orders.filter(o => actualIds.includes(o.id));
-    
+
     if (selectedOrdersData.length === 0) {
       return alert("No orders selected to print.");
     }
 
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return alert("Please allow popups to print packing slips.");
-    
-    const htmlContent = `
-      <html>
-        <head>
-          <title>Packing Slips</title>
-          <style>
-            body { font-family: sans-serif; margin: 0; padding: 0; }
-            .slip { page-break-after: always; padding: 40px; margin: 0 auto; max-width: 800px; box-sizing: border-box; }
-            @media print { .slip { border: none; margin: 0; padding: 40px; } }
-          </style>
-        </head>
-        <body>
-          ${selectedOrdersData.map(order => {
-             const addr = typeof order.shippingAddress === 'string' ? JSON.parse(order.shippingAddress || '{}') : (order.shippingAddress || {});
-             return `
-            <div class="slip">
-              <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-                <div style="flex: 1;">
-                  <h3 style="margin: 0 0 10px 0; font-size: 16px; font-weight: bold;">SHIP TO</h3>
-                  <div style="font-size: 14px; line-height: 1.5; color: #000;">
-                    <div>${order.customerName}</div>
-                    <div>${addr.line1 || addr.address || addr.address1 || ''}</div>
-                    ${addr.line2 || addr.address2 ? `<div>${addr.line2 || addr.address2}</div>` : ''}
-                    <div>${addr.city || ''} ${addr.state || addr.province || ''}</div>
-                    <div>${addr.postalCode || addr.pincode || addr.zip || ''}</div>
-                    <div>${addr.country || 'India'}</div>
-                    <div style="margin-top: 5px;">${addr.phone || order.customerPhone || ''}</div>
-                  </div>
-                </div>
-                <div style="flex: 1; text-align: right;">
-                  <h1 style="margin: 0; font-size: 24px; font-weight: normal; color: #333; letter-spacing: 1px;">RAAGHAS CLOTHING</h1>
-                </div>
-              </div>
-
-              <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 60px;">
-                <div style="flex: 1; border-top: 1px solid #000; padding-top: 15px; margin-right: 40px;">
-                  <div style="font-size: 14px; line-height: 1.5; text-align: left; color: #000;">
-                    <div>Thank you for shopping with us!</div>
-                    <div>Raaghas Clothing</div>
-                    <div>Salem:636001,Phno 6360664805</div>
-                    <div>www.raaghasclothing.com</div>
-                  </div>
-                </div>
-                <div style="text-align: right; font-size: 14px; line-height: 1.5; color: #000;">
-                  <div>Order ${order.formattedOrderNumber || order.orderNumber || order.id.slice(-4)}</div>
-                  <div>${new Date(order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
-                </div>
-              </div>
-            </div>
-          `}).join('')}
-          <script>
-            window.onload = () => { window.print(); window.close(); }
-          </script>
-        </body>
-      </html>
-    `;
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
+    setPackingSlipOrders(selectedOrdersData);
+    setIsPackingSlipOpen(true);
   };
 
   const getStatusColor = (status: string) => {
@@ -408,6 +391,13 @@ export default function FulfillmentDesk() {
           </AnimatePresence>
         </div>
       </div>
+
+      <PackingSlipModal 
+        isOpen={isPackingSlipOpen} 
+        onClose={() => setIsPackingSlipOpen(false)} 
+        orders={packingSlipOrders} 
+        storeSettings={storeSettings} 
+      />
     </div>
   );
 }

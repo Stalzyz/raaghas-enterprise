@@ -19,6 +19,7 @@ export default function CouponManagement() {
     value: 10,
     minOrderValue: 0,
     maxDiscount: 0,
+    usageLimit: 1000,
     usageLimitPerUser: 1,
     startDate: "",
     endDate: "",
@@ -66,7 +67,7 @@ export default function CouponManagement() {
         setEditingId(null);
         setNewCoupon({
           code: "", type: "PERCENTAGE", value: 10, minOrderValue: 0,
-          maxDiscount: 0, usageLimitPerUser: 1, startDate: "", endDate: "",
+          maxDiscount: 0, usageLimit: 1000, usageLimitPerUser: 1, startDate: "", endDate: "",
           autoApply: false, minQuantity: 0,
         });
       }
@@ -81,6 +82,7 @@ export default function CouponManagement() {
       value: coupon.value,
       minOrderValue: coupon.minOrderValue || 0,
       maxDiscount: coupon.maxDiscount || 0,
+      usageLimit: coupon.usageLimit || 1000,
       usageLimitPerUser: coupon.usageLimitPerUser || 1,
       startDate: coupon.startDate ? new Date(coupon.startDate).toISOString().split('T')[0] : "",
       endDate: coupon.endDate ? new Date(coupon.endDate).toISOString().split('T')[0] : "",
@@ -115,9 +117,9 @@ export default function CouponManagement() {
         const errorData = await res.json().catch(() => ({}));
         alert(`Failed to delete coupon: ${errorData.message || res.statusText}`);
       }
-    } catch (err) { 
+    } catch (err: any) { 
       console.error(err); 
-      alert("An error occurred while deleting the coupon.");
+      alert("Error deleting coupon: " + err.message);
     }
   };
 
@@ -138,7 +140,7 @@ export default function CouponManagement() {
                 setEditingId(null);
                 setNewCoupon({
                   code: "", type: "PERCENTAGE", value: 10, minOrderValue: 0, maxDiscount: 0,
-                  usageLimitPerUser: 1, startDate: "", endDate: "", autoApply: false, minQuantity: 0,
+                  usageLimit: 1000, usageLimitPerUser: 1, startDate: "", endDate: "", autoApply: false, minQuantity: 0,
                 });
                 setShowAddModal(true);
               }}
@@ -197,7 +199,7 @@ export default function CouponManagement() {
               <div className="p-3 bg-wine/10 text-wine rounded-2xl">
                 {coupon.type === 'PERCENTAGE' ? <Percent size={20} /> : <IndianRupee size={20} />}
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 relative z-10">
                 <button onClick={() => handleEdit(coupon)} className="p-2 text-gray-400 hover:text-blue-500 transition-colors">
                   <Edit2 size={16} />
                 </button>
@@ -280,6 +282,30 @@ export default function CouponManagement() {
               </div>
 
               <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 ml-1">Minimum Order Value</label>
+                <input 
+                  type="number"
+                  min="0"
+                  value={newCoupon.minOrderValue}
+                  onChange={e => setNewCoupon({...newCoupon, minOrderValue: parseInt(e.target.value)})}
+                  className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3 text-sm font-bold outline-none focus:border-wine"
+                />
+              </div>
+
+              {newCoupon.type === "PERCENTAGE" && (
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 ml-1">Max Discount Amount</label>
+                  <input 
+                    type="number"
+                    min="0"
+                    value={newCoupon.maxDiscount}
+                    onChange={e => setNewCoupon({...newCoupon, maxDiscount: parseInt(e.target.value)})}
+                    className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3 text-sm font-bold outline-none focus:border-wine"
+                  />
+                </div>
+              )}
+
+              <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 ml-1">Minimum Quantity</label>
                 <input 
                   type="number"
@@ -287,6 +313,28 @@ export default function CouponManagement() {
                   value={newCoupon.minQuantity}
                   onChange={e => setNewCoupon({...newCoupon, minQuantity: parseInt(e.target.value)})}
                   placeholder="e.g. 5 for Buy 5"
+                  className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3 text-sm font-bold outline-none focus:border-wine"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 ml-1">Total Usage Limit</label>
+                <input 
+                  type="number"
+                  min="1"
+                  value={newCoupon.usageLimit}
+                  onChange={e => setNewCoupon({...newCoupon, usageLimit: parseInt(e.target.value)})}
+                  className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3 text-sm font-bold outline-none focus:border-wine"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 ml-1">Usage per user</label>
+                <input 
+                  type="number"
+                  min="1"
+                  value={newCoupon.usageLimitPerUser}
+                  onChange={e => setNewCoupon({...newCoupon, usageLimitPerUser: parseInt(e.target.value)})}
                   className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3 text-sm font-bold outline-none focus:border-wine"
                 />
               </div>

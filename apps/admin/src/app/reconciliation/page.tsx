@@ -42,22 +42,51 @@ const STATUS_CONFIG = {
   mismatch: { color: "bg-orange-50 text-orange-700 border-orange-200", icon: <AlertOctagon size={14} />, label: "Amount Mismatch" },
 };
 
+// ─── Robust RFC-4180 CSV row parser ─────────────────────────────────────────
+function parseCSVRow(line: string): string[] {
+  const result: string[] = [];
+  let i = 0;
+  while (i < line.length) {
+    if (line[i] === '"') {
+      // Quoted field — consume until closing unescaped quote
+      i++;
+      let val = "";
+      while (i < line.length) {
+        if (line[i] === '"' && line[i + 1] === '"') { val += '"'; i += 2; }
+        else if (line[i] === '"') { i++; break; }
+        else { val += line[i++]; }
+      }
+      result.push(val.trim());
+      if (line[i] === ",") i++;
+    } else {
+      const end = line.indexOf(",", i);
+      if (end === -1) { result.push(line.slice(i).trim()); break; }
+      result.push(line.slice(i, end).trim());
+      i = end + 1;
+    }
+  }
+  return result;
+}
+
 // ─── Razorpay CSV Parser ─────────────────────────────────────────────────────
 function parseRazorpayCSV(text: string): GatewayTxn[] {
-  const lines = text.trim().split("\n");
+  const lines = text.trim().split(/\r?\n/);
   if (lines.length < 2) return [];
-  const headers = lines[0].split(",").map(h => h.trim().replace(/"/g, "").toLowerCase());
+  const headers = parseCSVRow(lines[0]).map(h => h.toLowerCase());
 
-  return lines.slice(1).map(line => {
-    const vals = line.split(",").map(v => v.trim().replace(/"/g, ""));
+  return lines.slice(1).filter(l => l.trim()).map(line => {
+    const vals = parseCSVRow(line);
     const row: any = {};
     headers.forEach((h, i) => { row[h] = vals[i] || ""; });
 
-    // Razorpay uses "payment id", "order id", "amount", "status", "created at"
+    const amountRaw = parseFloat(row["amount"] || "0");
+    // Razorpay exports may be in paise (large int) or in rupees (small decimal)
+    const amount = amountRaw > 10000 ? amountRaw / 100 : amountRaw;
+
     return {
       payment_id: row["payment id"] || row["payment_id"] || row["id"] || "",
       order_id:   row["order id"]   || row["order_id"]   || "",
-      amount:     parseFloat(row["amount"] || "0") / 100, // Razorpay stores in paise
+      amount,
       status:     row["status"] || "",
       created_at: row["created at"] || row["created_at"] || "",
       email:      row["email"] || "",
@@ -68,16 +97,15 @@ function parseRazorpayCSV(text: string): GatewayTxn[] {
 
 // ─── PhonePe CSV Parser ──────────────────────────────────────────────────────
 function parsePhonePeCSV(text: string): GatewayTxn[] {
-  const lines = text.trim().split("\n");
+  const lines = text.trim().split(/\r?\n/);
   if (lines.length < 2) return [];
-  const headers = lines[0].split(",").map(h => h.trim().replace(/"/g, "").toLowerCase());
+  const headers = parseCSVRow(lines[0]).map(h => h.toLowerCase());
 
-  return lines.slice(1).map(line => {
-    const vals = line.split(",").map(v => v.trim().replace(/"/g, ""));
+  return lines.slice(1).filter(l => l.trim()).map(line => {
+    const vals = parseCSVRow(line);
     const row: any = {};
     headers.forEach((h, i) => { row[h] = vals[i] || ""; });
 
-    // PhonePe uses "transaction id", "merchant transaction id", "amount", "status", "date"
     return {
       payment_id: row["transaction id"] || row["transactionid"] || row["merchant transaction id"] || "",
       order_id:   row["merchant transaction id"] || row["merchanttransactionid"] || "",

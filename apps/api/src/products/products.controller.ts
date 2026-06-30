@@ -137,6 +137,12 @@ export class ProductController {
     return this.productService.bulkUpdateItems(items);
   }
 
+  @Post('set-default-tax')
+  @RequirePermission('products:write')
+  async setDefaultTax(@Body() body: { taxRate?: number }) {
+    return this.productService.setDefaultTax(body.taxRate ?? 5);
+  }
+
   @Post()
   @RequirePermission('products:write')
   async create(@Body() data: any) {

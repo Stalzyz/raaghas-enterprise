@@ -392,6 +392,7 @@ export class PaymentsService implements OnModuleInit {
     signature: string;
     paymentId: string;
     gateway: 'RAZORPAY' | 'PHONEPE';
+    metaEventId?: string;
   }) {
     const settings = await this._getSettings();
 
@@ -553,7 +554,7 @@ export class PaymentsService implements OnModuleInit {
           phone: order.customerPhone,
           name: order.customerName,
           amount: Number(order.totalAmount),
-          metaEventId: (data as any).metaEventId,
+          metaEventId: data.metaEventId,
         });
         
         // Send email confirmation
@@ -654,17 +655,24 @@ export class PaymentsService implements OnModuleInit {
 
       // Increment Discount Usage (Fix for infinite coupon bug)
       if (order.discountCode) {
-        await tx.discount.update({
-          where: { code: order.discountCode },
-          data: { usedCount: { increment: 1 } }
-        }).catch(() => this.logger.warn(`Failed to increment usedCount for coupon ${order.discountCode}`));
-        if (order.userId) {
-           const discount = await tx.discount.findUnique({ where: { code: order.discountCode } });
-           if (discount) {
-             await (tx as any).discountUsage.create({
-                data: { discountId: discount.id, userId: order.userId, orderId: order.id }
-             }).catch(() => this.logger.warn(`Failed to create discountUsage for coupon ${order.discountCode}`));
-           }
+        const discount = await tx.discount.findUnique({ where: { code: order.discountCode } });
+        if (discount) {
+          await tx.discount.update({
+            where: { id: discount.id },
+            data: { usedCount: { increment: 1 } }
+          });
+          if (order.userId) {
+             const existingUsage = await (tx as any).discountUsage.findFirst({
+                where: { discountId: discount.id, userId: order.userId, orderId: order.id }
+             });
+             if (!existingUsage) {
+               await (tx as any).discountUsage.create({
+                  data: { discountId: discount.id, userId: order.userId, orderId: order.id }
+               });
+             }
+          }
+        } else {
+          this.logger.warn(`Discount ${order.discountCode} not found for order ${order.id}`);
         }
       }
 
@@ -793,9 +801,9 @@ export class PaymentsService implements OnModuleInit {
       try {
         const rzp = await this.getRazorpayInstance();
         const payments = await rzp.orders.fetchPayments(providerOrderId);
-        const successfulPayment = payments.items.find((p: any) => p.status === 'captured' || p.status === 'authorized');
+        const successfulPayment = payments.items.find((p: any) => p.status === 'captured');
         if (successfulPayment) {
-          this.logger.warn(`Attempted to cancel intent ${providerOrderId} but payment was already captured/authorized. Confirming instead.`);
+          this.logger.warn(`Attempted to cancel intent ${providerOrderId} but payment was already captured. Confirming instead.`);
           await this._confirmOrderFromWebhook(providerOrderId, successfulPayment.id, 'RAZORPAY');
           return { success: true, message: 'Payment was captured, order confirmed' };
         }

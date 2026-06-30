@@ -21,7 +21,7 @@ const config: Config = {
           dark: '#4D0A13'
         },
         ivory: {
-          light: '#FDFFCFB',
+          light: '#FDFCFB',
           DEFAULT: '#F8F5F2',
           dark: '#E8DED7',
         },

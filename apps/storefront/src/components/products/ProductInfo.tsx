@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, Truck, ShieldCheck, RefreshCw, Loader2, Heart, Tag, Check, AlertCircle, ChevronDown, X, Share2, Copy, Sparkles } from "lucide-react";
+import { ShoppingBag, Truck, ShieldCheck, RefreshCw, Loader2, Heart, Tag, Check, AlertCircle, ChevronDown, X, Share2, Copy, Sparkles, Star } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -218,9 +218,9 @@ export default function ProductInfo({ product }: ProductInfoProps) {
             <span className="text-2xl font-bold text-theme-text">
               {selectedVariant ? `₹${Number(selectedVariant.price).toLocaleString()}` : "Price TBD"}
             </span>
-            {selectedVariant?.compareAtPrice && (
-              <span className="text-lg text-theme-text-muted line-through">
-                ₹{Number(selectedVariant.compareAtPrice).toLocaleString()}
+            {selectedVariant && (selectedVariant?.mrp || selectedVariant?.compareAtPrice) && Number(selectedVariant.mrp || selectedVariant.compareAtPrice) > Number(selectedVariant.price) && (
+              <span className="text-xl md:text-2xl text-theme-text-muted font-sans font-light line-through opacity-70">
+                ₹{Number(selectedVariant.mrp || selectedVariant.compareAtPrice).toLocaleString()}
               </span>
             )}
           </div>
@@ -243,6 +243,14 @@ export default function ProductInfo({ product }: ProductInfoProps) {
         <span className="text-[10px] text-theme-text-muted uppercase tracking-[0.2em] font-medium mt-1">
           {product.taxInclusive !== false ? "Inclusive of GST" : "+ 12% GST (calculated at checkout)"}
         </span>
+        {selectedVariant && (
+          <div className="flex items-center gap-2 mt-2 w-fit">
+            <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-400 drop-shadow-[0_0_3px_rgba(250,204,21,0.8)] animate-pulse" />
+            <span className="text-[10px] font-bold text-yellow-600 dark:text-yellow-500 uppercase tracking-widest">
+              Earn {Math.floor(Number(selectedVariant.price) / 100)} Reward Points
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Multi-Dimensional Variant Selectors */}

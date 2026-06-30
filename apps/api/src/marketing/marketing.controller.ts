@@ -110,7 +110,33 @@ export class MarketingController {
     return this.marketingService.deleteOfferRule(id);
   }
 
-  // ─── META / FACEBOOK COMMERCE FEED ────────────────────────────────────────
+  // ─── META / FACEBOOK COMMERCE FEED & CAPI ─────────────────────────────────
+
+  @Public()
+  @Post('capi/track')
+  async trackCapiEvent(@Body() body: {
+    eventName: string;
+    orderId?: string;
+    amount?: number;
+    currency?: string;
+    phone?: string;
+    email?: string;
+    name?: string;
+    metaEventId?: string;
+  }) {
+    // Fire and forget so we don't block the client
+    this.marketingService.syncEventToMetaCapi(body.eventName, {
+      orderId: body.orderId || `req_${Date.now()}`,
+      amount: body.amount || 0,
+      currency: body.currency || 'INR',
+      phone: body.phone,
+      email: body.email,
+      name: body.name,
+      metaEventId: body.metaEventId,
+    }).catch(() => {});
+    
+    return { success: true };
+  }
 
   @Public()
   @Get('facebook-feed.xml')

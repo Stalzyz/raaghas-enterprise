@@ -57,14 +57,18 @@ export default function SupportPage() {
                  <div className="p-4 bg-gray-50 rounded-2xl group-hover:bg-wine group-hover:text-white transition-all duration-300">
                     <MessageSquare size={24} />
                  </div>
-                 <div>
+                  <div>
                     <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Live Concierge</h4>
                     <p className="text-xl font-bold text-charcoal mt-1">Chat via WhatsApp</p>
-                    {settings?.supportPhone && (
-                      <a href={`https://wa.me/91${settings.supportPhone}`} className="text-sm text-wine font-bold hover:underline mt-1 block">
-                         +91 {settings.supportPhone}
-                      </a>
-                    )}
+                    {settings?.supportPhone && (() => {
+                      const cleanPhone = settings.supportPhone.replace(/\D/g, '');
+                      const waPhone = cleanPhone.length <= 10 ? `91${cleanPhone}` : cleanPhone;
+                      return (
+                        <a href={`https://wa.me/${waPhone}`} className="text-sm text-wine font-bold hover:underline mt-1 block">
+                           +{waPhone}
+                        </a>
+                      );
+                    })()}
                  </div>
               </div>
 
@@ -85,7 +89,7 @@ export default function SupportPage() {
                  </div>
                  <div>
                     <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Luxury Atelier</h4>
-                    <p className="text-xl font-bold text-charcoal mt-1">{settings?.storeAddress || 'Chennai, India'}</p>
+                    <p className="text-xl font-bold text-charcoal mt-1">{settings?.businessAddress}</p>
                     <p className="text-sm text-gray-500 mt-1 italic">By appointment only.</p>
                  </div>
               </div>

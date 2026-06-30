@@ -67,27 +67,27 @@ const fontPlayfair = 'Georgia, "Times New Roman", serif';
 export const metadata: Metadata = {
   metadataBase: new URL("https://raaghas.in"),
   title: {
-    default: "Raaghas Clothing | Luxury Women's Ethnic Wear",
+    default: "Raaghas | India's Leading Premium Casual & Office Wear",
     template: "%s | Raaghas"
   },
-  description: "Bespoke ethnic wear for the modern woman. Minimal, luxury, and premium collections by Raaghas.",
+  description: "Raaghas is India's leading luxury brand for premium casual and office wear. Discover breathable, handcrafted ethnic wear designed for all-day comfort and elegant evening transitions.",
   openGraph: {
     type: "website",
     url: "https://raaghas.in",
-    title: "Raaghas Clothing | Luxury Women's Ethnic Wear",
-    description: "Bespoke ethnic wear for the modern woman. Minimal, luxury, and premium collections by Raaghas.",
+    title: "Raaghas | Premium Casual & Office Wear",
+    description: "Raaghas is India's leading luxury brand for premium casual and office wear. Discover breathable, handcrafted ethnic wear designed for all-day comfort.",
     siteName: "Raaghas",
     images: [{
       url: "/og-image.jpg",
       width: 1200,
       height: 630,
-      alt: "Raaghas Collection"
+      alt: "Raaghas Premium Ethnic Wear"
     }]
   },
   twitter: {
     card: "summary_large_image",
-    title: "Raaghas Clothing | Luxury Women's Ethnic Wear",
-    description: "Bespoke ethnic wear for the modern woman. Minimal, luxury, and premium collections by Raaghas.",
+    title: "Raaghas | Premium Casual & Office Wear",
+    description: "Raaghas is India's leading luxury brand for premium casual and office wear. Discover breathable, handcrafted ethnic wear designed for all-day comfort.",
     images: ["/og-image.jpg"]
   },
   verification: {
@@ -312,6 +312,7 @@ export default async function RootLayout({
               "name": "Raaghas",
               "url": "https://raaghas.in",
               "logo": "https://raaghas.in/logo.png",
+              "description": "Raaghas is India's leading luxury brand for premium casual and office wear.",
               "sameAs": [
                 "https://www.facebook.com/raaghas",
                 "https://www.instagram.com/raaghas"

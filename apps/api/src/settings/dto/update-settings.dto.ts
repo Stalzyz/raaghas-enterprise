@@ -209,6 +209,12 @@ export class UpdateSettingsDto {
   @IsOptional()
   maxCreditUsagePercent?: any;
 
+  @IsOptional()
+  loyaltyMinOrderValue?: any;
+
+  @IsOptional()
+  loyaltyPointsRate?: any;
+
   @IsString()
   @IsOptional()
   id?: string;

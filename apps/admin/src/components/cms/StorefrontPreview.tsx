@@ -45,7 +45,7 @@ interface ThemeSettings {
 }
 
 const getMediaUrl = (url?: string | null) => {
-  if (!url) return "";
+  if (!url) return "https://images.unsplash.com/photo-1583391733958-d20f4c9c1b9b?q=80&w=800&auto=format&fit=crop";
   if (url.startsWith("http")) return url;
   if (url.startsWith("data:")) return url; // Handle base64
   
@@ -285,7 +285,8 @@ function PreviewSection({ section, theme, previewThemeMode }: { section: Section
   };
   const settings = (section as any).settings || {};
   const anim = animMap[settings.animation || "fade"] || animMap["fade"];
-  const duration = settings.speed ?? 0.5;
+  const rawSpeed = parseFloat(settings.speed);
+  const duration = (isFinite(rawSpeed) && rawSpeed > 0) ? rawSpeed : 0.5;
   const delay = settings.delay ?? 0;
   if ((section as any).hidden) return null;
   return (
@@ -604,11 +605,12 @@ function renderSection(section: Section, theme: ThemeSettings, previewThemeMode:
               <p className="text-[10px] opacity-40 uppercase tracking-widest">{content.handleText || "@raaghas"}</p>
            </div>
            <div className="grid grid-cols-5 gap-2">
-              {[1,2,3,4,5].map(i => (
-                <div key={i} className="aspect-square bg-gray-100 rounded-lg overflow-hidden relative">
-                   <div className="absolute inset-0 bg-black/5" />
-                </div>
-              ))}
+               {[1,2,3,4,5].map(i => (
+                 <div key={i} className="aspect-square bg-gray-100 rounded-lg overflow-hidden relative">
+                    <img src={`https://images.unsplash.com/photo-1583391733958-d20f4c9c1b9b?q=80&w=400&auto=format&fit=crop`} className="w-full h-full object-cover opacity-90" alt="" />
+                    <div className="absolute inset-0 bg-black/5" />
+                 </div>
+               ))}
            </div>
         </div>
       );
@@ -725,11 +727,12 @@ function renderSection(section: Section, theme: ThemeSettings, previewThemeMode:
                {[1,2,3,4].map(i => (
                  <div key={i} className={`space-y-3 ${bodyFont}`}>
                     <div className="aspect-[3/4] bg-beige/50 rounded-lg overflow-hidden relative" style={{ borderRadius: buttonRadius }}>
+                       <img src={`https://images.unsplash.com/photo-1583391733958-d20f4c9c1b9b?q=80&w=600&auto=format&fit=crop`} className="w-full h-full object-cover opacity-90" />
                        <div className="absolute top-2 left-2 text-white text-[8px] px-1.5 py-0.5 rounded font-bold uppercase" style={{ backgroundColor: primaryColor }}>Bestseller</div>
                     </div>
                     <div className="space-y-1">
-                       <div className="h-3 w-3/4 bg-black/10 rounded" />
-                       <div className="h-3 w-1/4 bg-black/5 rounded" />
+                       <div className="text-xs font-bold" style={{ color: style.textColor }}>Designer Piece {i}</div>
+                       <div className="text-[10px] opacity-60" style={{ color: style.textColor }}>₹4,999</div>
                     </div>
                  </div>
                ))}
@@ -764,18 +767,14 @@ function renderSection(section: Section, theme: ThemeSettings, previewThemeMode:
         <div className="py-10 px-6 border-b transition-all duration-500" style={{ ...sectionStyle, borderBottomColor: style.textColor ? `${style.textColor}1A` : "rgba(0,0,0,0.05)" }}>
           <div className="flex gap-4 overflow-hidden">
              {(content.categories || [1,2,3,4,5]).map((cat: any, i: number) => (
-               <div key={i} className="flex-none w-24 space-y-3 flex flex-col items-center">
+               <div key={i} className="flex-none w-28 space-y-4 flex flex-col items-center">
                   <div 
-                    className="w-16 h-16 rounded-full bg-gray-100 border overflow-hidden relative"
+                    className="w-24 h-24 rounded-full bg-gray-100 border overflow-hidden relative"
                     style={{ borderColor: style.textColor ? `${style.textColor}1A` : "rgba(0,0,0,0.05)" }}
                   >
-                     {cat.image ? (
-                        <img src={getMediaUrl(cat.image)} className="absolute inset-0 w-full h-full object-cover opacity-80" />
-                     ) : (
-                        <div className="w-full h-full bg-gray-50" />
-                     )}
+                     <img src={cat.image ? getMediaUrl(cat.image) : `https://images.unsplash.com/photo-1583391733958-d20f4c9c1b9b?q=80&w=400&auto=format&fit=crop`} className="absolute inset-0 w-full h-full object-cover" />
                   </div>
-                  <span className={`text-[9px] font-bold uppercase tracking-tight opacity-70 ${bodyFont}`} style={{ color: style.textColor }}>{cat.name || "Category"}</span>
+                  <span className={`text-[10px] font-bold uppercase tracking-tight opacity-70 ${bodyFont}`} style={{ color: style.textColor }}>{cat.name || "Category"}</span>
                </div>
              ))}
           </div>
@@ -824,9 +823,7 @@ function renderSection(section: Section, theme: ThemeSettings, previewThemeMode:
                 {img.url ? (
                   <img src={getMediaUrl(img.url)} alt="" className={`w-full h-full ${shapeClasses} shadow-sm`} />
                 ) : (
-                  <div className={`w-full h-full bg-gray-100 ${shapeClasses} flex items-center justify-center text-gray-300 text-xs`}>
-                    Image
-                  </div>
+                  <img src={`https://images.unsplash.com/photo-1583391733958-d20f4c9c1b9b?q=80&w=200`} alt="" className={`w-full h-full ${shapeClasses} shadow-sm opacity-80`} />
                 )}
               </div>
             ))}
@@ -999,6 +996,7 @@ function renderSection(section: Section, theme: ThemeSettings, previewThemeMode:
             {[1,2,3,4].map(i => (
               <div key={i}>
                 <div className="aspect-[3/4] rounded-lg overflow-hidden relative" style={{ backgroundColor: tokens.surface, borderRadius: buttonRadius }}>
+                  <img src={`https://images.unsplash.com/photo-1583391733958-d20f4c9c1b9b?q=80&w=400`} className="w-full h-full object-cover opacity-90" alt="" />
                   <div className="absolute top-2 left-2 px-2 py-0.5 text-white text-[8px] font-bold uppercase" style={{ backgroundColor: primaryColor, borderRadius: "3px" }}>Smart Pick</div>
                 </div>
                 <div className="mt-3 space-y-1">
@@ -1024,7 +1022,7 @@ function renderSection(section: Section, theme: ThemeSettings, previewThemeMode:
                 <div className="flex gap-2">
                   {[b?.image1, b?.image2].map((img: string, j: number) => (
                     <div key={j} className="w-14 h-14 rounded-lg overflow-hidden" style={{ backgroundColor: tokens.border }}>
-                      {img && <img src={getMediaUrl(img)} alt="" className="w-full h-full object-cover" />}
+                      <img src={img ? getMediaUrl(img) : `https://images.unsplash.com/photo-1583391733958-d20f4c9c1b9b?q=80&w=200`} alt="" className="w-full h-full object-cover opacity-90" />
                     </div>
                   ))}
                 </div>
@@ -1067,11 +1065,7 @@ function renderSection(section: Section, theme: ThemeSettings, previewThemeMode:
                 
               return (
                 <div key={i} className="aspect-[4/5] overflow-hidden rounded-2xl relative group/ugc shadow-sm border border-black/5">
-                  {item?.image ? (
-                    <img src={getMediaUrl(item.image)} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full" style={{ background: `linear-gradient(135deg, ${primaryColor}${(i * 18 + 20).toString(16).padStart(2, '0')}, ${tokens.surface})` }} />
-                  )}
+                  <img src={item?.image ? getMediaUrl(item.image) : `https://images.unsplash.com/photo-1583391733958-d20f4c9c1b9b?q=80&w=400`} alt="" className="w-full h-full object-cover opacity-90" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover/ugc:opacity-100 transition-opacity" />
                   <div className="absolute inset-x-0 bottom-0 p-4 translate-y-full group-hover/ugc:translate-y-0 transition-transform">
                     <p className="text-[9px] font-bold text-white uppercase tracking-widest truncate">{name}</p>

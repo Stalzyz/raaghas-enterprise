@@ -1,7 +1,7 @@
 "use client";
 
 import { useCart } from "@/context/CartContext";
-import { X, ShoppingBag, Plus, Minus, ArrowRight, ShieldCheck } from "lucide-react";
+import { X, ShoppingBag, Plus, Minus, ArrowRight, ShieldCheck, Sparkles, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -126,6 +126,13 @@ export function CartDrawer() {
                 <div className="pt-4 border-t border-theme-border flex justify-between items-end">
                    <span className="text-lg font-serif italic text-theme-text">Estimated Total</span>
                    <span className="text-2xl font-bold text-theme-text">₹{(cartTotal + Math.round(items.reduce((acc, item) => item.taxInclusive === false ? acc + (item.price * item.quantity * ((item.taxRate || 5) / 100)) : acc, 0))).toLocaleString()}</span>
+                </div>
+
+                <div className="flex items-center justify-center gap-2 pt-2">
+                  <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-400 drop-shadow-[0_0_3px_rgba(250,204,21,0.8)] animate-pulse" />
+                  <span className="text-[10px] font-bold text-yellow-600 dark:text-yellow-500 uppercase tracking-widest">
+                    You will earn {Math.floor(cartTotal / 100)} Reward Points
+                  </span>
                 </div>
 
                 <div className="space-y-3 pt-2">

@@ -17,7 +17,7 @@ export default function CartPage() {
   const isEmpty = items.length === 0;
 
   return (
-    <div className="min-h-screen bg-ivory/30 pt-32 pb-24 px-6 md:px-12">
+    <div className="min-h-screen bg-ivory/30 pb-24 px-6 md:px-12">
       <div className="max-w-7xl mx-auto">
         
         {/* Breadcrumbs */}

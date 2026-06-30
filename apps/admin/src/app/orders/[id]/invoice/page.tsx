@@ -48,6 +48,14 @@ export default function OrderInvoicePage() {
       <Link href="/orders" className="text-wine text-xs font-bold uppercase underline">Back to Orders</Link>
     </div>
   );
+  if (order.status === 'CANCELLED') return (
+    <div className="h-screen flex flex-col items-center justify-center gap-4">
+      <AlertCircle className="text-amber-500" size={48} />
+      <p className="text-gray-700 font-bold uppercase tracking-widest">Invoice Not Available</p>
+      <p className="text-gray-400 text-sm">Invoices are not generated for cancelled orders.</p>
+      <Link href={`/orders/${id}`} className="text-wine text-xs font-bold uppercase underline">Back to Order</Link>
+    </div>
+  );
 
   const getParsedAddress = (addr: any) => {
     if (!addr) return {};

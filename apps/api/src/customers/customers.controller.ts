@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards, Query, Param } from '@nestjs/common';
+import { Controller, Get, Patch, Body, UseGuards, Query, Param } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -12,23 +12,24 @@ export class CustomersController {
 
   @Get()
   async findAll(@Query('role') role?: string) {
-    const where: any = {};
+    const where: any = { role: 'CUSTOMER' };
     if (role && role !== 'ALL') {
       where.role = role;
     }
-    
-    return (this.prisma.user.findMany as any)({
+
+    return this.prisma.user.findMany({
       where,
       select: {
         id: true,
         email: true,
         name: true,
+        phone: true,
         role: true,
         lastActiveAt: true,
         interests: true,
         createdAt: true,
         updatedAt: true,
-        wallet: true,
+        wallet: { select: { id: true, balance: true } },
         _count: {
           select: { orders: true }
         }
@@ -48,16 +49,25 @@ export class CustomersController {
         id: true,
         email: true,
         name: true,
+        phone: true,
         lastActiveAt: true,
         interests: true,
         createdAt: true,
-        wallet: true,
+        wallet: { select: { id: true, balance: true } },
         _count: {
           select: { reviews: true, WishlistItem: true }
         }
       },
       orderBy: { lastActiveAt: 'desc' },
     });
+  }
+
+  @Patch(':id')
+  async update(@Param('id') id: string, @Body() body: { phone?: string; name?: string }) {
+    const data: any = {};
+    if (body.phone !== undefined) data.phone = body.phone || null;
+    if (body.name !== undefined) data.name = body.name;
+    return this.prisma.user.update({ where: { id }, data });
   }
 
   @Get(':id')

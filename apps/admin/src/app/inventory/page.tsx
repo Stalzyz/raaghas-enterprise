@@ -16,7 +16,10 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+import { useAdminAuth } from "@/components/providers/AuthProvider";
+
 export default function InventoryDashboard() {
+  const { token } = useAdminAuth();
   const [radar, setRadar] = useState<any>(null);
   const [variants, setVariants] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -24,20 +27,32 @@ export default function InventoryDashboard() {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    fetchData();
+    if (typeof window !== 'undefined') {
+      const q = new URLSearchParams(window.location.search).get("search");
+      if (q) setSearch(q);
+    }
   }, []);
+
+  useEffect(() => {
+    if (token) fetchData();
+  }, [token]);
 
   const fetchData = async () => {
     setIsLoading(true);
     try {
       const [radarRes, gridRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/inventory/radar`),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/inventory/grid`)
+        fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/inventory/radar`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/inventory/grid`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
       ]);
       const radarData = await radarRes.json();
       const gridData = await gridRes.json();
+      
       setRadar(radarData);
-      setVariants(gridData);
+      setVariants(Array.isArray(gridData) ? gridData : []);
     } catch (error) {
       console.error(error);
     } finally {
@@ -49,7 +64,10 @@ export default function InventoryDashboard() {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/inventory/adjust`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
         body: JSON.stringify({ variantId, change, type: 'ADJUSTMENT', notes: 'Manual adjustment from Grid' })
       });
       if (!res.ok) throw new Error("Failed to adjust stock");
@@ -65,7 +83,9 @@ export default function InventoryDashboard() {
 
   const filteredVariants = variants.filter(v => 
     v.sku?.toLowerCase().includes(search.toLowerCase()) || 
-    v.product.title.toLowerCase().includes(search.toLowerCase())
+    v.product?.title?.toLowerCase().includes(search.toLowerCase()) ||
+    v.productId?.toLowerCase() === search.toLowerCase() ||
+    v.product?.id?.toLowerCase() === search.toLowerCase()
   );
 
   if (isLoading) {
@@ -179,7 +199,14 @@ export default function InventoryDashboard() {
                     return (
                       <tr key={v.id} className="hover:bg-gray-50/30 transition-colors group">
                         <td className="px-8 py-6">
-                           <p className="text-sm font-bold text-charcoal">{v.product.title}</p>
+                           <div className="flex items-center gap-2">
+                             <p className="text-sm font-bold text-charcoal">{v.product.title}</p>
+                             {[v.option1Value, v.option2Value, v.option3Value].filter(Boolean).length > 0 && (
+                               <span className="text-[10px] bg-wine/10 text-wine px-2 py-0.5 rounded-full font-bold">
+                                 {[v.option1Value, v.option2Value, v.option3Value].filter(Boolean).join(' / ')}
+                               </span>
+                             )}
+                           </div>
                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">{v.sku || 'No SKU'}</p>
                         </td>
                         <td className="px-8 py-6">

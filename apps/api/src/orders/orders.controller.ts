@@ -10,7 +10,7 @@ export class OrdersController {
   @Get('my')
   @UseGuards(AuthGuard)
   async getMyOrders(@Req() req: any) {
-    return this.ordersService.getUserOrders(req.user.sub);
+    return this.ordersService.getUserOrders(req.user.id, req.user.email);
   }
 
   @Get('track')

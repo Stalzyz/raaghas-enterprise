@@ -42,12 +42,16 @@ export class NotificationsService {
         return;
       }
 
+      // 1.5 Fetch Store Settings
+      const storeSettings = await this.prisma.storeSettings.findUnique({ where: { id: 'global' } });
+      const enrichedData = { ...data, store: storeSettings || {} };
+
       // 2. Compile with Handlebars
       const subjectTemplate = Handlebars.compile(template.subject);
       const bodyTemplate = Handlebars.compile(template.body);
 
-      const subject = subjectTemplate(data);
-      const html = bodyTemplate(data);
+      const subject = subjectTemplate(enrichedData);
+      const html = bodyTemplate(enrichedData);
 
       const recipient = data.customer?.email || data.email || data.user?.email;
 

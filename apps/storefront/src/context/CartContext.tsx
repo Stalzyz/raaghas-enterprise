@@ -78,7 +78,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return [...prev, newItem];
     });
 
-    // Track Meta AddToCart Event
+    // Track Meta AddToCart Event (Pixel + CAPI Deduplication)
+    const eventId = "evt_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9);
     import("@/components/analytics/MetaPixel").then((m) => {
       m.trackMetaEvent("AddToCart", {
         content_ids: [newItem.variantId],
@@ -86,8 +87,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
         currency: "INR",
         value: newItem.price,
         content_type: "product"
-      });
+      }, eventId);
     });
+
+    fetch(process.env.NEXT_PUBLIC_API_URL + "/marketing/capi/track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        eventName: "AddToCart",
+        amount: newItem.price,
+        currency: "INR",
+        metaEventId: eventId
+      })
+    }).catch(() => {});
   };
 
   const removeItem = (id: string) => {

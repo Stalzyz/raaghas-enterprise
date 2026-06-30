@@ -551,10 +551,9 @@ export default function ThemeBuilder() {
     const loadContent = async () => {
       try {
         console.log("CMS: Initializing Load...");
-        const [pagesRes, themeRes, presetsRes, collectionsRes] = await Promise.all([
+        const [pagesRes, themeRes, collectionsRes] = await Promise.all([
           fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/cms/pages/home`),
           fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/cms/theme`),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/cms/presets`),
           fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/products/collections?adminMode=true`)
         ]);
 
@@ -586,10 +585,6 @@ export default function ThemeBuilder() {
           }
         }
 
-        if (presetsRes.ok) {
-          const presets = await presetsRes.json();
-          setDbPresets(presets);
-        }
         if (collectionsRes && collectionsRes.ok) {
           const collections = await collectionsRes.json();
           setDbCollections(collections);
@@ -1015,33 +1010,6 @@ export default function ThemeBuilder() {
                       value={theme.storeName} 
                       onChange={(v) => { setTheme({ ...theme, storeName: v }); setHasUnsavedChanges(true); }} 
                     />
-
-                    <div className="space-y-4">
-                      <h4 className="text-[11px] font-bold text-charcoal uppercase tracking-[0.2em] flex items-center gap-2">
-                        <Sparkles size={14} className="text-wine" /> Premium Designer Presets
-                      </h4>
-                      <div className="grid grid-cols-1 gap-3">
-                        {dbPresets.map(preset => (
-                          <button
-                            key={preset.id}
-                            onClick={() => applyDbPreset(preset)}
-                            className="group flex items-center gap-4 p-3 bg-gray-50 border border-gray-100 rounded-2xl hover:bg-white hover:border-wine hover:shadow-xl transition-all text-left"
-                          >
-                             <div className="w-16 h-16 rounded-xl bg-wine/5 flex items-center justify-center flex-shrink-0 border border-wine/10 group-hover:bg-wine/10 transition-colors">
-                                <Sparkles size={24} className="text-wine/40 group-hover:text-wine transition-colors" />
-                             </div>
-                             <div className="flex-1 min-w-0">
-                                <p className="text-[11px] font-bold text-charcoal uppercase tracking-widest mb-1 group-hover:text-wine">{preset.name}</p>
-                                <p className="text-[9px] text-gray-400 line-clamp-2 leading-relaxed">{preset.description}</p>
-                             </div>
-                             <div className="p-2 bg-wine/5 text-wine rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Sparkles size={14} />
-                             </div>
-                          </button>
-                        ))}
-                        {dbPresets.length === 0 && <p className="text-[10px] text-gray-400 italic">No designer presets found in database.</p>}
-                      </div>
-                    </div>
 
                     <div className="space-y-4">
                       <h4 className="text-[11px] font-bold text-charcoal uppercase tracking-[0.2em] flex items-center gap-2">

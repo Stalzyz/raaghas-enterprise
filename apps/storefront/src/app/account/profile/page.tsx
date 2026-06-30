@@ -75,9 +75,10 @@ function ProfilePageContent() {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
-      setProfile(data);
-      setName(data.name || "");
-      setAddresses(data.savedAddresses || []);
+      const user = data.user || data;
+      setProfile(user);
+      setName(user.name || "");
+      setAddresses(user.savedAddresses || []);
     } catch (error) {
        console.error(error);
     } finally {
@@ -90,7 +91,7 @@ function ProfilePageContent() {
     setIsUpdating(true);
     try {
       const token = await getToken();
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:6005'}/api/v1/profile/update`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:6005'}/api/v1/auth/me`, {
         method: "PATCH",
         headers: { 
           "Content-Type": "application/json",

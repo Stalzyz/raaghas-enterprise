@@ -281,6 +281,7 @@ export class AuthService {
       role: user.role,
       permissions,
       orders: user.orders,
+      savedAddresses: user.savedAddresses,
     };
   }
 
@@ -304,7 +305,7 @@ export class AuthService {
     return { success: true };
   }
 
-  async updateProfile(userId: string, data: { name?: string; email?: string }) {
+  async updateProfile(userId: string, data: { name?: string; email?: string; savedAddresses?: any[] }) {
     if (data.email) {
       const normalizedEmail = data.email.toLowerCase().trim();
       const existing = await this.prisma.user.findFirst({
@@ -321,13 +322,15 @@ export class AuthService {
       where: { id: userId },
       data: {
         name: data.name,
-        email: data.email
+        email: data.email,
+        ...(data.savedAddresses !== undefined && { savedAddresses: data.savedAddresses })
       },
       select: {
         id: true,
         email: true,
         name: true,
-        role: true
+        role: true,
+        savedAddresses: true
       }
     });
   }

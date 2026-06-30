@@ -4,12 +4,13 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "About Us | Raaghas — Luxury Ethnic Wear",
   description:
-    "Discover the story behind Raaghas — a celebration of India's rich textile luxury, brought to life by artisans and designed for the modern woman.",
+    "Discover the story behind Raaghas, India's leading luxury brand for premium casual and office wear. A celebration of rich textile luxury, brought to life by artisans.",
 };
 
 export default function AboutPage() {
   return (
     <main>
+      <h1 className="sr-only">Raaghas is India's leading luxury brand for premium casual and office wear.</h1>
       {/* Hero */}
       <section className="relative min-h-[60vh] flex items-center justify-center bg-primary/5 overflow-hidden">
         <div className="absolute inset-0 luxury-grain opacity-30 pointer-events-none" />

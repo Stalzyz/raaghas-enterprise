@@ -60,16 +60,17 @@ export default function AddProductPage() {
   useEffect(() => {
     async function loadGuides() {
       if (!token) return;
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      // NEXT_PUBLIC_API_URL already includes /api/v1 — don't append it again
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1');
       try {
         const [sgRes, collRes] = await Promise.all([
-          fetch(`${baseUrl}/api/v1/cms/size-guides`, { headers: { Authorization: `Bearer ${token}` } }),
-          fetch(`${baseUrl}/api/v1/products/collections`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${baseUrl}/size-guides`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${baseUrl}/products/collections`, { headers: { Authorization: `Bearer ${token}` } }),
         ]);
         if (sgRes.ok) setSizeGuides(await sgRes.json());
         if (collRes.ok) setAllCollections(await collRes.json());
       } catch (e) {
-        console.error("Failed to fetch size guides", e);
+        console.error("Failed to fetch size guides / collections", e);
       }
     }
     loadGuides();
@@ -256,7 +257,8 @@ export default function AddProductPage() {
     try {
       const payload = {
         ...form,
-        collections: selectedCollectionIds,
+        taxRate: parseFloat(form.taxRate) || 5,
+        collections: selectedCollectionIds.filter(id => !id.startsWith('virtual-')),
         images: images.map(img => ({ url: img.url, isPrimary: img.isPrimary })),
         variants: combinations.map(comb => {
           const key = comb.join("-");
@@ -567,6 +569,35 @@ export default function AddProductPage() {
                     </div>
                     {optIdx > 0 && <button onClick={() => removeOption(optIdx)} className="text-red-400 hover:text-red-600"><Trash2 size={16}/></button>}
                   </div>
+                  {/* Quick-pick for Size options */}
+                  {opt.name.toLowerCase() === 'size' && (
+                    <div className="space-y-2">
+                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Quick Pick</p>
+                      <div className="flex flex-wrap gap-2">
+                        {SIZES.map(sz => {
+                          const active = opt.values.includes(sz);
+                          return (
+                            <button
+                              key={sz}
+                              type="button"
+                              onClick={() => active ? removeValue(optIdx, opt.values.indexOf(sz)) : addValue(optIdx, sz)}
+                              className={`text-[10px] font-bold px-3 py-1.5 rounded-lg border transition-all ${active ? 'bg-wine text-white border-wine' : 'bg-gray-50 text-gray-500 border-gray-200 hover:border-wine hover:text-wine'}`}
+                            >
+                              {sz}
+                            </button>
+                          );
+                        })}
+                        <button
+                          type="button"
+                          onClick={() => { SIZES.slice(0, 6).forEach(sz => addValue(optIdx, sz)); }}
+                          className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-dashed border-gray-300 text-gray-400 hover:border-wine hover:text-wine transition-all"
+                        >
+                          + All Standard
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex flex-wrap gap-2">
                     {opt.values.map((val, valIdx) => (
                       <span key={valIdx} className="bg-wine text-white text-xs font-bold pl-3 pr-2 py-1.5 rounded-lg flex items-center gap-2 group">
@@ -574,15 +605,15 @@ export default function AddProductPage() {
                         <button onClick={() => removeValue(optIdx, valIdx)} className="hover:bg-white/20 rounded-md p-0.5"><X size={12}/></button>
                       </span>
                     ))}
-                    <input 
+                    <input
                       onKeyDown={e => {
                         if (e.key === 'Enter') {
-                          addValue(optIdx, (e.target as HTMLInputElement).value);
+                          addValue(optIdx, (e.target as HTMLInputElement).value.trim());
                           (e.target as HTMLInputElement).value = '';
                         }
                       }}
                       className="text-xs bg-gray-50 border border-dashed border-gray-300 px-3 py-1.5 rounded-lg outline-none focus:border-wine focus:bg-white"
-                      placeholder="Type value & hit Enter..."
+                      placeholder="Or type a custom value & hit Enter..."
                     />
                   </div>
                 </div>
@@ -715,28 +746,60 @@ export default function AddProductPage() {
                   </span>
                 )}
               </label>
-              <div className="max-h-40 overflow-y-auto space-y-2 border border-gray-200 rounded-xl p-3 bg-gray-50">
-                {allCollections.filter(Boolean).map((c: any) => (
-                  <label key={c.id} className="flex items-center gap-3 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      checked={selectedCollectionIds.includes(c.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedCollectionIds(prev => [...prev, c.id]);
-                        } else {
-                          setSelectedCollectionIds(prev => prev.filter(id => id !== c.id));
-                        }
-                      }}
-                      className="w-4 h-4 rounded accent-wine"
-                    />
-                    <span className="text-sm text-charcoal group-hover:text-wine transition-colors">{c.title}</span>
-                  </label>
-                ))}
-                {allCollections.length === 0 && (
-                  <p className="text-xs text-gray-400 text-center py-2">Loading collections...</p>
-                )}
-              </div>
+              {allCollections.length === 0 ? (
+                <p className="text-xs text-gray-400 text-center py-3 border border-gray-200 rounded-xl bg-gray-50">Loading...</p>
+              ) : (
+                <div className="border border-gray-200 rounded-xl overflow-hidden bg-gray-50 max-h-64 overflow-y-auto">
+                  {/* Shop by Category */}
+                  {allCollections.filter((c: any) => c.isVirtual).length > 0 && (
+                    <div>
+                      <p className="px-3 py-2 text-[9px] font-bold uppercase tracking-[0.25em] text-gray-400 bg-gray-100 border-b border-gray-200 sticky top-0">
+                        Shop by Category
+                      </p>
+                      <div className="space-y-0">
+                        {allCollections.filter((c: any) => c.isVirtual).map((c: any) => (
+                          <label key={c.id} className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-white transition-colors group">
+                            <input
+                              type="checkbox"
+                              checked={selectedCollectionIds.includes(c.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) setSelectedCollectionIds(prev => [...prev, c.id]);
+                                else setSelectedCollectionIds(prev => prev.filter(id => id !== c.id));
+                              }}
+                              className="w-3.5 h-3.5 rounded accent-wine flex-shrink-0"
+                            />
+                            <span className="text-xs text-charcoal group-hover:text-wine transition-colors">{c.title}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {/* Shop by Collection */}
+                  {allCollections.filter((c: any) => !c.isVirtual).length > 0 && (
+                    <div>
+                      <p className="px-3 py-2 text-[9px] font-bold uppercase tracking-[0.25em] text-gray-400 bg-gray-100 border-b border-gray-200 border-t sticky top-0">
+                        Shop by Collection
+                      </p>
+                      <div className="space-y-0">
+                        {allCollections.filter((c: any) => !c.isVirtual).map((c: any) => (
+                          <label key={c.id} className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-white transition-colors group">
+                            <input
+                              type="checkbox"
+                              checked={selectedCollectionIds.includes(c.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) setSelectedCollectionIds(prev => [...prev, c.id]);
+                                else setSelectedCollectionIds(prev => prev.filter(id => id !== c.id));
+                              }}
+                              className="w-3.5 h-3.5 rounded accent-wine flex-shrink-0"
+                            />
+                            <span className="text-xs text-charcoal group-hover:text-wine transition-colors">{c.title}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             <div>
               <label className="text-sm font-bold text-charcoal block mb-1">Sub-Category</label>

@@ -136,7 +136,7 @@ export class AuthController {
 
   @UseGuards(AuthGuard)
   @Patch('me')
-  async updateMe(@Req() req: any, @Body() data: { name?: string; email?: string }) {
+  async updateMe(@Req() req: any, @Body() data: { name?: string; email?: string; savedAddresses?: any[] }) {
     return this.authService.updateProfile(req.user.id, data);
   }
 }

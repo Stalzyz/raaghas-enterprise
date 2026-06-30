@@ -158,6 +158,7 @@ export default function PurchaseOrderDetails() {
                 <tr>
                   <th className="px-6 py-4">Fabric / Material</th>
                   <th className="px-6 py-4 text-center">HSN</th>
+                  <th className="px-6 py-4 text-center">In-Hand</th>
                   <th className="px-6 py-4 text-center">Qty</th>
                   <th className="px-6 py-4 text-right">Cost Price</th>
                   <th className="px-6 py-4 text-right">Total</th>
@@ -171,7 +172,8 @@ export default function PurchaseOrderDetails() {
                       <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{item.variant?.sku}</p>
                     </td>
                     <td className="px-6 py-5 text-center font-mono text-[10px] text-gray-400">{item.hsnCode || "-"}</td>
-                    <td className="px-6 py-5 text-center font-bold text-sm text-charcoal">{item.quantity}</td>
+                    <td className="px-6 py-5 text-center font-bold text-sm text-gray-400">{item.variant?.inventory || 0}</td>
+                    <td className="px-6 py-5 text-center font-bold text-sm text-wine">+{item.quantity}</td>
                     <td className="px-6 py-5 text-right font-mono text-xs text-gray-500">₹{Number(item.costPrice).toLocaleString()}</td>
                     <td className="px-6 py-5 text-right font-bold text-charcoal">₹{(item.quantity * Number(item.costPrice)).toLocaleString()}</td>
                   </tr>

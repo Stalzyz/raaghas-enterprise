@@ -75,6 +75,7 @@ export class CommunicationService {
       const mailOptions = {
         from: `"${storeName}" <${from}>`,
         to,
+        cc: settings?.supportEmail || 'raaghaclothing@gmail.com',
         subject,
         [isHtml ? 'html' : 'text']: body,
         attachments

@@ -73,7 +73,6 @@ async function bootstrap() {
   // 1. MUST BE FIRST: Enable CORS with Strict Whitelist
   const whitelist = [
     'https://raaghas.in',
-    'https://www.raaghas.in',
     'https://admin.raaghas.in',
     'https://api.raaghas.in',
     'http://localhost:3000',
@@ -81,6 +80,9 @@ async function bootstrap() {
     'http://localhost:6001',
     'http://localhost:6002',
     'http://localhost:6005',
+    'http://localhost:7001',
+    'http://localhost:7002',
+    'http://localhost:7005',
   ];
 
   app.enableCors({
@@ -117,7 +119,7 @@ async function bootstrap() {
   // Versioning and Prefixing
   app.setGlobalPrefix('api/v1');
   
-  const port = process.env.PORT || 6005;
+  const port = process.env.PORT || 7005;
   
   const startApp = async (retry = true) => {
     try {
