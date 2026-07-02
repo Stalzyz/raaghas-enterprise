@@ -113,22 +113,29 @@ ssh $SSH_OPTS root@$VPS_IP << 'REMOTE_SCRIPT'
     fi
   done
 
-  # ── Restart all PM2 services ──────────────────────────────────────────────────
-  echo "🚀 Restarting PM2 services..."
-  pm2 delete raaghas-api raaghas-admin raaghas-storefront 2>/dev/null || true
+  # ── Restart all PM2 services (Zero Downtime) ──────────────────────────────────
+  echo "🚀 Reloading PM2 services for zero downtime..."
+  
+  # API
+  if pm2 describe raaghas-api > /dev/null 2>&1; then
+    NODE_ENV=production PORT=6005 pm2 reload raaghas-api --update-env
+  else
+    NODE_ENV=production PORT=6005 pm2 start apps/api/dist/src/main.js --name raaghas-api --node-args="--max-old-space-size=512"
+  fi
 
-  NODE_ENV=production PORT=6005 pm2 start apps/api/dist/src/main.js \
-    --name raaghas-api \
-    --node-args="--max-old-space-size=512" \
-    --env production
+  # Admin
+  if pm2 describe raaghas-admin > /dev/null 2>&1; then
+    NODE_ENV=production PORT=6010 pm2 reload raaghas-admin --update-env
+  else
+    NODE_ENV=production PORT=6010 pm2 start apps/admin/.next/standalone/apps/admin/server.js --name raaghas-admin --node-args="--max-old-space-size=512"
+  fi
 
-  NODE_ENV=production PORT=6010 pm2 start apps/admin/.next/standalone/apps/admin/server.js \
-    --name raaghas-admin \
-    --node-args="--max-old-space-size=512"
-
-  NODE_ENV=production PORT=6009 pm2 start apps/storefront/.next/standalone/apps/storefront/server.js \
-    --name raaghas-storefront \
-    --node-args="--max-old-space-size=512"
+  # Storefront
+  if pm2 describe raaghas-storefront > /dev/null 2>&1; then
+    NODE_ENV=production PORT=6009 pm2 reload raaghas-storefront --update-env
+  else
+    NODE_ENV=production PORT=6009 pm2 start apps/storefront/.next/standalone/apps/storefront/server.js --name raaghas-storefront --node-args="--max-old-space-size=512"
+  fi
 
   pm2 save
   echo "✅ PM2 services running:"
