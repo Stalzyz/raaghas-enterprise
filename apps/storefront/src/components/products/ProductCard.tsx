@@ -160,12 +160,12 @@ export default function ProductCard({ product }: ProductCardProps) {
               toggleWishlist(product.id);
             }}
             className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl backdrop-blur-md border border-white/20 ${
-              isWishlisted 
+              mounted && isWishlisted 
                 ? "bg-wine text-white" 
                 : "bg-black/60 text-white hover:bg-wine"
             }`}
           >
-            <Heart size={16} fill={isWishlisted ? "currentColor" : "none"} strokeWidth={2} />
+            <Heart size={16} fill={mounted && isWishlisted ? "currentColor" : "none"} strokeWidth={2} />
           </button>
           <button 
             onClick={openQuickView}

@@ -184,6 +184,8 @@ function ScrollProductCard({ product }: { product: any }) {
   const { addItem, toggleDrawer } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
   const wishlisted = isInWishlist(product.id);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const isOutOfStock = product.inventory <= 0;
   const hasOptions =
@@ -243,9 +245,9 @@ function ScrollProductCard({ product }: { product: any }) {
         {/* Wishlist */}
         <button
           onClick={(e) => { e.preventDefault(); toggleWishlist(product.id); }}
-          className={`absolute top-3 right-3 z-20 w-9 h-9 rounded-full flex items-center justify-center transition-all shadow-lg backdrop-blur-md border border-white/20 ${wishlisted ? "bg-primary text-white" : "bg-black/50 text-white opacity-0 group-hover:opacity-100"}`}
+          className={`absolute top-3 right-3 z-20 w-9 h-9 rounded-full flex items-center justify-center transition-all shadow-lg backdrop-blur-md border border-white/20 ${mounted && wishlisted ? "bg-primary text-white" : "bg-black/50 text-white opacity-0 group-hover:opacity-100"}`}
         >
-          <Heart size={14} fill={wishlisted ? "currentColor" : "none"} />
+          <Heart size={14} fill={mounted && wishlisted ? "currentColor" : "none"} />
         </button>
 
         {/* Images */}

@@ -254,9 +254,9 @@ function ProductCard({ product }: { product: any }) {
         <div className="absolute top-4 right-4 z-20 flex flex-col gap-2 translate-x-10 group-hover:translate-x-0 transition-transform duration-500">
           <button 
             onClick={(e) => { e.preventDefault(); toggleWishlist(product.id); }}
-            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl backdrop-blur-md border border-white/20 ${isWishlisted ? 'bg-wine text-white' : 'bg-black/60 text-white hover:bg-wine'}`}
+            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl backdrop-blur-md border border-white/20 ${mounted && isWishlisted ? 'bg-wine text-white' : 'bg-black/60 text-white hover:bg-wine'}`}
           >
-            <Heart size={16} fill={isWishlisted ? "currentColor" : "none"} />
+            <Heart size={16} fill={mounted && isWishlisted ? "currentColor" : "none"} />
           </button>
           <button 
             onClick={openQuickView}

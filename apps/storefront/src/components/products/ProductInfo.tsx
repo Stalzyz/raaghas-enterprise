@@ -56,6 +56,8 @@ export default function ProductInfo({ product }: ProductInfoProps) {
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false); // Default static for SSR
   const [checkingCoupon, setCheckingCoupon] = useState(false);
   const [viewers, setViewers] = useState(12); // Default static for SSR
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const { addItem, toggleDrawer } = useCart();
   const { user: authUser, token } = useAuth();
   const router = useRouter();
@@ -377,12 +379,12 @@ export default function ProductInfo({ product }: ProductInfoProps) {
         <button 
           onClick={() => toggleWishlist(product.id)}
           className={`p-5 rounded-2xl border transition-colors ${
-            isInWishlist(product.id)
+            mounted && isInWishlist(product.id)
               ? "bg-wine text-ivory border-wine shadow-lg"
               : "border-charcoal/10 hover:bg-beige text-wine"
           }`}
         >
-          <Heart size={20} fill={isInWishlist(product.id) ? "currentColor" : "none"} />
+          <Heart size={20} fill={mounted && isInWishlist(product.id) ? "currentColor" : "none"} />
         </button>
       </div>
 

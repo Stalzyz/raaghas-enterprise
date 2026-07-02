@@ -65,13 +65,14 @@ export function useWishlist() {
       try {
         const token = await getToken();
         loadLocal(); // get latest local items
+        const initialWishlist = [...globalWishlist]; // Capture state before network requests
         
         // Sync local items up to the cloud
-        if (globalWishlist.length > 0) {
+        if (initialWishlist.length > 0) {
           await fetch(`${API_URL}/api/v1/wishlist/sync`, {
             method: "POST",
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-            body: JSON.stringify({ productIds: globalWishlist }),
+            body: JSON.stringify({ productIds: initialWishlist }),
           }).catch(() => null);
         }
 
@@ -82,9 +83,17 @@ export function useWishlist() {
         
         if (response.ok) {
           const data = await response.json();
-          // Adjust based on backend response shape. The service returns an array of modified product objects with `.id`
-          const newWishlist = Array.isArray(data) ? data.map((p: any) => p.id || p.productId || p) : [];
-          globalWishlist = newWishlist;
+          const backendWishlist = Array.isArray(data) ? data.map((p: any) => p.id || p.productId || p) : [];
+          
+          // Reconcile changes made by the user DURING the network requests
+          const addedDuringSync = globalWishlist.filter(id => !initialWishlist.includes(id));
+          const removedDuringSync = initialWishlist.filter(id => !globalWishlist.includes(id));
+          
+          let finalWishlist = backendWishlist.filter((id: string) => !removedDuringSync.includes(id));
+          finalWishlist = [...finalWishlist, ...addedDuringSync];
+          finalWishlist = Array.from(new Set(finalWishlist));
+          
+          globalWishlist = finalWishlist;
           localStorage.setItem(WISHLIST_LOCAL_STORAGE_KEY, JSON.stringify(globalWishlist));
           notify();
         }
