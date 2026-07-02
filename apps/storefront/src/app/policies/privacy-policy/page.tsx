@@ -1,7 +1,8 @@
+import { API_URL } from "@/lib/api";
+
 import Link from "next/link";
 import { LegalProseSection } from "@/components/sections/LegalProseSection";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? "http://localhost:6005" : "https://api.raaghas.in");
 
 export async function generateMetadata() {
   try {

@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect } from "react";
 import { 
   Truck, Search, Filter, ChevronRight, ExternalLink, 
@@ -21,7 +23,7 @@ export default function ShipmentTrackingPage() {
 
   const fetchShipments = async () => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1');
+      const baseUrl = `${API_BASE}/api/v1`;
       const res = await fetch(`${baseUrl}/logistics/shipments`, {
         headers: { Authorization: `Bearer ${token}` }
       });

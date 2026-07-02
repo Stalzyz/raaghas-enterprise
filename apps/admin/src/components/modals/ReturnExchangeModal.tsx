@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, RefreshCw, Undo2, AlertCircle, Loader2 } from "lucide-react";
@@ -42,7 +44,7 @@ export function ReturnExchangeModal({
     if (!token) return;
     setIsLoadingVariants(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1')}/products/admin/${productId}`, {
+      const res = await fetch(`${`${API_BASE}/api/v1`}/products/admin/${productId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
@@ -63,7 +65,7 @@ export function ReturnExchangeModal({
 
     setIsSubmitting(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1')}/orders/admin/${orderId}/exchange-or-return`, {
+      const res = await fetch(`${`${API_BASE}/api/v1`}/orders/admin/${orderId}/exchange-or-return`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

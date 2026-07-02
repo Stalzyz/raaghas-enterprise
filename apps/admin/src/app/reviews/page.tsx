@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect } from "react";
 import { 
   Star, 
@@ -35,7 +37,7 @@ export default function ReviewModerationPage() {
   const [savingPolicy, setSavingPolicy] = useState(false);
   const [policySaved, setPolicySaved] = useState(false);
 
-  const API = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+  const API = API_BASE;
 
   // FIX: Wait for token before fetching
   useEffect(() => {
@@ -101,7 +103,7 @@ export default function ReviewModerationPage() {
   const moderateReview = async (id: string, approved: boolean) => {
     try {
       
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/reviews/${id}/moderate?approved=${approved}`, {
+      await fetch(`${API_BASE}/reviews/${id}/moderate?approved=${approved}`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -115,7 +117,7 @@ export default function ReviewModerationPage() {
     if (!confirm("Are you sure you want to delete this review?")) return;
     try {
       
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/reviews/${id}`, {
+      await fetch(`${API_BASE}/reviews/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` }
       });

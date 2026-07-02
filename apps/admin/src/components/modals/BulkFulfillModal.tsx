@@ -1,3 +1,5 @@
+import { API_BASE } from "@/lib/api";
+
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Truck, Loader2 } from "lucide-react";
@@ -21,7 +23,7 @@ export function BulkFulfillModal({ isOpen, onClose, selectedOrderIds, onComplete
         trackingId: trackingId // Using same tracking ID for simplicity in basic bulk, or can be improved later
       }));
 
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1');
+      const apiBase = `${API_BASE}/api/v1`;
       const res = await fetch(`${apiBase}/orders/admin/bulk-fulfillments`, {
         method: "POST",
         headers: { 

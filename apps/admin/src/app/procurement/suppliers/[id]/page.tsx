@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useEffect, useState } from "react";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
 import { 
@@ -37,7 +39,7 @@ export default function SupplierDashboard() {
 
   const fetchData = async () => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const baseUrl = API_BASE;
       const res = await fetch(`${baseUrl}/procurement/suppliers/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -66,7 +68,7 @@ export default function SupplierDashboard() {
     e.preventDefault();
     setIsSaving(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const baseUrl = API_BASE;
       const res = await fetch(`${baseUrl}/procurement/suppliers/${id}`, {
         method: 'PUT',
         headers: { 
@@ -90,7 +92,7 @@ export default function SupplierDashboard() {
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this supplier?")) return;
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const baseUrl = API_BASE;
       const res = await fetch(`${baseUrl}/procurement/suppliers/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }

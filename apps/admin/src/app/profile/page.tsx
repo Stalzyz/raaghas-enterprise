@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState } from "react";
 import { User, Mail, Shield, Lock, Key, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
@@ -18,7 +20,7 @@ export default function ProfilePage() {
     setMessage({ text: "", type: "" });
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/auth/me`, {
+      const res = await fetch(`${API_BASE}/auth/me`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -54,7 +56,7 @@ export default function ProfilePage() {
     setMessage({ text: "", type: "" });
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/auth/change-password`, {
+      const res = await fetch(`${API_BASE}/auth/change-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

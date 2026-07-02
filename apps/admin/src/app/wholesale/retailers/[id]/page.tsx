@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
@@ -43,7 +45,7 @@ export default function RetailerProfile({ params }: { params: Promise<{ id: stri
   const fetchRetailer = async () => {
     try {
       
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/wholesale/retailers/${id}`, {
+      const res = await fetch(`${API_BASE}/wholesale/retailers/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!res.ok) throw new Error("Failed to load retailer profile.");
@@ -59,7 +61,7 @@ export default function RetailerProfile({ params }: { params: Promise<{ id: stri
   const fetchPriceLists = async () => {
     try {
       
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/wholesale/price-lists`, {
+      const res = await fetch(`${API_BASE}/wholesale/price-lists`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) setPriceLists(await res.json());
@@ -87,7 +89,7 @@ export default function RetailerProfile({ params }: { params: Promise<{ id: stri
     setSaving(true);
     try {
       
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/wholesale/retailers/${id}/${status}`, {
+      const res = await fetch(`${API_BASE}/wholesale/retailers/${id}/${status}`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -104,7 +106,7 @@ export default function RetailerProfile({ params }: { params: Promise<{ id: stri
     setSaving(true);
     try {
       
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/wholesale/retailers/${id}`, {
+      const res = await fetch(`${API_BASE}/wholesale/retailers/${id}`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',

@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -30,7 +32,7 @@ export default function OrderDetails() {
 
   const fetchOrder = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/wholesale/orders/${id}`, {
+      const res = await fetch(`${API_BASE}/wholesale/orders/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
@@ -47,7 +49,7 @@ export default function OrderDetails() {
   const updateStatus = async (newStatus: string) => {
     setUpdating(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/wholesale/orders/${id}/status`, {
+      const res = await fetch(`${API_BASE}/wholesale/orders/${id}/status`, {
         method: "PATCH",
         headers: { 
           "Content-Type": "application/json",

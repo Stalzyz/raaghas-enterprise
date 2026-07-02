@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
@@ -60,7 +62,7 @@ export default function ProductManagement() {
       try {
         const headers: Record<string, string> = {};
         if (token) headers['Authorization'] = `Bearer ${token}`;
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1')}/products?adminMode=true&limit=2000`, {
+        const res = await fetch(`${`${API_BASE}/api/v1`}/products?adminMode=true&limit=2000`, {
           headers,
           credentials: 'include',
         });
@@ -80,7 +82,7 @@ export default function ProductManagement() {
   useEffect(() => {
     async function loadCollections() {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1')}/products/collections`);
+        const res = await fetch(`${`${API_BASE}/api/v1`}/products/collections`);
         if (res.ok) {
           setCollections(await res.json());
         }
@@ -104,7 +106,7 @@ export default function ProductManagement() {
     formData.append("file", importFile);
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1');
+      const baseUrl = `${API_BASE}/api/v1`;
       const headers: Record<string, string> = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
@@ -150,7 +152,7 @@ export default function ProductManagement() {
     
     setIsBulkLoading(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1');
+      const baseUrl = `${API_BASE}/api/v1`;
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       if (token) headers['Authorization'] = `Bearer ${token}`;
       const res = await fetch(`${baseUrl}/products/bulk-action`, {
@@ -180,7 +182,7 @@ export default function ProductManagement() {
     if (!confirm("This will set taxRate = 5% and taxInclusive = true for ALL products. Continue?")) return;
     setIsSettingTax(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1');
+      const baseUrl = `${API_BASE}/api/v1`;
       const res = await fetch(`${baseUrl}/products/set-default-tax`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
@@ -284,7 +286,7 @@ export default function ProductManagement() {
     if (stock === 0) outOfStockCount++;
     else if (stock < 20) lowStockCount++;
 
-    const apiBase = (process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')).replace('/api/v1', '');
+    const apiBase = (API_BASE).replace('/api/v1', '');
     const rawImageUrl = p.images?.[0]?.url || '';
     const imageUrl = rawImageUrl
       ? (rawImageUrl.startsWith('http') ? rawImageUrl : `${apiBase}${rawImageUrl}`)
@@ -650,7 +652,7 @@ export default function ProductManagement() {
                                  onClick={async () => {
                                    if (!confirm('Duplicate this product?')) return;
                                    try {
-                                     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1')}/products/${p.id}/duplicate`, {
+                                     const res = await fetch(`${`${API_BASE}/api/v1`}/products/${p.id}/duplicate`, {
                                        method: 'POST',
                                        headers: { Authorization: `Bearer ${token}` }
                                      });
@@ -666,7 +668,7 @@ export default function ProductManagement() {
                                  onClick={async () => {
                                     if (!confirm(`Are you sure you want to ${p.status === 'Draft' ? 'Publish' : 'Archive'} this product?`)) return;
                                     try {
-                                      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1')}/products/${p.id}/toggle-publish`, {
+                                      const res = await fetch(`${`${API_BASE}/api/v1`}/products/${p.id}/toggle-publish`, {
                                         method: 'PATCH',
                                         headers: { Authorization: `Bearer ${token}` }
                                       });

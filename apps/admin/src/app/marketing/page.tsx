@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -10,7 +12,7 @@ import {
 } from "lucide-react";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? "http://localhost:6005/api/v1" : "https://api.raaghas.in/api/v1");
+const API_URL = `${API_BASE}/api/v1`;
 
 interface Lead {
   id: string;

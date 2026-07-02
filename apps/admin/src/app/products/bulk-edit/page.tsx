@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
@@ -19,7 +21,7 @@ function BulkEditContent() {
   const [editedItems, setEditedItems] = useState<Record<string, any>>({});
   const [sizeGuides, setSizeGuides] = useState<any[]>([]);
 
-  const API = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1');
+  const API = `${API_BASE}/api/v1`;
 
   useEffect(() => {
     async function loadGuides() {

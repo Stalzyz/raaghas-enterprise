@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { 
@@ -98,7 +100,7 @@ export default function OrdersPage() {
     if (!token) return;
     const fetchSettings = async () => {
       try {
-        const apiBase = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1');
+        const apiBase = `${API_BASE}/api/v1`;
         const res = await fetch(`${apiBase}/settings`, { headers: { Authorization: `Bearer ${token}` } });
         if (res.ok) setStoreSettings(await res.json());
       } catch (err) {}
@@ -127,7 +129,7 @@ export default function OrdersPage() {
       if (filters.financialStatus) queryParams.append("financialStatus", filters.financialStatus);
       if (filters.fulfillmentStatus) queryParams.append("fulfillmentStatus", filters.fulfillmentStatus);
 
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1');
+      const apiBase = `${API_BASE}/api/v1`;
       const res = await fetch(`${apiBase}/orders/admin/all?${queryParams.toString()}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -166,7 +168,7 @@ export default function OrdersPage() {
     }
 
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1');
+      const apiBase = `${API_BASE}/api/v1`;
       const res = await fetch(`${apiBase}${endpoint.replace('/api/v1', '')}`, {
         method: 'PATCH',
         headers: { 
@@ -384,6 +386,7 @@ export default function OrdersPage() {
                     <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Images</th>
                     <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Status</th>
                     <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Payment</th>
+                    <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Payment Ref</th>
                     <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Total</th>
                     <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Staff</th>
                     <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">Risk</th>
@@ -455,7 +458,7 @@ export default function OrdersPage() {
                             const rawUrl = item.variant?.product?.images?.[0]?.url
                               || item.imageUrl
                               || item.variant?.imageUrl;
-                            const apiBase = (process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')).replace('/api/v1', '');
+                            const apiBase = (API_BASE).replace('/api/v1', '');
                             const imageUrl = rawUrl
                               ? (rawUrl.startsWith('http') ? rawUrl : `${apiBase}${rawUrl}`)
                               : null;
@@ -495,6 +498,9 @@ export default function OrdersPage() {
                           </span>
                           <span className="text-[9px] text-gray-400">{order.paymentMethod}</span>
                         </div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <span className="text-[10px] font-mono text-gray-500">{order.paymentId || order.paymentIntentId || "—"}</span>
                       </td>
                       <td className="px-6 py-5 text-xs font-bold text-gray-900">
                         ₹{Number(order.totalAmount).toLocaleString()}

@@ -1,5 +1,7 @@
 "use client";
 
+import { API_URL } from "@/lib/api";
+
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, ArrowRight, ShieldCheck, Chrome, Loader2 } from "lucide-react";
@@ -30,7 +32,6 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
     }
   }, [isAuthenticated, authLoading]);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? "http://localhost:6005" : "https://api.raaghas.in");
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();

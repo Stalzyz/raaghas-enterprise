@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect } from "react";
 import { Plus, Trash2, MapPin, Truck, ChevronRight, Save, Loader2, Globe, Map, Ship, Eye, EyeOff, Tag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -20,7 +22,7 @@ export default function ShippingConfigPage() {
 
   const fetchData = async () => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const baseUrl = API_BASE;
       
       const [zonesRes, settingsRes] = await Promise.all([
         fetch(`${baseUrl}/settings/shipping-zones`, { headers: { Authorization: `Bearer ${token}` } }),
@@ -79,7 +81,7 @@ export default function ShippingConfigPage() {
     }
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const baseUrl = API_BASE;
       const res = await fetch(`${baseUrl}/logistics/zones/${zoneId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
@@ -98,7 +100,7 @@ export default function ShippingConfigPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const baseUrl = API_BASE;
       
       const [zonesRes, settingsRes] = await Promise.all([
         fetch(`${baseUrl}/settings/shipping-zones`, {

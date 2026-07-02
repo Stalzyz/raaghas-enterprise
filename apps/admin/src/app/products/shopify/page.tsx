@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect } from "react";
 import { Package, Sparkles, CheckCircle2, RotateCw, AlertTriangle, DownloadCloud, Image as ImageIcon, Database } from "lucide-react";
 
@@ -33,7 +35,7 @@ export default function ShopifyMigrationPage() {
     if (status?.isRunning) {
       interval = setInterval(async () => {
         try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/products/migration/status`, {
+          const res = await fetch(`${API_BASE}/products/migration/status`, {
             credentials: 'include'
           });
           if (res.ok) {
@@ -54,7 +56,7 @@ export default function ShopifyMigrationPage() {
     
     setIsStarting(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/products/migration/start`, {
+      const res = await fetch(`${API_BASE}/products/migration/start`, {
         method: "POST",
         credentials: 'include',
         headers: { 
@@ -97,7 +99,7 @@ export default function ShopifyMigrationPage() {
     
     setIsResetting(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/products/migration/deep-reset`, {
+      const res = await fetch(`${API_BASE}/products/migration/deep-reset`, {
         method: "POST",
         credentials: 'include'
       });

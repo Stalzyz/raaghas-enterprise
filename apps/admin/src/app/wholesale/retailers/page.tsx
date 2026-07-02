@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
@@ -168,7 +170,7 @@ export default function RetailerDirectory() {
       if (search) params.append("search", search);
 
       if (search) params.append("search", search);
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const baseUrl = API_BASE;
       const res = await fetch(`${baseUrl}/wholesale/retailers?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -184,7 +186,7 @@ export default function RetailerDirectory() {
 
   const handleCreateRetailer = async (form: any) => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const baseUrl = API_BASE;
       const res = await fetch(`${baseUrl}/wholesale/retailers`, {
         method: 'POST',
         headers: { 

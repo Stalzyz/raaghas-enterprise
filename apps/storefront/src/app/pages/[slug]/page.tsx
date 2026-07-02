@@ -1,8 +1,9 @@
+import { API_URL } from "@/lib/api";
+
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SectionRenderer } from "@/components/sections/SectionRenderer";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? "http://localhost:6005" : "https://api.raaghas.in");
 
 async function getPage(slug: string) {
   try {

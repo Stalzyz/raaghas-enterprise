@@ -62,34 +62,36 @@ export class SettingsController {
   @UseGuards(AuthGuard)
   async saveShippingZones(@Body() body: { zones: any[] }) {
     const { zones } = body;
-    // Basic implementation: Delete and recreate for simplicity in this MVP
-    // Better implementation would be to use upserts or specific updates
-    await (this.prisma as any).shippingMethod.deleteMany({});
-    await (this.prisma as any).shippingZone.deleteMany({});
+    
+    // Execute within a transaction to ensure safe updates
+    await this.prisma.$transaction(async (tx: any) => {
+      await tx.shippingMethod.deleteMany({});
+      await tx.shippingZone.deleteMany({});
 
-    for (const zone of zones) {
-      const createdZone = await (this.prisma as any).shippingZone.create({
-        data: {
-          name: zone.name,
-          regions: zone.regions,
-          isActive: zone.isActive,
-        }
-      });
-
-      if (zone.methods && zone.methods.length > 0) {
-        await (this.prisma as any).shippingMethod.createMany({
-          data: zone.methods.map((m: any) => ({
-            zoneId: createdZone.id,
-            name: m.name,
-            baseCost: m.baseCost,
-            minOrderValue: m.minOrderValue,
-            maxOrderValue: m.maxOrderValue,
-            isActive: m.isActive,
-            description: m.description,
-          }))
+      for (const zone of zones) {
+        const createdZone = await tx.shippingZone.create({
+          data: {
+            name: zone.name,
+            regions: zone.regions,
+            isActive: zone.isActive,
+          }
         });
+
+        if (zone.methods && zone.methods.length > 0) {
+          await tx.shippingMethod.createMany({
+            data: zone.methods.map((m: any) => ({
+              zoneId: createdZone.id,
+              name: m.name,
+              baseCost: m.baseCost,
+              minOrderValue: m.minOrderValue,
+              maxOrderValue: m.maxOrderValue,
+              isActive: m.isActive,
+              description: m.description,
+            }))
+          });
+        }
       }
-    }
+    });
 
     return this.getShippingZones();
   }

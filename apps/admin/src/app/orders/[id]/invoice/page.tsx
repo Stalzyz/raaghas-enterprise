@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Printer, Download, Loader2, AlertCircle } from "lucide-react";
@@ -22,7 +24,7 @@ export default function OrderInvoicePage() {
 
   const fetchOrder = async () => {
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1');
+      const apiBase = `${API_BASE}/api/v1`;
       const res = await fetch(`${apiBase}/orders/admin/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });

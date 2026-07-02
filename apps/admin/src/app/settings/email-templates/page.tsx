@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Mail, Plus, Settings, ChevronRight, Edit3 } from "lucide-react";
@@ -13,7 +15,7 @@ export default function EmailTemplatesPage() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { token, isLoading: authLoading } = useAdminAuth();
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1');
+  const baseUrl = `${API_BASE}/api/v1`;
 
   useEffect(() => {
     // Wait until auth provider has finished loading before fetching

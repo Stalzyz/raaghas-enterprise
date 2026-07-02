@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect } from "react";
 import { Plus, Trash2, ChevronRight, Save, Loader2, GripVertical, Menu as MenuIcon, ExternalLink } from "lucide-react";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
@@ -18,7 +20,7 @@ export default function NavigationPage() {
   const fetchMenus = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/navigation`);
+      const res = await fetch(`${API_BASE}/navigation`);
       const data = await res.json();
       setMenus(data);
       if (data.length > 0) setSelectedMenu(data[0]);
@@ -75,7 +77,7 @@ export default function NavigationPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/navigation`, {
+      await fetch(`${API_BASE}/navigation`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

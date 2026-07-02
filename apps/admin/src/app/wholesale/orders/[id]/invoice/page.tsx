@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -24,7 +26,7 @@ export default function InvoiceView() {
   const fetchInvoice = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/wholesale/orders/${id}/invoice`, {
+      const res = await fetch(`${API_BASE}/wholesale/orders/${id}/invoice`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!res.ok) throw new Error("Failed to fetch invoice details");
@@ -40,7 +42,7 @@ export default function InvoiceView() {
   const handlePublish = async () => {
     setIsPublishing(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/wholesale/orders/${id}/invoice`, {
+      const res = await fetch(`${API_BASE}/wholesale/orders/${id}/invoice`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -58,7 +60,7 @@ export default function InvoiceView() {
   const handleSendEmail = async (data: { subject: string; body: string; signature: string }) => {
     setIsEmailing(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/wholesale/orders/${id}/send-invoice`, {
+      const res = await fetch(`${API_BASE}/wholesale/orders/${id}/send-invoice`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -77,7 +79,7 @@ export default function InvoiceView() {
 
   const handleDownload = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/wholesale/orders/${id}/download`, {
+      const res = await fetch(`${API_BASE}/wholesale/orders/${id}/download`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!res.ok) throw new Error("Download failed");

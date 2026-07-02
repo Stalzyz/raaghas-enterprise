@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect } from "react";
 import { 
   Search, 
@@ -41,7 +43,7 @@ export default function CollectionsPage() {
   async function loadCollections() {
     setLoading(true);
     try {
-      const apiBase = (process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')).replace(/\/api\/v1\/?$/, '') + '/api/v1';
+      const apiBase = (API_BASE).replace(/\/api\/v1\/?$/, '') + '/api/v1';
       const res = await fetch(`${apiBase}/products/collections?adminMode=true`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -81,7 +83,7 @@ export default function CollectionsPage() {
     e.preventDefault();
     setIsSaving(true);
     try {
-      const apiBase = (process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')).replace(/\/api\/v1\/?$/, '') + '/api/v1';
+      const apiBase = (API_BASE).replace(/\/api\/v1\/?$/, '') + '/api/v1';
       const url = editingCollection 
         ? `${apiBase}/products/collections/${editingCollection.id}`
         : `${apiBase}/products/collections`;
@@ -110,7 +112,7 @@ export default function CollectionsPage() {
     if (!confirm(`Are you sure you want to delete the "${title}" collection?`)) return;
 
     try {
-      const apiBase = (process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')).replace(/\/api\/v1\/?$/, '') + '/api/v1';
+      const apiBase = (API_BASE).replace(/\/api\/v1\/?$/, '') + '/api/v1';
       const res = await fetch(`${apiBase}/products/collections/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }

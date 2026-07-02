@@ -1,5 +1,7 @@
 "use client";
 
+import { API_URL } from "@/lib/api";
+
 import { motion } from "framer-motion";
 import { Heart, ShoppingBag, Zap, Search, X, SlidersHorizontal } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
@@ -28,7 +30,7 @@ export function ProductGridSection({ content, style }: { content: Record<string,
       setLoading(true);
       try {
         const handle = content.collectionHandle === 'all' ? '' : content.collectionHandle;
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+        const apiUrl = API_URL;
         
         const url = `${apiUrl}/api/v1/products${handle ? `?collection=${handle}` : ''}`;
         let res = await fetch(url);

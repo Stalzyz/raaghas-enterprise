@@ -24,7 +24,7 @@ function SlipContent({ order, storeSettings }: { order: any; storeSettings: any 
   const fromWebsite = storeSettings?.websiteUrl || 'www.raaghas.in';
 
   return (
-    <div className="slip-container" style={{ width: '5.5in', height: '3.8in', boxSizing: 'border-box', padding: '0.25in', display: 'flex', flexDirection: 'column', backgroundColor: '#fff', color: '#000', fontFamily: 'sans-serif', margin: '0 auto' }}>
+    <div className="slip-container" style={{ width: '100%', height: '100%', boxSizing: 'border-box', padding: '0.25in', display: 'flex', flexDirection: 'column', backgroundColor: '#fff', color: '#000', fontFamily: 'sans-serif', margin: '0 auto' }}>
       {/* Top Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #000', paddingBottom: '0.1in', marginBottom: '0.15in' }}>
         <div style={{ flex: 1 }}>
@@ -84,7 +84,7 @@ export const PackingSlipModal: React.FC<PackingSlipModalProps> = ({ isOpen, onCl
         <head>
           <title>Packing Slip${isBulk ? 's' : ` - ${orders[0]?.id || ''}`}</title>
           <style>
-            @page { size: 5.5in 3.8in; margin: 0; }
+            @page { size: A5; margin: 10pt; }
             body { font-family: sans-serif; margin: 0; padding: 0; background: #fff; }
             .page-break { page-break-after: always; }
             * { box-sizing: border-box; }

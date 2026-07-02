@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
@@ -9,7 +11,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? "http://localhost:6005" : "https://api.raaghas.in");
+const API_URL = API_BASE;
 
 export default function CustomerDetailPage() {
   const params = useParams();

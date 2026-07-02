@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -96,7 +98,7 @@ export default function PageEditor() {
       return;
     }
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const baseUrl = API_BASE;
       const res = await fetch(`${baseUrl}/cms/pages/${handle}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -114,7 +116,7 @@ export default function PageEditor() {
 
   async function loadTheme() {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const baseUrl = API_BASE;
       const res = await fetch(`${baseUrl}/cms/theme`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -133,7 +135,7 @@ export default function PageEditor() {
     }
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const baseUrl = API_BASE;
       const res = await fetch(`${baseUrl}/cms/pages/${handle === 'new' ? pageData.handle : handle}`, {
         method: "PUT",
         headers: { 

@@ -30,6 +30,7 @@
   "dependencies": {
     "@prisma/client": "^6.7.0",
     "lodash": "^4.18.1",
+    "papaparse": "^5.5.4",
     "puppeteer": "^24.43.1",
     "sharp": "^0.35.2",
     "zeptomatch": "^1.2.2"

@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
@@ -24,7 +26,7 @@ export default function WholesaleOrders() {
 
   const fetchOrders = async () => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const baseUrl = API_BASE;
       const res = await fetch(`${baseUrl}/wholesale/orders`, {
         headers: { Authorization: `Bearer ${token}` }
       });

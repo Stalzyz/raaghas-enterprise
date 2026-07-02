@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeft, Plus, Search, Trash2, Save, ShoppingBag, Receipt, Loader2 } from "lucide-react";
@@ -33,10 +35,10 @@ export default function NewWholesaleOrder() {
     const fetchData = async () => {
       try {
         const [retRes, invRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/wholesale/retailers`, {
+          fetch(`${API_BASE}/wholesale/retailers`, {
             headers: { Authorization: `Bearer ${token}` }
           }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/inventory/grid`, {
+          fetch(`${API_BASE}/inventory/grid`, {
             headers: { Authorization: `Bearer ${token}` }
           })
         ]);
@@ -99,7 +101,7 @@ export default function NewWholesaleOrder() {
     if (!retailerId || items.length === 0) return;
     setIsSubmitting(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/wholesale/orders/draft`, {
+      const res = await fetch(`${API_BASE}/wholesale/orders/draft`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

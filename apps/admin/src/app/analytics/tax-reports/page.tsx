@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect } from "react";
 import { ClipboardList, Download, FileText, Search, Filter, Loader2, IndianRupee } from "lucide-react";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
@@ -41,7 +43,7 @@ export default function GSTReportsPage() {
   async function loadTaxData() {
     try {
       setLoading(true);
-      const apiBase = (process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')).replace(/\/api\/v1\/?$/, '') + '/api/v1';
+      const apiBase = (API_BASE).replace(/\/api\/v1\/?$/, '') + '/api/v1';
       const params = new URLSearchParams();
       if (startDate) params.append('from', startDate);
       if (endDate) params.append('to', endDate);

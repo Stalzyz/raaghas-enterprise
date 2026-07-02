@@ -1,5 +1,7 @@
 "use client";
 
+import { API_URL } from "@/lib/api";
+
 import { useEffect, useState } from "react";
 import ProductCard from "./ProductCard";
 import { Loader2 } from "lucide-react";
@@ -11,7 +13,7 @@ export default function RelatedProducts({ productId }: { productId: string }) {
   useEffect(() => {
     async function fetchRelated() {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/api/v1/products/related/${productId}`);
+        const res = await fetch(`${API_URL}/api/v1/products/related/${productId}`);
         const data = await res.json();
         setProducts(data);
       } catch (err) {

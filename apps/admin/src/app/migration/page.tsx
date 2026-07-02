@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState } from "react";
 import { Upload, FileUp, AlertCircle, CheckCircle2 } from "lucide-react";
 
@@ -15,7 +17,7 @@ export default function MigrationPage() {
   const fetchAudit = async () => {
     setIsAuditing(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/products/migration/audit-collections`);
+      const response = await fetch(`${API_BASE}/products/migration/audit-collections`);
       const data = await response.json();
       setAuditData(data);
     } catch (err) {
@@ -29,7 +31,7 @@ export default function MigrationPage() {
     if (!confirm("This will merge orphan collections and delete empty ones. Proceed?")) return;
     setIsCleaning(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/products/migration/cleanup-collections`, {
+      const response = await fetch(`${API_BASE}/products/migration/cleanup-collections`, {
         method: "POST"
       });
       const data = await response.json();
@@ -48,7 +50,7 @@ export default function MigrationPage() {
 
     setIsResetting(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/products/migration/deep-reset`, {
+      const response = await fetch(`${API_BASE}/products/migration/deep-reset`, {
         method: "POST"
       });
       const data = await response.json();
@@ -78,7 +80,7 @@ export default function MigrationPage() {
     formData.append("file", file);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/migration/shopify-csv`, {
+      const response = await fetch(`${API_BASE}/migration/shopify-csv`, {
         method: "POST",
         body: formData,
       });

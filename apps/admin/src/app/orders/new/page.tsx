@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect } from "react";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
 import { Loader2, ArrowLeft, Search, Plus, Trash2, CheckCircle, Package } from "lucide-react";
@@ -39,11 +41,11 @@ export default function CreateDraftOrderPage() {
   const fetchProducts = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/products?adminMode=true&limit=50`, {
+      const res = await fetch(`${API_BASE}/products?adminMode=true&limit=50`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
-      setProducts(data.products || []);
+      setProducts(Array.isArray(data) ? data : (data.data || data.products || []));
     } catch (e) {
       console.error(e);
     } finally {
@@ -95,7 +97,7 @@ export default function CreateDraftOrderPage() {
         notes
       };
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/orders/draft`, {
+      const res = await fetch(`${API_BASE}/orders/draft`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect } from "react";
 import { Plus, Tag, Search, ToggleRight, ToggleLeft, Edit3, Trash2, Calendar, Users, X, Percent, IndianRupee, Loader2 } from "lucide-react";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
@@ -129,7 +131,7 @@ export default function DiscountManager() {
 
   const fetchDiscounts = async () => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const baseUrl = API_BASE;
       const res = await fetch(`${baseUrl}/marketing/discounts`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -149,7 +151,7 @@ export default function DiscountManager() {
     // Optimistic update
     setDiscounts(discounts.map(d => d.id === id ? { ...d, isActive: !d.isActive } : d));
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const baseUrl = API_BASE;
       await fetch(`${baseUrl}/marketing/discounts/${id}/toggle`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${token}` }
@@ -163,7 +165,7 @@ export default function DiscountManager() {
   const deleteDiscount = async (id: string) => {
     if (!confirm("Delete this discount code permanently?")) return;
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const baseUrl = API_BASE;
       const res = await fetch(`${baseUrl}/marketing/discounts/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
@@ -180,7 +182,7 @@ export default function DiscountManager() {
 
   const handleCreateDiscount = async (form: any) => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const baseUrl = API_BASE;
       const res = await fetch(`${baseUrl}/marketing/discounts`, {
         method: 'POST',
         headers: { 

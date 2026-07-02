@@ -1,4 +1,6 @@
 "use client";
+
+import { API_BASE } from "@/lib/api";
 import { useState, useEffect } from "react";
 import { 
   Users, Shield, Lock, CheckCircle2, Plus, X, 
@@ -56,10 +58,10 @@ export default function RolesAndUsersPage() {
     setLoading(true);
     try {
       const [rolesRes, usersRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/auth/roles`, {
+        fetch(`${API_BASE}/auth/roles`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/auth/users`, {
+        fetch(`${API_BASE}/auth/users`, {
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);
@@ -97,7 +99,7 @@ export default function RolesAndUsersPage() {
     if (!roleName) return;
     setSaving(true);
     try {
-      const url = `${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/auth/roles${editingRole ? `/${editingRole.id}` : ''}`;
+      const url = `${API_BASE}/auth/roles${editingRole ? `/${editingRole.id}` : ''}`;
       const res = await fetch(url, {
         method: editingRole ? 'PUT' : 'POST',
         headers: { 
@@ -145,7 +147,7 @@ export default function RolesAndUsersPage() {
     if (!userEmail) return;
     setSaving(true);
     try {
-      const url = `${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/auth/users${editingUser ? `/${editingUser.id}` : ''}`;
+      const url = `${API_BASE}/auth/users${editingUser ? `/${editingUser.id}` : ''}`;
       const res = await fetch(url, {
         method: editingUser ? 'PUT' : 'POST',
         headers: { 
@@ -174,7 +176,7 @@ export default function RolesAndUsersPage() {
   const handleDelete = async (type: 'role' | 'user', id: string) => {
     if (!confirm(`Are you sure you want to delete this ${type}?`)) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/auth/${type}s/${id}`, { 
+      const res = await fetch(`${API_BASE}/auth/${type}s/${id}`, { 
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });

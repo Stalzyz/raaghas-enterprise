@@ -1,3 +1,5 @@
+import { API_URL } from "@/lib/api";
+
 import { SectionRenderer } from "@/components/sections/SectionRenderer";
 import Link from "next/link";
 
@@ -112,7 +114,7 @@ const FALLBACK_SECTIONS: Section[] = [
 
 async function getHomePageData(): Promise<any> {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? "http://localhost:6005" : "https://api.raaghas.in")}/api/v1/cms/pages/home`, {
+    const res = await fetch(`${API_URL}/api/v1/cms/pages/home`, {
       next: { revalidate: 60 }, // ISR: Cache for 60 seconds
     });
     if (!res.ok) throw new Error("API unavailable");

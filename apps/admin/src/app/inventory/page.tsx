@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect } from "react";
 import { 
   BarChart3, 
@@ -41,10 +43,10 @@ export default function InventoryDashboard() {
     setIsLoading(true);
     try {
       const [radarRes, gridRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/inventory/radar`, {
+        fetch(`${API_BASE}/inventory/radar`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/inventory/grid`, {
+        fetch(`${API_BASE}/inventory/grid`, {
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);
@@ -62,7 +64,7 @@ export default function InventoryDashboard() {
 
   const handleAdjustStock = async (variantId: string, change: number) => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/inventory/adjust`, {
+      const res = await fetch(`${API_BASE}/inventory/adjust`, {
         method: "PATCH",
         headers: { 
           "Content-Type": "application/json",

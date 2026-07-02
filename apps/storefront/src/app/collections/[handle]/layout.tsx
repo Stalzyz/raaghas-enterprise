@@ -1,6 +1,7 @@
+import { API_URL } from "@/lib/api";
+
 import { Metadata } from "next";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? "http://localhost:6005" : "https://api.raaghas.in");
 
 async function getCollection(handle: string) {
   try {

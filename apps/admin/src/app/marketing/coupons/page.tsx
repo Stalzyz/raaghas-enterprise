@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useEffect, useState } from "react";
 import { Plus, Search, Trash2, Edit2, Tag, Calendar, Users, Percent, IndianRupee, Loader2 } from "lucide-react";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
@@ -29,7 +31,7 @@ export default function CouponManagement() {
 
   const fetchCoupons = async () => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const baseUrl = API_BASE;
       const res = await fetch(`${baseUrl}/growth/coupons`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -49,7 +51,7 @@ export default function CouponManagement() {
 
   const handleCreate = async () => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const baseUrl = API_BASE;
       const url = editingId ? `${baseUrl}/growth/coupons/${editingId}` : `${baseUrl}/growth/coupons`;
       const method = editingId ? "PATCH" : "POST";
 
@@ -94,7 +96,7 @@ export default function CouponManagement() {
 
   const handleToggle = async (id: string) => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const baseUrl = API_BASE;
       const res = await fetch(`${baseUrl}/growth/coupons/${id}/toggle`, {
         method: "PATCH",
         headers: { Authorization: `Bearer ${token}` }
@@ -106,7 +108,7 @@ export default function CouponManagement() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure?")) return;
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1');
+      const baseUrl = `${API_BASE}/api/v1`;
       const res = await fetch(`${baseUrl}/growth/coupons/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` }

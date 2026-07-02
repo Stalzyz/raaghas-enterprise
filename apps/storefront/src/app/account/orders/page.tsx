@@ -1,5 +1,7 @@
 "use client";
 
+import { API_URL } from "@/lib/api";
+
 import { useEffect, useState, Suspense } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { Package, ChevronRight, Clock, CheckCircle2, Truck, XCircle, ShoppingBag, Loader2 } from "lucide-react";
@@ -95,7 +97,7 @@ function MyOrdersPageContent() {
     setIsLoading(true);
     try {
       const token = await getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/api/v1/orders/my`, {
+      const res = await fetch(`${API_URL}/api/v1/orders/my`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!res.ok) throw new Error("Failed to fetch orders");

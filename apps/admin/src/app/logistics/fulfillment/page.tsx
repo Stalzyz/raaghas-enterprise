@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect } from "react";
 import { 
   Package, Truck, CheckCircle2, ChevronRight, Search, 
@@ -31,7 +33,7 @@ export default function FulfillmentDesk() {
 
   const fetchStoreSettings = async () => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1');
+      const baseUrl = `${API_BASE}/api/v1`;
       const res = await fetch(`${baseUrl}/settings`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -46,7 +48,7 @@ export default function FulfillmentDesk() {
 
   const fetchOrders = async () => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1');
+      const baseUrl = `${API_BASE}/api/v1`;
       const res = await fetch(`${baseUrl}/orders/admin/all`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -77,7 +79,7 @@ export default function FulfillmentDesk() {
     if (!confirm(`Are you sure you want to mark ${selectedIds.length} orders as SHIPPED?`)) return;
     setLoading(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const baseUrl = API_BASE;
       await Promise.all(selectedIds.map(id => 
         fetch(`${baseUrl}/orders/admin/${id}/status`, {
           method: 'PATCH',
@@ -348,7 +350,7 @@ export default function FulfillmentDesk() {
                     disabled={packedItems.length !== (selectedOrder.items?.length || 0)}
                     onClick={async () => {
                       if (!selectedOrder) return;
-                      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+                      const baseUrl = API_BASE;
                       const res = await fetch(`${baseUrl}/orders/admin/${selectedOrder.id}/status`, {
                         method: 'PATCH',
                         headers: { 

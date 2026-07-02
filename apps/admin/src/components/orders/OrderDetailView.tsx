@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import React, { useState, useEffect } from "react";
 import { 
   ArrowLeft, 
@@ -107,7 +109,7 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
   useEffect(() => {
     if (!token) return;
     fetchOrder();
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1');
+    const baseUrl = `${API_BASE}/api/v1`;
     fetch(`${baseUrl}/settings`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data) setStoreSettings(data); })
@@ -129,7 +131,7 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
     if (!token) return;
     try {
       
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1')}/orders/admin/${id}`, {
+      const res = await fetch(`${`${API_BASE}/api/v1`}/orders/admin/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!res.ok) {
@@ -151,7 +153,7 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
     setIsUpdating(true);
     try {
       
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1')}/orders/admin/${id}/status`, {
+      await fetch(`${`${API_BASE}/api/v1`}/orders/admin/${id}/status`, {
         method: "PATCH",
         headers: { 
           "Content-Type": "application/json",
@@ -170,7 +172,7 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
   const verifyPayment = async () => {
     setIsUpdating(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1')}/payments/admin/verify/${id}`, {
+      const res = await fetch(`${`${API_BASE}/api/v1`}/payments/admin/verify/${id}`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -191,7 +193,7 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
   const updateFinancialStatus = async (status: string) => {
     setIsUpdating(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1')}/orders/admin/${id}/financial-status`, {
+      const res = await fetch(`${`${API_BASE}/api/v1`}/orders/admin/${id}/financial-status`, {
         method: "PATCH",
         headers: { 
           "Content-Type": "application/json",
@@ -222,7 +224,7 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
         .filter((item: any) => selectedItemsForFulfillment.includes(item.id))
         .map((item: any) => ({ variantId: item.variantId, quantity: item.quantity }));
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1')}/orders/admin/${id}/fulfillments`, {
+      const res = await fetch(`${`${API_BASE}/api/v1`}/orders/admin/${id}/fulfillments`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -248,7 +250,7 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
   const automateShipment = async (provider: string = 'shiprocket') => {
     setIsUpdating(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1')}/logistics/automate/${id}`, {
+      const res = await fetch(`${`${API_BASE}/api/v1`}/logistics/automate/${id}`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -272,7 +274,7 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
   const syncTracking = async (trackingId: string, provider: string = 'shiprocket') => {
     setIsUpdating(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1')}/logistics/sync-tracking/${trackingId}?provider=${provider}`, {
+      const res = await fetch(`${`${API_BASE}/api/v1`}/logistics/sync-tracking/${trackingId}?provider=${provider}`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -292,7 +294,7 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
     if (!noteText.trim()) return;
     setIsUpdating(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1')}/orders/admin/${id}/notes`, {
+      const res = await fetch(`${`${API_BASE}/api/v1`}/orders/admin/${id}/notes`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -325,7 +327,7 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
 
     setIsUpdating(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1')}/orders/admin/${id}/returns`, {
+      const res = await fetch(`${`${API_BASE}/api/v1`}/orders/admin/${id}/returns`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -378,7 +380,7 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
       const payload = addressType === "shipping"
         ? { shippingAddress: addressForm }
         : { billingAddress: addressForm };
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1')}/orders/admin/${id}/address`, {
+      await fetch(`${`${API_BASE}/api/v1`}/orders/admin/${id}/address`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(payload)
@@ -404,7 +406,7 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
 
     setIsUpdating(true);
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1')}/orders/admin/${id}/refunds`, {
+      await fetch(`${`${API_BASE}/api/v1`}/orders/admin/${id}/refunds`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({

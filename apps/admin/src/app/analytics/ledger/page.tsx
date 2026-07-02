@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import React, { useState, useEffect } from 'react';
 import { 
   Landmark, ArrowUpRight, ArrowDownRight, RefreshCcw, 
@@ -23,7 +25,7 @@ export default function LedgerPage() {
     endDate: new Date().toISOString().split('T')[0]
   });
 
-  const apiBase = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+  const apiBase = API_BASE;
 
   const fetchData = async () => {
     setLoading(true);

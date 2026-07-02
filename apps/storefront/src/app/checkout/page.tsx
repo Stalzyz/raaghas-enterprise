@@ -1,5 +1,7 @@
 "use client";
 
+import { API_URL } from "@/lib/api";
+
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -11,7 +13,6 @@ import Cookies from "js-cookie";
 import { OffersProgress } from "@/components/ui/OffersProgress";
 import { ShippingPredictor } from "@/components/ui/ShippingPredictor";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? "http://localhost:6005" : "https://api.raaghas.in");
 
 const INDIAN_STATES = [
   "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", 
@@ -63,6 +64,7 @@ export default function CheckoutPage() {
   const [processingMsg, setProcessingMsg] = useState("Processing your order...");
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [wallet, setWallet] = useState<{ balance: number; use: boolean }>({ balance: 0, use: false });
+  const [maxCreditUsagePercent, setMaxCreditUsagePercent] = useState(50);
   const [autoOffer, setAutoOffer] = useState<{ id: string; name: string; amount: number } | null>(null);
   
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
@@ -135,7 +137,7 @@ export default function CheckoutPage() {
   const walletDeduction = wallet.use
     ? Math.min(
         wallet.balance,
-        (baseTotal + excludedTax - (promoState.amount || 0) - (autoOffer?.amount || 0)) * 0.5
+        (baseTotal + excludedTax - (promoState.amount || 0) - (autoOffer?.amount || 0)) * (maxCreditUsagePercent / 100)
       )
     : 0;
 
@@ -249,6 +251,17 @@ export default function CheckoutPage() {
             });
           }
         }
+        
+        try {
+          const settingsRes = await fetch(`${API_URL}/api/v1/settings/public`);
+          if (settingsRes.ok) {
+            const settings = await settingsRes.json();
+            if (settings.maxCreditUsagePercent !== undefined) {
+              setMaxCreditUsagePercent(settings.maxCreditUsagePercent);
+            }
+          }
+        } catch (e) {}
+
         if (token) {
           const walletRes = await fetch(`${API_URL}/api/v1/growth/wallet`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -709,7 +722,7 @@ export default function CheckoutPage() {
               </div>
               {wallet.use && (
                 <p className="text-[10px] text-wine font-medium">
-                  Up to 50% of cart value can be paid using wallet credits.
+                  Up to {maxCreditUsagePercent}% of cart value can be paid using wallet credits.
                 </p>
               )}
             </section>

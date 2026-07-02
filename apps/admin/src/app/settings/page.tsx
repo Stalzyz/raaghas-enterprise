@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect } from "react";
 import { Save, Globe, Phone, Mail, Link2, Share2, Loader2, CheckCircle2, MessageSquare, Shield, Eye, EyeOff, CreditCard, Receipt, MapPin, Landmark, Percent, ShieldCheck, Target, BarChart3, Sparkles, Hash } from "lucide-react";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
@@ -91,7 +93,7 @@ export default function SettingsPage() {
     if (!token) return;
     setIsLoading(true);
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const apiBase = API_BASE;
       const res = await fetch(`${apiBase}/settings`, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -128,7 +130,7 @@ export default function SettingsPage() {
         _count, ...cleanSettings 
       } = settings;
 
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const apiBase = API_BASE;
       const res = await fetch(`${apiBase}/settings`, {
         method: "PATCH",
         headers: {

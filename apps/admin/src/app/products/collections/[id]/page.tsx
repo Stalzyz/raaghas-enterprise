@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { 
@@ -58,7 +60,7 @@ export default function CollectionDetailsPage() {
   async function loadCollection() {
     setLoading(true);
     try {
-      const apiBase = (process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')).replace(/\/api\/v1\/?$/, '') + '/api/v1';
+      const apiBase = (API_BASE).replace(/\/api\/v1\/?$/, '') + '/api/v1';
       const res = await fetch(`${apiBase}/products/collections/${params.id}`);
       if (res.ok) {
         const data = await res.json();
@@ -97,7 +99,7 @@ export default function CollectionDetailsPage() {
     
     setSearching(true);
     try {
-      const apiBase = (process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')).replace(/\/api\/v1\/?$/, '') + '/api/v1';
+      const apiBase = (API_BASE).replace(/\/api\/v1\/?$/, '') + '/api/v1';
       const url = new URL(`${apiBase}/products`);
       url.searchParams.append('adminMode', 'true');
       url.searchParams.append('limit', '50');
@@ -152,7 +154,7 @@ export default function CollectionDetailsPage() {
     if (selectedProductIds.size === 0) return;
     setIsAdding(true);
     try {
-      const apiBase = (process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')).replace(/\/api\/v1\/?$/, '') + '/api/v1';
+      const apiBase = (API_BASE).replace(/\/api\/v1\/?$/, '') + '/api/v1';
       const res = await fetch(`${apiBase}/products/collections/${params.id}/products`, {
         method: 'POST',
         headers: { 
@@ -178,7 +180,7 @@ export default function CollectionDetailsPage() {
     if (!confirm(`Remove ${selectedTableIds.size} products from this collection?`)) return;
     setIsAdding(true);
     try {
-      const apiBase = (process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')).replace(/\/api\/v1\/?$/, '') + '/api/v1';
+      const apiBase = (API_BASE).replace(/\/api\/v1\/?$/, '') + '/api/v1';
       const res = await fetch(`${apiBase}/products/bulk-action`, {
         method: 'POST',
         headers: { 
@@ -208,7 +210,7 @@ export default function CollectionDetailsPage() {
   const handleRemoveProduct = async (productId: string, title: string) => {
     if (!confirm(`Remove "${title}" from this collection?`)) return;
     try {
-      const apiBase = (process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')).replace(/\/api\/v1\/?$/, '') + '/api/v1';
+      const apiBase = (API_BASE).replace(/\/api\/v1\/?$/, '') + '/api/v1';
       const res = await fetch(`${apiBase}/products/collections/${params.id}/products/${productId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }

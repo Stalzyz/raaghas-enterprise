@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect } from "react";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
 import { Loader2, ArrowLeft, Search, Plus, Trash2, Package } from "lucide-react";
@@ -29,7 +31,7 @@ export default function EditOrderItemsPage() {
     try {
       setIsLoading(true);
       // Fetch Order
-      const resOrder = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/orders/admin/${id}`, {
+      const resOrder = await fetch(`${API_BASE}/orders/admin/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const orderData = await resOrder.json();
@@ -44,7 +46,7 @@ export default function EditOrderItemsPage() {
       setSelectedItems(mappedItems);
 
       // Fetch Products
-      const resProducts = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/products?adminMode=true&limit=50`, {
+      const resProducts = await fetch(`${API_BASE}/products?adminMode=true&limit=50`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const prodData = await resProducts.json();
@@ -93,7 +95,7 @@ export default function EditOrderItemsPage() {
         }))
       };
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/orders/admin/${id}/items`, {
+      const res = await fetch(`${API_BASE}/orders/admin/${id}/items`, {
         method: "PUT",
         headers: { 
           "Content-Type": "application/json",

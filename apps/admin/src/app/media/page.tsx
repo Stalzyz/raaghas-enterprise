@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect, useRef } from "react";
 import { Upload, FolderPlus, Grid, List, Search, MoreVertical, FileIcon, ImageIcon, FilmIcon, Trash2, Loader2, CheckCircle2 } from "lucide-react";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
@@ -31,7 +33,7 @@ export default function MediaManager() {
     if (!token) return;
     setIsLoading(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const baseUrl = API_BASE;
       const res = await fetch(`${baseUrl}/cms/media`, {
         headers: { Authorization: `Bearer ${token}` },
         credentials: 'include'
@@ -50,7 +52,7 @@ export default function MediaManager() {
     if (files.length === 0) return;
 
     setIsUploading(true);
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+    const baseUrl = API_BASE;
     
     try {
       // Parallel upload for better speed, but limited to 5 at a time to avoid socket exhaustion
@@ -108,7 +110,7 @@ export default function MediaManager() {
     if (!confirm(`Are you sure you want to delete ${name}?`)) return;
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const baseUrl = API_BASE;
       const res = await fetch(`${baseUrl}/cms/media/${id}`, {
         method: "DELETE",
         headers: { 
@@ -135,7 +137,7 @@ export default function MediaManager() {
     if (!confirm(`Permanently delete ${selectedIds.length} assets? This cannot be undone.`)) return;
 
     setIsLoading(true);
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+    const baseUrl = API_BASE;
     
     try {
       // Process deletions in parallel
@@ -254,7 +256,7 @@ export default function MediaManager() {
             >
               <div className="aspect-square bg-gray-50 relative flex items-center justify-center border-b border-gray-100 overflow-hidden">
                  {item.type?.toLowerCase().includes("image") ? (
-                   <img src={item.url?.startsWith('http') ? item.url : `${(process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1')).replace('/api/v1', '')}${item.url}`} alt={item.filename} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                   <img src={item.url?.startsWith('http') ? item.url : `${(`${API_BASE}/api/v1`).replace('/api/v1', '')}${item.url}`} alt={item.filename} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
                  ) : (
                    <div className="flex flex-col items-center gap-2">
                      <FilmIcon className="text-gray-300" size={40} />

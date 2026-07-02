@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useEffect, useState } from "react";
 import { BarChart3, TrendingUp, Users, ShoppingBag, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import Link from "next/link";
@@ -13,7 +15,7 @@ export default function AnalyticsPage() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const apiBase = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+        const apiBase = API_BASE;
         const res = await fetch(`${apiBase}/analytics/executive-overview`, {
           headers: { Authorization: `Bearer ${token}` }
         });

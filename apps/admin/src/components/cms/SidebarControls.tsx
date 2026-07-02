@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ChevronLeft, Eye, EyeOff, GripVertical, Trash2, 
@@ -400,7 +402,7 @@ function EditorContent({ section, activeTab, onUpdate }: { section: Section; act
   const getDisplayUrl = (url?: string) => {
     if (!url) return "";
     if (url.startsWith("http")) return url;
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? "http://localhost:6005" : "https://api.raaghas.in");
+    const baseUrl = API_BASE;
     const cleanPath = url.startsWith("/") ? url : `/${url}`;
     return `${baseUrl}${cleanPath}`;
   };

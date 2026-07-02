@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect } from "react";
 import { ArrowUpRight, TrendingUp, Users, ShoppingBag, CreditCard, Building2, Package, Tag, Clock, Loader2 } from "lucide-react";
 import Link from "next/link";
@@ -28,7 +30,7 @@ export default function Dashboard() {
       }
 
       const query = from ? `?from=${from}` : "";
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const baseUrl = API_BASE;
       
       const res = await fetch(`${baseUrl}/analytics/executive-overview${query}`, {
         headers: {

@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -38,7 +40,7 @@ export default function EditProductPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+        const baseUrl = API_BASE;
         const prodRes = await fetch(`${baseUrl}/products/${id}?adminMode=true`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -68,7 +70,7 @@ export default function EditProductPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const baseUrl = API_BASE;
       const res = await fetch(`${baseUrl}/products/${product.id}`, {
         method: 'PATCH',
         headers: {
@@ -95,7 +97,7 @@ export default function EditProductPage() {
 
     setIsUploading(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const baseUrl = API_BASE;
       
       const uploadPromises = files.map(async (file) => {
         const formData = new FormData();
@@ -584,7 +586,7 @@ export default function EditProductPage() {
                       className="relative aspect-[3/4] rounded-2xl overflow-hidden group"
                     >
                       <img 
-                        src={typeof img === 'string' ? (img.startsWith('http') ? img : `${(process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1')).replace('/api/v1', '')}${img}`) : (img?.url?.startsWith('http') ? img.url : `${(process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1')).replace('/api/v1', '')}${img?.url || ''}`)} 
+                        src={typeof img === 'string' ? (img.startsWith('http') ? img : `${(`${API_BASE}/api/v1`).replace('/api/v1', '')}${img}`) : (img?.url?.startsWith('http') ? img.url : `${(`${API_BASE}/api/v1`).replace('/api/v1', '')}${img?.url || ''}`)} 
                         className="w-full h-full object-cover" 
                       />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">

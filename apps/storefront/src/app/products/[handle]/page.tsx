@@ -1,3 +1,5 @@
+import { API_URL } from "@/lib/api";
+
 import { notFound } from "next/navigation";
 import ProductGallery from "@/components/products/ProductGallery";
 import ProductInfo from "@/components/products/ProductInfo";
@@ -12,7 +14,6 @@ import { Metadata } from "next";
 import { getAssetUrl } from "@/lib/utils/assets";
 import Breadcrumb from "@/components/layout/Breadcrumb";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? "http://localhost:6005" : "https://api.raaghas.in");
 
 async function getProduct(handle: string) {
   const url = `${API_URL}/api/v1/products/${encodeURIComponent(handle)}`;

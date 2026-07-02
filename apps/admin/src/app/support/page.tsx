@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect } from "react";
 import { MessageSquare, Clock, User, Mail, Phone, ExternalLink, CheckCircle2, MoreVertical, Filter, Loader2, MessageCircle } from "lucide-react";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
@@ -18,7 +20,7 @@ export default function SupportDashboard() {
   const fetchTickets = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/support/tickets`, {
+      const res = await fetch(`${API_BASE}/support/tickets`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -32,7 +34,7 @@ export default function SupportDashboard() {
 
   const updateStatus = async (id: string, status: string) => {
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/support/tickets/${id}/status`, {
+      await fetch(`${API_BASE}/support/tickets/${id}/status`, {
         method: "PATCH",
         headers: { 
           "Content-Type": "application/json",

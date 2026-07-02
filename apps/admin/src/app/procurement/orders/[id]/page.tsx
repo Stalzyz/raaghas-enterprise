@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -26,7 +28,7 @@ export default function PurchaseOrderDetails() {
 
   const fetchPO = async () => {
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const apiBase = API_BASE;
       const res = await fetch(`${apiBase}/procurement/orders/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -43,7 +45,7 @@ export default function PurchaseOrderDetails() {
   const updateStatus = async (newStatus: string) => {
     setUpdating(true);
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const apiBase = API_BASE;
       const res = await fetch(`${apiBase}/procurement/orders/${id}/status`, {
         method: "PUT",
         headers: { 

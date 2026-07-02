@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -552,9 +554,9 @@ export default function ThemeBuilder() {
       try {
         console.log("CMS: Initializing Load...");
         const [pagesRes, themeRes, collectionsRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/cms/pages/home`),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/cms/theme`),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/products/collections?adminMode=true`)
+          fetch(`${API_BASE}/cms/pages/home`),
+          fetch(`${API_BASE}/cms/theme`),
+          fetch(`${API_BASE}/products/collections?adminMode=true`)
         ]);
 
         if (pagesRes.ok) {
@@ -610,7 +612,7 @@ export default function ThemeBuilder() {
     if (!confirm(`Apply "${preset.name}"? This will overwrite your current homepage layout and global theme.`)) return;
     
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/cms/presets/${preset.id}/apply`, {
+      const res = await fetch(`${API_BASE}/cms/presets/${preset.id}/apply`, {
         method: 'POST'
       });
       if (res.ok) {
@@ -691,7 +693,7 @@ export default function ThemeBuilder() {
       if (token) headers["Authorization"] = `Bearer ${token}`;
 
       // ATOMIC SAVE: One request to update the entire store state
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/cms/sync`, {
+      const response = await fetch(`${API_BASE}/cms/sync`, {
         method: "POST",
         headers,
         body: JSON.stringify({ 

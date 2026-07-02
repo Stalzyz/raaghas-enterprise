@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeft, UploadCloud, Save, Plus, Trash2, X, Settings2, Sparkles, Loader2 } from "lucide-react";
@@ -61,7 +63,7 @@ export default function AddProductPage() {
     async function loadGuides() {
       if (!token) return;
       // NEXT_PUBLIC_API_URL already includes /api/v1 — don't append it again
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1');
+      const baseUrl = `${API_BASE}/api/v1`;
       try {
         const [sgRes, collRes] = await Promise.all([
           fetch(`${baseUrl}/size-guides`, { headers: { Authorization: `Bearer ${token}` } }),
@@ -200,7 +202,7 @@ export default function AddProductPage() {
     if (files.length === 0) return;
     
     setIsUploading(true);
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+    const baseUrl = API_BASE;
     
     try {
       const uploadPromises = files.map(async (file) => {
@@ -279,7 +281,7 @@ export default function AddProductPage() {
         })
       };
 
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const baseUrl = API_BASE;
       const res = await fetch(`${baseUrl}/products`, {
         method: "POST",
         headers: { 
@@ -310,7 +312,7 @@ export default function AddProductPage() {
     
     setIsGeneratingDescription(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const baseUrl = API_BASE;
       const res = await fetch(`${baseUrl}/ai/generate-description`, {
         method: "POST",
         headers: { 
@@ -512,7 +514,7 @@ export default function AddProductPage() {
                {/* Existing Images */}
                {images.map(img => (
                  <div key={img.id} className="aspect-[3/4] rounded-xl relative overflow-hidden group bg-gray-100 border border-gray-200">
-                    <img src={img.url?.startsWith('http') ? img.url : `${(process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005/api/v1' : 'https://api.raaghas.in/api/v1')).replace('/api/v1', '')}${img.url}`} className="w-full h-full object-cover" />
+                    <img src={img.url?.startsWith('http') ? img.url : `${(`${API_BASE}/api/v1`).replace('/api/v1', '')}${img.url}`} className="w-full h-full object-cover" />
                     {img.isPrimary && (
                       <span className="absolute top-2 left-2 bg-charcoal text-white text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded">Primary</span>
                     )}

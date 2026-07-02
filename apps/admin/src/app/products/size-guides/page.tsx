@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useEffect, useState } from "react";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
 import { Plus, Trash, Edit, Check, X } from "lucide-react";
@@ -15,7 +17,7 @@ export default function SizeGuidesPage() {
   const [name, setName] = useState("");
   const [htmlContent, setHtmlContent] = useState("");
 
-  const apiBase = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? "http://localhost:6005" : "https://api.raaghas.in");
+  const apiBase = API_BASE;
 
   const fetchGuides = async () => {
     try {

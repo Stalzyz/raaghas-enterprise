@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useEffect, useState } from "react";
 import { Users, UserPlus, Gift, TrendingUp, ShieldCheck, Share2, Loader2, IndianRupee } from "lucide-react";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
@@ -14,7 +16,7 @@ export default function ReferralManagement() {
 
     const fetchStats = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/growth/referrals/stats`, {
+        const res = await fetch(`${API_BASE}/growth/referrals/stats`, {
           headers: {
             Authorization: `Bearer ${token}`
           }

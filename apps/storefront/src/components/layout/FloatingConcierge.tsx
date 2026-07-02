@@ -1,5 +1,7 @@
 "use client";
 
+import { API_URL } from "@/lib/api";
+
 import { MessageCircle, X, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
@@ -13,7 +15,7 @@ export function FloatingConcierge() {
   const [showOffersPanel, setShowOffersPanel] = useState(false);
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/api/v1/settings/public`)
+    fetch(`${API_URL}/api/v1/settings/public`)
       .then(res => res.json())
       .then(data => {
         if (data.supportPhone) setSupportPhone(data.supportPhone);

@@ -1,5 +1,7 @@
 "use client";
 
+import { API_URL } from "@/lib/api";
+
 import { useState, useMemo } from "react";
 import { ShoppingBag, Loader2, Info, CheckCircle2 } from "lucide-react";
 import { useWholesale } from "@/components/providers/WholesaleProvider";
@@ -49,7 +51,7 @@ export default function WholesaleQuantityGrid({ product }: WholesaleQuantityGrid
           unitPrice: wholesalePrice
         }));
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/api/v1/wholesale/orders/draft`, {
+      const res = await fetch(`${API_URL}/api/v1/wholesale/orders/draft`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

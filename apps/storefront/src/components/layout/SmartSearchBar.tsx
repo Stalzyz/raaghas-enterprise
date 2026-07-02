@@ -1,5 +1,7 @@
 "use client";
 
+import { API_URL } from "@/lib/api";
+
 import { useState, useRef, useEffect } from "react";
 import { Search, Loader2, Sparkles, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -30,7 +32,7 @@ export default function SmartSearchBar({ onClose }: { onClose?: () => void }) {
   const performSearch = async (searchQuery: string) => {
     setIsSearching(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/api/v1/ai/search`, {
+      const response = await fetch(`${API_URL}/api/v1/ai/search`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: searchQuery }),

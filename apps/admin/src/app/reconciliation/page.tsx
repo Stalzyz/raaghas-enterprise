@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useCallback } from "react";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
 import { motion, AnimatePresence } from "framer-motion";
@@ -243,7 +245,7 @@ export default function ReconciliationPage() {
 
       // 2. Fetch all confirmed orders from the DB (no date filter, let the CSV define the scope)
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? "http://localhost:6005/api/v1" : "https://api.raaghas.in/api/v1")}/orders/admin/all`,
+        `${`${API_BASE}/api/v1`}/orders/admin/all`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const orders: any[] = await res.json();

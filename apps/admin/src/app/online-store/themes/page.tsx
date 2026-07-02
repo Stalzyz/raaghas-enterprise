@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { 
@@ -33,7 +35,7 @@ export default function ThemePresetsPage() {
 
   const fetchPresets = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/cms/presets`);
+      const res = await fetch(`${API_BASE}/cms/presets`);
       if (res.ok) {
         const data = await res.json();
         setPresets(data);
@@ -52,7 +54,7 @@ export default function ThemePresetsPage() {
   const handleApply = async (id: string) => {
     setApplying(id);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/cms/presets/${id}/apply`, {
+      const res = await fetch(`${API_BASE}/cms/presets/${id}/apply`, {
         method: "POST"
       });
       if (res.ok) {
@@ -70,7 +72,7 @@ export default function ThemePresetsPage() {
   const handleSeed = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/cms/presets/seed`, {
+      const res = await fetch(`${API_BASE}/cms/presets/seed`, {
         method: "POST"
       });
       if (res.ok) {

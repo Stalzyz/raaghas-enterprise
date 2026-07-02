@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useEffect } from "react";
 import {
   Zap, Plus, ArrowRight, Settings2, Trash2, ShieldCheck,
@@ -7,8 +9,6 @@ import {
   AlertCircle, CheckCircle2
 } from "lucide-react";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? "http://localhost:6005/api/v1" : "https://api.raaghas.in/api/v1");
 
 const CONDITION_OPTIONS = [
   { value: "minCartValue", label: "Cart Value ≥ ₹", type: "number" },

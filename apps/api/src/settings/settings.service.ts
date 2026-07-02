@@ -44,6 +44,7 @@ export class SettingsService {
       googleClientId: settings.googleClientId,
       shippingRules: settings.customRules,
       aiAssistantEnabled: settings.aiAssistantEnabled,
+      maxCreditUsagePercent: settings.maxCreditUsagePercent ? Number(settings.maxCreditUsagePercent) : 50,
     };
   }
 

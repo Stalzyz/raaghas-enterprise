@@ -1,5 +1,7 @@
 "use client";
 
+import { API_URL } from "@/lib/api";
+
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/context/CartContext";
@@ -38,7 +40,7 @@ export function OffersProgress() {
       .catch(console.error);
 
     // Fetch dynamic cheap/upsell products
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+    const apiBase = API_URL;
     fetch(`${apiBase}/api/v1/products?limit=10&sort=price_asc&inStock=true`)
       .then(res => res.json())
       .then(data => {

@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useEffect, useState } from "react";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
 import { FileText, Search, Plus, MoreHorizontal, Download, Loader2, ArrowUpRight, Send } from "lucide-react";
@@ -20,7 +22,7 @@ export default function InvoiceHistory() {
 
   const fetchInvoices = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/invoices`, {
+      const res = await fetch(`${API_BASE}/invoices`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
@@ -47,7 +49,7 @@ export default function InvoiceHistory() {
   const handleSendEmail = async (data: { subject: string; body: string; signature: string }) => {
     if (!selectedInvoice) return;
     
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/invoices/${selectedInvoice.id}/send-email`, {
+    const res = await fetch(`${API_BASE}/invoices/${selectedInvoice.id}/send-email`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -63,7 +65,7 @@ export default function InvoiceHistory() {
 
   const handleDownload = async (inv: any) => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/invoices/${inv.id}/download`, {
+      const res = await fetch(`${API_BASE}/invoices/${inv.id}/download`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       

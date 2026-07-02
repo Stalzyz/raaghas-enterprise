@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import React from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, RotateCw, Sparkles } from "lucide-react";
@@ -56,7 +58,7 @@ const getMediaUrl = (url?: string | null) => {
   // If it's already an upload path, don't prepend /uploads again
   const finalPath = normalizedUrl.startsWith("/uploads/") ? normalizedUrl : `/uploads${normalizedUrl}`;
   
-  let baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? "http://localhost:6005" : "https://api.raaghas.in");
+  let baseUrl = API_BASE;
   baseUrl = baseUrl.replace('/api/v1', '');
   return `${baseUrl}${finalPath}`;
 };

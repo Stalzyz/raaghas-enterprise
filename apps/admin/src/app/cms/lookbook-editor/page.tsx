@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useState, useRef, useEffect } from "react";
 import { Plus, Trash2, Crosshair, Save, AlertCircle, CheckCircle2 } from "lucide-react";
 
@@ -82,7 +84,7 @@ export default function LookbookEditor() {
   };
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/products`)
+    fetch(`${API_BASE}/products`)
       .then(res => res.json())
       .then(data => {
         if (data.items) {
@@ -98,10 +100,10 @@ export default function LookbookEditor() {
     setSaving(true);
     setMessage(null);
     try {
-      const pageRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/cms/pages/lookbooks`);
+      const pageRes = await fetch(`${API_BASE}/cms/pages/lookbooks`);
       let page;
       if (!pageRes.ok) {
-        const createRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/cms/pages`, {
+        const createRes = await fetch(`${API_BASE}/cms/pages`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ title: "Lookbooks", handle: "lookbooks", isPublished: true })
@@ -128,7 +130,7 @@ export default function LookbookEditor() {
 
       const content = { scenes: formattedScenes };
       
-      const updateRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in')}/cms/pages/${page.id}/sections`, {
+      const updateRes = await fetch(`${API_BASE}/cms/pages/${page.id}/sections`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify([{ type: "LOOKBOOK", order: 0, content }])

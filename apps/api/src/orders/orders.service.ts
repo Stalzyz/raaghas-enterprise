@@ -1078,24 +1078,47 @@ export class OrdersService {
 
     const generatedOrderId = `RAAGHAS-${Math.floor(Date.now() / 1000).toString(36).toUpperCase()}${Math.floor(Math.random() * 10000).toString(36).toUpperCase()}`;
 
-    const order = await this.prisma.order.create({
-      data: {
-        id: generatedOrderId,
-        status: 'CREATED',
-        financialStatus: 'pending',
-        source: 'admin',
-        totalAmount,
-        subtotal,
-        shipping,
-        discountAmount: discount,
-        customerName: data.customerName,
-        customerEmail: data.customerEmail,
-        customerPhone: data.customerPhone,
-        shippingAddress: data.shippingAddress,
-        billingAddress: data.billingAddress || data.shippingAddress,
-        notes: data.notes,
-        items: { create: enrichedItems },
+    const order = await this.prisma.$transaction(async (tx) => {
+      const newOrder = await tx.order.create({
+        data: {
+          id: generatedOrderId,
+          status: 'CREATED',
+          financialStatus: 'pending',
+          source: 'admin',
+          totalAmount,
+          subtotal,
+          shipping,
+          discountAmount: discount,
+          customerName: data.customerName,
+          customerEmail: data.customerEmail,
+          customerPhone: data.customerPhone,
+          shippingAddress: data.shippingAddress,
+          billingAddress: data.billingAddress || data.shippingAddress,
+          notes: data.notes,
+          items: { create: enrichedItems },
+        }
+      });
+
+      // Decrement inventory for each item
+      for (const item of data.items) {
+        const variant = await tx.variant.update({
+          where: { id: item.variantId },
+          data: { inventory: { decrement: item.quantity } }
+        });
+        
+        await tx.stockLog.create({
+          data: {
+            variantId: item.variantId,
+            type: 'ORDER',
+            change: -item.quantity,
+            newBalance: variant.inventory,
+            referenceId: newOrder.id,
+            notes: `Reserved for draft order ${newOrder.id}`
+          }
+        });
       }
+
+      return newOrder;
     });
 
     const settings = await this.prisma.storeSettings.findUnique({ where: { id: 'global' } });

@@ -358,11 +358,11 @@ export class ProductService {
       let key = row.Product_ID || row.Handle;
       
       if (!key) {
-        if (row.Name || row.Title) {
+        if (lastKey) {
+          key = lastKey; // Inherit handle for variant rows that are completely blank or missing Handle
+        } else if (row.Name || row.Title) {
           key = row.Name || row.Title;
-          lastKey = key; // Update lastKey since this is a new product
-        } else if (lastKey) {
-          key = lastKey; // Inherit handle for variant rows that are completely blank
+          lastKey = key; // Update lastKey since this is a new product without Handle
         }
       } else {
         lastKey = key; // Update the running parent key

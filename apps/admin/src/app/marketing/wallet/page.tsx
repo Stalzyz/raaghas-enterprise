@@ -1,5 +1,7 @@
 "use client";
 
+import { API_BASE } from "@/lib/api";
+
 import { useEffect, useState } from "react";
 import { Search, IndianRupee, History, ArrowUpRight, ArrowDownLeft, ShieldAlert, Loader2, UserPlus, Download } from "lucide-react";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
@@ -15,7 +17,7 @@ export default function WalletManagement() {
 
   const fetchWallets = async () => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const baseUrl = API_BASE;
       const res = await fetch(`${baseUrl}/customers?role=${selectedRole}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -24,7 +26,7 @@ export default function WalletManagement() {
         const customerIds = customers.slice(0, 50).map((c: any) => c.id).join(',');
         
         if (customerIds) {
-          const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+          const baseUrl = API_BASE;
           const wRes = await fetch(`${baseUrl}/growth/wallet/bulk?userIds=${customerIds}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
@@ -48,7 +50,7 @@ export default function WalletManagement() {
   const handleAdjust = async () => {
     if (!selectedWallet) return;
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:6005' : 'https://api.raaghas.in');
+      const baseUrl = API_BASE;
       const res = await fetch(`${baseUrl}/growth/wallet/adjust`, {
         method: "POST",
         headers: { 

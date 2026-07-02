@@ -254,6 +254,25 @@ export class LogisticsService {
       })
     );
 
+    if (options.length === 0) {
+      // Ultimate fallback so we never block checkout for a missing state
+      let cost = 100;
+      let desc = "Standard Delivery";
+      if (hasHeavyItems) {
+        cost += 250;
+        desc += " (Includes ₹250 heavy item handling)";
+      }
+      options.push({
+        id: 'default-fallback',
+        name: 'Standard Delivery',
+        cost,
+        description: desc,
+        zoneName: 'National',
+        isHeavy: hasHeavyItems,
+        uniqueCollectionsCount: uniqueCollections.size
+      });
+    }
+
     return options;
   }
 
