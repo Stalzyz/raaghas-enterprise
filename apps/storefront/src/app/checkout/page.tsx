@@ -708,7 +708,10 @@ export default function CheckoutPage() {
                   </div>
                   <div>
                     <h3 className="text-sm font-bold">Raaghas Wallet</h3>
-                    <p className="text-xs text-theme-text-muted">Available: ₹{wallet.balance.toLocaleString()}</p>
+                    <p className="text-xs text-theme-text-muted">
+                      Available: ₹{wallet.balance.toLocaleString()} <br/>
+                      <span className="text-[10px] opacity-70">(Max {maxCreditUsagePercent}% of cart value per order)</span>
+                    </p>
                   </div>
                 </div>
                 <button
@@ -721,9 +724,16 @@ export default function CheckoutPage() {
                 </button>
               </div>
               {wallet.use && (
-                <p className="text-[10px] text-wine font-medium">
-                  Up to {maxCreditUsagePercent}% of cart value can be paid using wallet credits.
-                </p>
+                <div className="p-3 bg-wine/5 rounded-xl border border-wine/10">
+                  <p className="text-xs text-wine font-medium">
+                    ₹{walletDeduction.toLocaleString()} has been applied to this order.
+                  </p>
+                  {wallet.balance > walletDeduction && (
+                    <p className="text-[10px] text-wine/70 mt-1">
+                      (Your remaining ₹{(wallet.balance - walletDeduction).toLocaleString()} can be used on future orders)
+                    </p>
+                  )}
+                </div>
               )}
             </section>
           )}

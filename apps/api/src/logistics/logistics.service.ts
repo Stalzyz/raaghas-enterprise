@@ -47,45 +47,28 @@ export class LogisticsService {
     return { threshold: 1899 };
   }
 
-  private normalizeStateName(state: string): string {
-    const stateMap: Record<string, string> = {
-      'andrapradesh': 'Andhra Pradesh',
-      'andhrapradesh': 'Andhra Pradesh',
-      'andhra pradesh': 'Andhra Pradesh',
-      'andra pradesh': 'Andhra Pradesh',
-      'andrapadesh': 'Andhra Pradesh',
-      'andhra padesh': 'Andhra Pradesh',
-      'ap': 'Andhra Pradesh',
-      'tamilnadu': 'Tamil Nadu',
-      'tamil nadu': 'Tamil Nadu',
-      'tn': 'Tamil Nadu',
-      'maharastra': 'Maharashtra',
-      'maharashtra': 'Maharashtra',
-      'mh': 'Maharashtra',
-      'karnataka': 'Karnataka',
-      'ka': 'Karnataka',
-      'kerela': 'Kerala',
-      'kerala': 'Kerala',
-      'kl': 'Kerala',
-      'telangana': 'Telangana',
-      'ts': 'Telangana',
-      'delhincr': 'Delhi',
-      'delhi': 'Delhi',
-      'dl': 'Delhi',
-      'west bengal': 'West Bengal',
-      'wb': 'West Bengal',
-      'uttar pradesh': 'Uttar Pradesh',
-      'up': 'Uttar Pradesh',
-      'rajasthan': 'Rajasthan',
-      'rj': 'Rajasthan',
+  private getPossibleStateNames(state: string): string[] {
+    const raw = state.toLowerCase().replace(/[^a-z]/g, '');
+    const map: Record<string, string[]> = {
+      'andhrapradesh': ['Andhra Pradesh', 'AndhraPradesh', 'Andhrapradesh', 'AP'],
+      'tamilnadu': ['Tamil Nadu', 'TamilNadu', 'Tamilnadu', 'TN'],
+      'maharashtra': ['Maharashtra', 'Maharastra', 'MH'],
+      'karnataka': ['Karnataka', 'KA'],
+      'kerala': ['Kerala', 'Kerela', 'KL'],
+      'telangana': ['Telangana', 'TS', 'TG'],
+      'delhi': ['Delhi', 'DelhiNCR', 'New Delhi', 'DL'],
+      'delhincr': ['Delhi', 'DelhiNCR', 'New Delhi', 'DL'],
+      'westbengal': ['West Bengal', 'WestBengal', 'WB'],
+      'uttarpradesh': ['Uttar Pradesh', 'UttarPradesh', 'UP'],
+      'rajasthan': ['Rajasthan', 'RJ'],
+      'madhyapradesh': ['Madhya Pradesh', 'MadhyaPradesh', 'MP'],
+      'jammuandkashmir': ['Jammu and Kashmir', 'Jammu & Kashmir', 'J&K', 'JK'],
     };
-    const key = state.toLowerCase().trim();
-    return stateMap[key] || state;
+    return map[raw] || [state, state.trim(), state.toLowerCase(), state.toUpperCase()];
   }
 
   async getShippingOptions(state: string, cartTotal: number, items: any[] = []) {
-    // Normalize state name to handle common typos and abbreviations
-    const normalizedState = this.normalizeStateName(state);
+    const possibleStates = this.getPossibleStateNames(state);
 
     // 1. Fetch exact product details from database for accurate category/collection rules
     const productIds = items.map(i => i.id || i.productId).filter(Boolean);
@@ -114,12 +97,7 @@ export class LogisticsService {
       where: {
         isActive: true,
         OR: [
-          { regions: { has: normalizedState } },
-          { regions: { has: normalizedState.toLowerCase() } },
-          { regions: { has: normalizedState.toUpperCase() } },
-          { regions: { has: state } },  // original in case already correct
-          { regions: { has: state.toLowerCase() } },
-          { regions: { has: state.toUpperCase() } },
+          { regions: { hasSome: possibleStates } },
           { regions: { isEmpty: true } }
         ]
       },
