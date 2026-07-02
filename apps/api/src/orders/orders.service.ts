@@ -1109,7 +1109,7 @@ export class OrdersService {
         await tx.stockLog.create({
           data: {
             variantId: item.variantId,
-            type: 'ORDER',
+            type: 'SALE',
             change: -item.quantity,
             newBalance: variant.inventory,
             referenceId: newOrder.id,
