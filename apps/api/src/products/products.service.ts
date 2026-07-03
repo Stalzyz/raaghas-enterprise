@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import OpenAI from 'openai';
+
 
 @Injectable()
 export class ProductService {
@@ -10,18 +10,7 @@ export class ProductService {
     private prisma: PrismaService,
   ) {}
 
-  /** Resolves the OpenAI API key: DB settings first, then env fallback. */
-  private async getOpenAiClient(): Promise<OpenAI | null> {
-    try {
-      const settings = await (this.prisma as any).storeSettings.findUnique({ where: { id: 'global' } });
-      const apiKey = settings?.openAiApiKey || process.env.OPENAI_API_KEY;
-      if (apiKey) return new OpenAI({ apiKey });
-    } catch {
-      // If DB lookup fails, try env
-      if (process.env.OPENAI_API_KEY) return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    }
-    return null;
-  }
+
 
   async findAll(query: { 
     ids?: string[];
@@ -331,56 +320,7 @@ export class ProductService {
     return [...dbCollections, ...virtualCollections];
   }
 
-  private async aiPreProcessCsv(rows: any[]): Promise<any[]> {
-    const openai = await this.getOpenAiClient();
-    if (!openai) {
-      this.logger.warn('OpenAI API Key is missing (checked DB settings and env). Skipping AI pre-processing and falling back to standard import.');
-      return rows;
-    }
-    
-    this.logger.log(`Starting AI Pre-Processing for ${rows.length} rows...`);
-    const chunkSize = 30;
-    let processedRows: any[] = [];
-    
-    for (let i = 0; i < rows.length; i += chunkSize) {
-      const chunk = rows.slice(i, i + chunkSize);
-      
-      try {
-        const prompt = `
-You are an expert eCommerce data normalization assistant.
-Your task is to take this array of raw product CSV rows (in JSON format) and clean, map, and augment them.
-Rules:
-1. Standardize column names. The output MUST use exactly these keys if the data exists: "Product_ID", "Title", "Handle", "Description", "Category", "Brand", "Color", "Size", "SKU", "Price", "Inventory", "Status", "Published". Keep any other columns as they are.
-2. If "Handle" is missing or blank, generate an SEO-friendly URL slug (e.g. "red-cotton-t-shirt"). Variants of the same base product MUST be given the exact same Handle so they group together!
-3. If "SKU" is missing or blank, generate one following the format [BRAND-3]-[CAT-3]-[COLOR-3]-[SIZE] (e.g. RAA-APP-RED-XL). If size or color are missing, omit them or use a default.
-4. Return the result strictly as a valid JSON object with a single key "rows" containing the array of processed objects.
-        `;
 
-        const response = await openai.chat.completions.create({
-          model: 'gpt-4o-mini',
-          messages: [
-            { role: 'system', content: prompt },
-            { role: 'user', content: JSON.stringify(chunk) }
-          ],
-          response_format: { type: 'json_object' }
-        });
-
-        const rawContent = response.choices[0]?.message?.content || '{}';
-        const parsedContent = JSON.parse(rawContent);
-        
-        if (parsedContent && Array.isArray(parsedContent.rows)) {
-          processedRows = processedRows.concat(parsedContent.rows);
-        } else {
-          throw new Error('AI returned invalid JSON format (missing "rows" array)');
-        }
-      } catch (err: any) {
-        this.logger.error(`AI Pre-processing chunk failed: ${err.message}. Falling back to raw chunk.`);
-        processedRows = processedRows.concat(chunk);
-      }
-    }
-    this.logger.log('AI Pre-Processing completed.');
-    return processedRows;
-  }
 
   async processCsvBulkUpload(buffer: Buffer) {
     const Papa = require('papaparse');
@@ -415,9 +355,22 @@ Rules:
 
     let rows = parsed.data as any[];
     
-    // AI Pre-Processing step (Skipped if OPENAI_API_KEY is not set)
-    rows = await this.aiPreProcessCsv(rows);
-    
+    // Deterministic Normalization
+    rows = rows.map((row: any) => {
+      const title = row.Title || row.Name || '';
+      let handle = row.Handle || '';
+      
+      // Auto-generate Handle if missing, based on Title
+      if (!handle && title) {
+        handle = title.toString().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+      }
+
+      return {
+        ...row,
+        Title: title,
+        Handle: handle,
+      };
+    });
     const summary = { success: 0, updated: 0, failed: 0, errors: [] as {key: string, error: string}[] };
 
     // Group rows by Product Identifier (Title or Handle or Product_ID)
