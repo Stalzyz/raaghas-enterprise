@@ -5,7 +5,6 @@ import { ProductService } from '../products/products.service';
 
 @Injectable()
 export class AiService {
-  private openai: OpenAI | null = null;
   private readonly logger = new Logger(AiService.name);
 
   constructor(
@@ -17,14 +16,11 @@ export class AiService {
   async search(query: string) {
     const settings = await (this.prisma as any).storeSettings.findUnique({ where: { id: 'global' } });
     const apiKey = settings?.openAiApiKey || process.env.OPENAI_API_KEY;
-    
-    if (apiKey && !this.openai) {
-      this.openai = new OpenAI({ apiKey });
-    } else if (!apiKey && this.openai) {
-      this.openai = null;
-    }
 
-    if (!this.openai) {
+    // Always create a fresh client from the current key so admin updates take effect immediately
+    const openaiClient = apiKey ? new OpenAI({ apiKey }) : null;
+
+    if (!openaiClient) {
       // Fallback to standard DB search if no API key
       const productsResult = await this.productService.findAll({ search: query, limit: 12, adminMode: false });
       const products = Array.isArray(productsResult) ? productsResult : (productsResult as any).data;
@@ -35,7 +31,7 @@ export class AiService {
     }
 
     try {
-      const completion = await this.openai.chat.completions.create({
+      const completion = await openaiClient.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: `You are an expert AI stylist for Raaghas, a premium fashion e-commerce brand specializing in luxury wear, kurtis, dresses, and traditional Indian clothing. Your goal is to interpret the user's query and extract search parameters to find the perfect products for them. If the user asks a conversational question, answer it warmly and elegantly in 1-2 short sentences, and ALWAYS call the search_products function to show them items.` },

@@ -35,7 +35,8 @@ export function ProductGridSection({ content, style }: { content: Record<string,
         const url = `${apiUrl}/api/v1/products${handle ? `?collection=${handle}` : ''}`;
         let res = await fetch(url);
         let data = await res.json();
-        let productsList = data.products || (Array.isArray(data) ? data : []);
+        // API returns plain array or paginated { data: [], meta: {} }
+        let productsList = Array.isArray(data) ? data : (data.data || data.products || []);
         
         // If collection was empty, DO NOT fetch generic products
         if (productsList.length > 0) {

@@ -4,15 +4,23 @@ import OpenAI from 'openai';
 
 @Injectable()
 export class ProductService {
-  private openai?: OpenAI;
   private readonly logger = new Logger(ProductService.name);
 
   constructor(
     private prisma: PrismaService,
-  ) {
-    if (process.env.OPENAI_API_KEY) {
-      this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  ) {}
+
+  /** Resolves the OpenAI API key: DB settings first, then env fallback. */
+  private async getOpenAiClient(): Promise<OpenAI | null> {
+    try {
+      const settings = await (this.prisma as any).storeSettings.findUnique({ where: { id: 'global' } });
+      const apiKey = settings?.openAiApiKey || process.env.OPENAI_API_KEY;
+      if (apiKey) return new OpenAI({ apiKey });
+    } catch {
+      // If DB lookup fails, try env
+      if (process.env.OPENAI_API_KEY) return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     }
+    return null;
   }
 
   async findAll(query: { 
@@ -324,8 +332,9 @@ export class ProductService {
   }
 
   private async aiPreProcessCsv(rows: any[]): Promise<any[]> {
-    if (!this.openai) {
-      this.logger.warn('OpenAI API Key is missing. Skipping AI pre-processing and falling back to standard import.');
+    const openai = await this.getOpenAiClient();
+    if (!openai) {
+      this.logger.warn('OpenAI API Key is missing (checked DB settings and env). Skipping AI pre-processing and falling back to standard import.');
       return rows;
     }
     
@@ -347,7 +356,7 @@ Rules:
 4. Return the result strictly as a valid JSON object with a single key "rows" containing the array of processed objects.
         `;
 
-        const response = await this.openai.chat.completions.create({
+        const response = await openai.chat.completions.create({
           model: 'gpt-4o-mini',
           messages: [
             { role: 'system', content: prompt },

@@ -34,7 +34,7 @@ export function ProductScrollSection({ content, style }: { content: Record<strin
         const url = `${apiUrl}/api/v1/products${handle ? `?collection=${handle}` : ""}`;
         const res = await fetch(url);
         const data = await res.json();
-        const list: any[] = data.products || (Array.isArray(data) ? data : []);
+        const list: any[] = Array.isArray(data) ? data : (data.data || data.products || []);
         if (list.length > 0) {
           const limit = content.limit || 12;
           const mapped = list.slice(0, limit).map((p: any) => {

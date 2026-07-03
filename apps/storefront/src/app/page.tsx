@@ -49,10 +49,10 @@ const FALLBACK_SECTIONS: Section[] = [
       headline: "The Curations",
       subheadline: "Handpicked selections for every facet of your life.",
       categories: [
-        { id: "1", label: "Office Wear", handle: "office-wear", image: "https://images.unsplash.com/photo-1589310243389-96a5483213a8?q=80&w=800", size: "large" },
-        { id: "2", label: "Daily Luxe", handle: "cotton-wear", image: "https://images.unsplash.com/photo-1610030469983-98e550d615e1?q=80&w=600", size: "small" },
-        { id: "3", label: "Silk Stories", handle: "silk-kalamkari", image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=600", size: "small" },
-        { id: "4", label: "New Drops", handle: "new-arrivals", image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=800", size: "medium" }
+        { id: "1", label: "Artisan Touch", handle: "artisan-touch", image: "https://images.unsplash.com/photo-1589310243389-96a5483213a8?q=80&w=800", size: "large" },
+        { id: "2", label: "Pure Cotton", handle: "pure-cotton-kurtis", image: "https://images.unsplash.com/photo-1610030469983-98e550d615e1?q=80&w=600", size: "small" },
+        { id: "3", label: "Kalamkari", handle: "kalamkari", image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=600", size: "small" },
+        { id: "4", label: "Fresh Drops", handle: "Fresh-Drops", image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=800", size: "medium" }
       ]
     } 
   },
@@ -62,8 +62,8 @@ const FALLBACK_SECTIONS: Section[] = [
     order: 3, 
     content: { 
       title: "The Bestsellers", 
-      count: 4, 
-      collectionHandle: "office-wear" 
+      count: 8, 
+      collectionHandle: "artisan-touch" 
     } 
   },
   { 

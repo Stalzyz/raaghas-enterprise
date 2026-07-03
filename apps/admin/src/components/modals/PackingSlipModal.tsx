@@ -31,7 +31,7 @@ function SlipContent({ order, storeSettings }: { order: any; storeSettings: any 
           <h1 style={{ margin: 0, fontSize: '12pt', fontWeight: 'bold', textTransform: 'uppercase' }}>{fromName}</h1>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <p style={{ margin: 0, fontSize: '11pt', fontWeight: 'bold' }}>Order #{order.formattedOrderNumber || order.orderNumber || order.id.slice(-10).toUpperCase()}</p>
+          <p style={{ margin: 0, fontSize: '11pt', fontWeight: 'bold' }}>Order #{order.formattedOrderNumber || (order.orderNumber != null ? String(order.orderNumber + 1000) : order.id.slice(-8).toUpperCase())}</p>
           <p style={{ margin: '2px 0 0', fontSize: '8pt' }}>Date: {new Date(order.createdAt).toLocaleDateString('en-GB')}</p>
         </div>
       </div>
@@ -43,7 +43,7 @@ function SlipContent({ order, storeSettings }: { order: any; storeSettings: any 
         <p style={{ margin: '4px 0 0', fontSize: '10pt', fontWeight: 'bold', lineHeight: 1.4 }}>
           {shippingAddr.address1 || shippingAddr.line1 || shippingAddr.address || ''}<br />
           {shippingAddr.address2 ? <>{shippingAddr.address2}<br /></> : null}
-          {shippingAddr.city}, {shippingAddr.province || shippingAddr.state} {shippingAddr.zip || shippingAddr.postalCode}<br />
+          {shippingAddr.city}, {shippingAddr.province || shippingAddr.state} {shippingAddr.zip || shippingAddr.postalCode || shippingAddr.pincode}<br />
           {shippingAddr.country || 'India'}
         </p>
         {(shippingAddr.phone || order.customerPhone) && <p style={{ margin: '6px 0 0', fontSize: '10pt', fontWeight: 'bold' }}>{shippingAddr.phone || order.customerPhone}</p>}
