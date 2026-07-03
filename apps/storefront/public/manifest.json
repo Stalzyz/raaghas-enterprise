@@ -1,9 +1,9 @@
 {
   "name": "Raaghas",
   "short_name": "Raaghas",
-  "description": "Luxury Luxury Ethnic Wear",
+  "description": "Premium Luxury Ethnic Wear by Raaghas",
   "start_url": "/",
-  "display": "standalone",
+  "display": "browser",
   "background_color": "#ffffff",
   "theme_color": "#701A31",
   "icons": [
