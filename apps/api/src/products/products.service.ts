@@ -578,7 +578,7 @@ Rules:
               offerPrice: vRow.Offer_Price ? parseNum(vRow.Offer_Price, null) : null,
               costPrice: vRow.Cost_Price ? parseNum(vRow.Cost_Price, null) : null,
               discountPercentage: vRow.Discount_Percent ? parseNum(vRow.Discount_Percent, null) : null,
-              inventory: parseNum(vRow.Stock_Qty || vRow.Stock || vRow['Variant Inventory Qty'], 0),
+              inventory: parseNum(vRow.Stock_Qty || vRow.Stock || vRow['Variant Inventory Qty'] || vRow.Inventory, 0),
               option1Name: vRow['Option1 Name'] || 'Size',
               option1Value: vRow['Option1 Value']?.toString() || vRow.Size?.toString() || 'Default',
               option2Name: vRow['Option2 Name'] || 'Color',
