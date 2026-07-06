@@ -17,7 +17,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    const status =
+    let status =
       exception instanceof HttpException
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
@@ -37,9 +37,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       const res = exception.getResponse() as any;
       message = typeof res === 'string' ? res : res.message || message;
+    } else if (exception.code === 'P2002') {
+      message = 'A record with this value already exists (Duplicate entry).';
+      status = HttpStatus.CONFLICT;
     } else if (exception.code?.startsWith('P')) {
-      // Prisma errors (P2002 etc)
-      message = 'A database integrity error occurred.';
+      // General Prisma errors
+      message = 'We encountered a temporary issue processing your request. Please try again.';
       if (process.env.NODE_ENV !== 'production') detail = exception.message;
     }
 
