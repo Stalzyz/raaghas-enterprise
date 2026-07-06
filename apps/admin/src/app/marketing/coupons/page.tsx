@@ -51,6 +51,11 @@ export default function CouponManagement() {
 
   const handleCreate = async () => {
     try {
+      if (!newCoupon.code.trim()) {
+        alert("Please enter a valid coupon code.");
+        return;
+      }
+
       const baseUrl = API_BASE;
       const url = editingId ? `${baseUrl}/growth/coupons/${editingId}` : `${baseUrl}/growth/coupons`;
       const method = editingId ? "PATCH" : "POST";
@@ -63,6 +68,7 @@ export default function CouponManagement() {
         },
         body: JSON.stringify(newCoupon)
       });
+      
       if (res.ok) {
         fetchCoupons();
         setShowAddModal(false);
@@ -72,8 +78,14 @@ export default function CouponManagement() {
           maxDiscount: 0, usageLimit: 1000, usageLimitPerUser: 1, startDate: "", endDate: "",
           autoApply: false, minQuantity: 0,
         });
+      } else {
+        const err = await res.json();
+        alert(err.message || "Failed to save coupon. The code might already exist.");
       }
-    } catch (err) { console.error(err); }
+    } catch (err: any) { 
+      console.error(err);
+      alert("A network error occurred. Please try again.");
+    }
   };
 
   const handleEdit = (coupon: any) => {
