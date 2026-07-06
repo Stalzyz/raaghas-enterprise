@@ -21,21 +21,24 @@ export class GrowthService {
     const settings = await this.settingsService.getSettings();
     const discountVal = Number(settings.welcomeDiscountPercent || 10.00);
 
-    // 1. Create a Welcome Coupon
-    const couponCode = `WELCOME-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+    // 1. Ensure a single master Welcome Coupon exists
+    const couponCode = `WELCOME${discountVal}`;
+    let coupon = await this.prisma.discount.findUnique({ where: { code: couponCode } });
     
-    const coupon = await this.prisma.discount.create({
-      data: {
-        code: couponCode,
-        type: 'PERCENTAGE',
-        value: new Decimal(discountVal),
-        isActive: true,
-        usageLimitPerUser: 1,
-        usageLimit: 1000,
-        startDate: new Date(),
-        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Valid for 30 days
-      }
-    });
+    if (!coupon) {
+      coupon = await this.prisma.discount.create({
+        data: {
+          code: couponCode,
+          type: 'PERCENTAGE',
+          value: new Decimal(discountVal),
+          isActive: true,
+          usageLimitPerUser: 1,
+          usageLimit: 100000,
+          startDate: new Date(),
+          // No expiration date set
+        }
+      });
+    }
 
     // 2. Trigger Welcome Notification
     await this.notificationsService.notify('WELCOME_OFFER', {
