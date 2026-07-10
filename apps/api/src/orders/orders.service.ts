@@ -728,11 +728,16 @@ export class OrdersService {
   }, tx?: any) {
     const executeOrderCreation = async (txn: any) => {
       // Resolve user
-      let userId: string | undefined;
-      if ((data as any).userId) {
-        userId = (data as any).userId;
-      } else if (data.clerkId) {
-        const user = await txn.user.findUnique({ where: { clerkId: data.clerkId } });
+      let userId: string | undefined = data.userId;
+      let clerkId: string | undefined = data.clerkId;
+
+      if (userId && userId.startsWith('user_')) {
+        clerkId = userId;
+        userId = undefined;
+      }
+
+      if (!userId && clerkId) {
+        const user = await txn.user.findUnique({ where: { clerkId } });
         if (user) userId = user.id;
       }
 
@@ -754,6 +759,7 @@ export class OrdersService {
           try {
             user = await txn.user.create({
               data: {
+                clerkId,
                 email,
                 name: data.customerName || 'Guest Customer',
                 phone: data.customerPhone || '',
@@ -873,22 +879,30 @@ export class OrdersService {
 
     // 2. USER RESOLUTION
     let userId = data.userId;
+    let clerkId = data.clerkId;
+
+    // If userId looks like a clerkId (e.g. user_2X...), use it for clerkId resolution instead
+    if (userId && userId.startsWith('user_')) {
+      clerkId = userId;
+      userId = undefined;
+    }
+
     if (!userId) {
       const fallbackEmail = `${data.customerPhone.replace(/\\D/g, "")}@guest.raaghas.in`;
       const email = data.customerEmail ? data.customerEmail.toLowerCase().trim() : fallbackEmail;
-      if (data.clerkId) {
-        let user = await prisma.user.findUnique({ where: { clerkId: data.clerkId } });
+      if (clerkId) {
+        let user = await prisma.user.findUnique({ where: { clerkId } });
         if (!user && email) {
           user = await prisma.user.findUnique({ where: { email } });
           if (user) {
-            await prisma.user.update({ where: { id: user.id }, data: { clerkId: data.clerkId } });
+            await prisma.user.update({ where: { id: user.id }, data: { clerkId } });
           }
         }
         if (!user) {
           user = await prisma.user.create({
             data: {
-              clerkId: data.clerkId,
-              email: email || data.clerkId,
+              clerkId,
+              email: email || clerkId,
               name: data.customerName || 'Guest Customer',
               phone: data.customerPhone || '',
               role: 'CUSTOMER',
@@ -991,11 +1005,21 @@ export class OrdersService {
     });
     const formatted = `${prefix}${confirmedCount + 1001}${suffix}`;
     
-    return await prisma.order.update({
+    const updatedOrder = await prisma.order.update({
       where: { id: order.id },
       data: { formattedOrderNumber: formatted },
       include: { items: true }
     });
+    
+    // Auto-process loyalty/referral if immediately confirmed (e.g. COD, 100% Wallet)
+    if (updatedOrder.status === 'CONFIRMED' && updatedOrder.userId) {
+      setImmediate(() => {
+        this.growthService.processReferralReward(updatedOrder.userId!, updatedOrder.id).catch(() => {});
+        this.growthService.processLoyaltyPoints(updatedOrder.userId!, updatedOrder.id).catch(() => {});
+      });
+    }
+
+    return updatedOrder;
   }
 
   async sendOrderConfirmationEmail(orderId: string) {

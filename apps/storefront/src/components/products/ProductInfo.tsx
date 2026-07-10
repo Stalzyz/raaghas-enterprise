@@ -133,7 +133,25 @@ export default function ProductInfo({ product }: ProductInfoProps) {
     return Array.from(new Set(values));
   };
 
-  const option1Values = getUniqueOptions('option1Value');
+  const SIZE_ORDER = ['XXS', 'XS', 'S', 'M', 'L', 'XL', '2XL', 'XXL', '3XL', '4XL', '5XL', 'FREE SIZE', 'FS'];
+  
+  const sortSizes = (sizes: any[]) => {
+    return sizes.sort((a, b) => {
+      const strA = String(a).toUpperCase();
+      const strB = String(b).toUpperCase();
+      const idxA = SIZE_ORDER.indexOf(strA);
+      const idxB = SIZE_ORDER.indexOf(strB);
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA !== -1) return -1;
+      if (idxB !== -1) return 1;
+      const numA = parseFloat(String(a));
+      const numB = parseFloat(String(b));
+      if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+      return String(a).localeCompare(String(b));
+    });
+  };
+
+  const option1Values = sortSizes(getUniqueOptions('option1Value'));
   const option2Values = getUniqueOptions('option2Value');
   const option3Values = getUniqueOptions('option3Value');
 

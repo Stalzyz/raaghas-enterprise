@@ -1,6 +1,6 @@
 import { API_URL } from "@/lib/api";
 
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import ProductGallery from "@/components/products/ProductGallery";
 import ProductInfo from "@/components/products/ProductInfo";
 import EnsembleCurator from "@/components/products/EnsembleCurator";
@@ -19,21 +19,21 @@ async function getProduct(handle: string) {
   const url = `${API_URL}/api/v1/products/${encodeURIComponent(handle)}`;
   try {
     const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) return null;
+    if (res.status === 404) return { notFound: true };
+    if (!res.ok) throw new Error("API error");
     const data = await res.json();
-    // API returns product object directly or { success: false, ... }
-    if (data.success === false) return null;
+    if (data.success === false) return { notFound: true };
     return data;
   } catch (err) {
     console.error("Failed to fetch product:", err);
-    return null;
+    return { error: true };
   }
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ handle: string }> }): Promise<Metadata> {
   const { handle } = await params;
   const product = await getProduct(handle);
-  if (!product) return { title: "Product Not Found" };
+  if (!product || product.notFound || product.error) return { title: "Product Not Found" };
 
   const imageUrl = getAssetUrl(product.images?.[0]?.url);
   
@@ -60,8 +60,20 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
   const { handle } = await params;
   const product = await getProduct(handle);
 
-  if (!product) {
-    notFound();
+  if (product?.notFound) {
+    redirect("/collections/all");
+  }
+
+  if (product?.error || !product) {
+    return (
+      <div className="min-h-screen flex items-center justify-center pt-24 pb-12">
+        <div className="text-center">
+          <h1 className="text-2xl font-serif text-charcoal mb-4">Temporarily Unavailable</h1>
+          <p className="text-charcoal/60 mb-8">We are having trouble loading this product. Please try again later.</p>
+          <a href="/collections/all" className="luxury-button">Return to Collections</a>
+        </div>
+      </div>
+    );
   }
 
   const stickyProps = {

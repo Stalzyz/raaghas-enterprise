@@ -6,6 +6,9 @@
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? "http://localhost:6005" : "https://api.raaghas.in");
 
 export const getApiUrl = (path: string) => {
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  let cleanPath = path.startsWith('/') ? path : `/${path}`;
+  if (!cleanPath.startsWith('/api/v1')) {
+    cleanPath = `/api/v1${cleanPath}`;
+  }
   return `${API_URL}${cleanPath}`;
 };

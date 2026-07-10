@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { API_URL } from "@/lib/api";
 
 export interface CartItem {
   id: string;
@@ -90,7 +91,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }, eventId);
     });
 
-    fetch(process.env.NEXT_PUBLIC_API_URL + "/marketing/capi/track", {
+    fetch(API_URL + "/marketing/capi/track", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

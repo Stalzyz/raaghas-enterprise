@@ -1,6 +1,28 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
+const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "Free Size"];
+
+function sortVariants(variants: any[]) {
+  if (!variants || !Array.isArray(variants)) return variants;
+  return variants.sort((a, b) => {
+    const sizeA = (a.option1Name?.toLowerCase() === 'size') ? a.option1Value : 
+                  ((a.option2Name?.toLowerCase() === 'size') ? a.option2Value : a.option1Value);
+    const sizeB = (b.option1Name?.toLowerCase() === 'size') ? b.option1Value : 
+                  ((b.option2Name?.toLowerCase() === 'size') ? b.option2Value : b.option1Value);
+    
+    let indexA = SIZE_ORDER.indexOf(sizeA);
+    let indexB = SIZE_ORDER.indexOf(sizeB);
+    
+    if (indexA === -1) indexA = 999;
+    if (indexB === -1) indexB = 999;
+    
+    if (indexA !== indexB) {
+      return indexA - indexB;
+    }
+    return 0;
+  });
+}
 
 @Injectable()
 export class ProductService {
@@ -192,10 +214,10 @@ export class ProductService {
 
       const data = products.map((product) => ({
         ...product,
-        variants: product.variants.map((v: any) => {
+        variants: sortVariants(product.variants.map((v: any) => {
           const reserved = (v.reservations || []).reduce((sum: number, r: any) => sum + r.quantity, 0);
           return { ...v, inventory: v.inventory - reserved };
-        }),
+        })),
         rating: 0,
         reviewsCount: 0
       }));
@@ -252,10 +274,10 @@ export class ProductService {
     return related.map((p) => {
       return { 
         ...p, 
-        variants: p.variants.map((v: any) => {
+        variants: sortVariants(p.variants.map((v: any) => {
           const reserved = (v.reservations || []).reduce((sum: number, r: any) => sum + r.quantity, 0);
           return { ...v, inventory: v.inventory - reserved };
-        }),
+        })),
         rating: 0, 
         reviewsCount: 0 
       };
@@ -284,10 +306,10 @@ export class ProductService {
 
     return { 
       ...product, 
-      variants: product.variants.map((v: any) => {
+      variants: sortVariants(product.variants.map((v: any) => {
         const reserved = (v.reservations || []).reduce((sum: number, r: any) => sum + r.quantity, 0);
         return { ...v, inventory: v.inventory - reserved };
-      }),
+      })),
       bundleProducts: [], // bundleIds removed from schema
       rating: 0, 
       reviewsCount: 0 
@@ -821,11 +843,21 @@ export class ProductService {
 
       // 2. Handle variants if provided
       if (variants) {
+        const incomingVariantIds = variants.map((v: any) => v.id).filter(Boolean);
+        
+        // Delete removed variants
+        await tx.variant.deleteMany({
+          where: {
+            productId: id,
+            id: { notIn: incomingVariantIds }
+          }
+        });
+
         for (const variant of variants) {
           const variantData = {
-            sku: variant.sku,
-            barcode: variant.barcode,
-            price: Number(variant.price || variant.sellingPrice),
+            sku: variant.sku || null,
+            barcode: variant.barcode || null,
+            price: Number(variant.price ?? variant.sellingPrice ?? 0),
             mrp: variant.mrp ? Number(variant.mrp) : undefined,
             sellingPrice: variant.sellingPrice ? Number(variant.sellingPrice) : undefined,
             offerPrice: variant.offerPrice ? Number(variant.offerPrice) : undefined,

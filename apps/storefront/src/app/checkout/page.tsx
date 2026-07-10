@@ -151,14 +151,17 @@ export default function CheckoutPage() {
 
   // ── Auth Enforcement ──────────────────────────────────────────────────────
   useEffect(() => {
-    const token = getToken();
-    if (!token) {
-      router.replace("/sign-in?redirect=/checkout");
-      // Still mark as checked so we don't show spinner while redirect happens
+    const checkAuth = async () => {
+      const token = await getToken();
+      if (!token) {
+        router.replace("/sign-in?redirect=/checkout");
+        // Still mark as checked so we don't show spinner while redirect happens
+        setAuthChecked(true);
+        return;
+      }
       setAuthChecked(true);
-      return;
-    }
-    setAuthChecked(true);
+    };
+    checkAuth();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Empty cart guard ──────────────────────────────────────────────────────
@@ -218,7 +221,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     const fetchGrowthData = async () => {
       try {
-        const token = getToken();
+        const token = await getToken();
         const offerRes = await fetch(`${API_URL}/api/v1/growth/offers/eligible`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -335,7 +338,7 @@ export default function CheckoutPage() {
     if (!promoCode) return;
     setPromoState({ status: "LOADING" });
     try {
-      const token = getToken();
+      const token = await getToken();
       const res = await fetch(`${API_URL}/api/v1/growth/coupons/validate`, {
         method: "POST",
         headers: {
@@ -402,7 +405,7 @@ export default function CheckoutPage() {
   const handlePayment = async () => {
     if (!validateForm()) return;
 
-    const token = getToken();
+    const token = await getToken();
     if (!token) {
       router.push("/sign-in?redirect=/checkout");
       return;
@@ -480,7 +483,7 @@ export default function CheckoutPage() {
       // ── Step 3: Validate payload from backend ─────────────────────────────
       if (data.netPayable === 0 && data.paymentPayload?.freeOrder) {
         setPaymentSuccess(true);
-        const token = getToken();
+        const currentToken = await getToken();
         if (token) {
           setTimeout(() => router.push(`/account/orders?status=success`), 2000);
         } else {

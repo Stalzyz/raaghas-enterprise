@@ -64,6 +64,8 @@ export function useWishlist() {
       isSyncing = true;
       try {
         const token = await getToken();
+        if (!token) return; // Prevent 401 log spam
+        
         loadLocal(); // get latest local items
         const initialWishlist = [...globalWishlist]; // Capture state before network requests
         

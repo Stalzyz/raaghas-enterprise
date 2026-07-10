@@ -573,6 +573,13 @@ export class PaymentsService implements OnModuleInit {
           metaEventId: data.metaEventId,
         });
         
+        if (order.userId) {
+          this.growthService.processReferralReward(order.userId, order.id)
+            .catch(e => this.logger.error('Referral reward failed (verifyAndConfirmOrder):', e));
+          this.growthService.processLoyaltyPoints(order.userId, order.id)
+            .catch(e => this.logger.error('Loyalty points failed (verifyAndConfirmOrder):', e));
+        }
+        
         // Send email confirmation
         this.ordersService.sendOrderConfirmationEmail(order.id)
           .catch(e => this.logger.error('Failed to send order confirmation email (confirmPayment)', e));
@@ -788,7 +795,6 @@ export class PaymentsService implements OnModuleInit {
         if (order.userId) {
           this.growthService.processReferralReward(order.userId, order.id)
             .catch(e => this.logger.error('Referral reward failed:', e));
-            
           this.growthService.processLoyaltyPoints(order.userId, order.id)
             .catch(e => this.logger.error('Loyalty points processing failed:', e));
         }
