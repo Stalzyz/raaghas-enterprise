@@ -5,6 +5,7 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Search as SearchIcon, X, SlidersHorizontal, ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { API_URL } from "@/lib/api";
+import Cookies from "js-cookie";
 
 function SearchPageContent() {
   const searchParams = useSearchParams();
@@ -41,6 +42,25 @@ function SearchPageContent() {
       const res = await fetch(`${API_URL}/api/v1/products?search=${encodeURIComponent(q)}`);
       const data = await res.json();
       setResults(Array.isArray(data) ? data : []);
+
+      // Meta Tracking
+      const searchEventId = "evt_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9);
+      import("@/components/analytics/MetaPixel").then((m) => {
+        m.trackMetaEvent("Search", {
+          search_string: q
+        }, searchEventId);
+      });
+      fetch(API_URL + "/api/v1/marketing/capi/track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          eventName: "Search",
+          metaEventId: searchEventId,
+          contentIds: Array.isArray(data) ? data.slice(0, 10).map((p: any) => p.variants?.[0]?.id).filter(Boolean) : [],
+          fbp: Cookies.get("_fbp"),
+          fbc: Cookies.get("_fbc")
+        })
+      }).catch(() => {});
     } catch (err) {
       console.error(err);
     } finally {

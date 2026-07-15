@@ -2,10 +2,12 @@
 
 import { useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+import { useAuth } from "@/components/providers/AuthProvider";
 
 export default function MetaPixel({ pixelId }: { pixelId: string | null }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (!pixelId) return;
@@ -28,9 +30,13 @@ export default function MetaPixel({ pixelId }: { pixelId: string | null }) {
       s.parentNode.insertBefore(t, s);
     })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
 
-    (window as any).fbq("init", pixelId);
+    if (user?.email) {
+      (window as any).fbq("init", pixelId, { em: user.email });
+    } else {
+      (window as any).fbq("init", pixelId);
+    }
     (window as any).fbq("track", "PageView");
-  }, [pixelId]);
+  }, [pixelId, user?.email]);
 
   // Track PageView on route change
   useEffect(() => {

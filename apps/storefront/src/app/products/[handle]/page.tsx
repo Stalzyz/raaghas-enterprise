@@ -10,6 +10,7 @@ import { StickyAddToCart } from "@/components/cro/StickyAddToCart";
 import ReviewList from "@/components/reviews/ReviewList";
 import ReviewForm from "@/components/reviews/ReviewForm";
 import { Metadata } from "next";
+import ViewContentTracker from "@/components/analytics/ViewContentTracker";
 
 import { getAssetUrl } from "@/lib/utils/assets";
 import Breadcrumb from "@/components/layout/Breadcrumb";
@@ -147,6 +148,14 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
       <div className="max-w-[1400px] mx-auto px-6 md:px-12 pt-44 md:pt-48 pb-12 md:pb-24">
         <Breadcrumb items={breadcrumbItems} />
         
+        {product.variants?.[0] && (
+          <ViewContentTracker 
+            variantId={product.variants[0].id} 
+            title={product.title} 
+            price={product.variants[0].price} 
+          />
+        )}
+
         {/* Main Grid: Gallery & Info */}
         <div className="grid lg:grid-cols-2 gap-16 items-start">
           <div className="lg:sticky lg:top-40">

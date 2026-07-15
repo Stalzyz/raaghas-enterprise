@@ -114,6 +114,7 @@ export class GrowthService {
         endDate: data.endDate ? new Date(data.endDate) : null,
         autoApply: data.autoApply,
         minQuantity: data.minQuantity ? parseInt(data.minQuantity, 10) : null,
+        applicableCategories: data.applicableCategories !== undefined ? data.applicableCategories : undefined,
       }
     });
   }
@@ -156,31 +157,91 @@ export class GrowthService {
     }
     
     if (coupon.minOrderValue && cartValue < Number(coupon.minOrderValue)) {
+      console.log(`[Coupon Validation] Failed: Minimum order value ${coupon.minOrderValue} required for ${code}`);
       throw new BadRequestException(`Minimum order value of ₹${coupon.minOrderValue} required`);
     }
 
+    // Robust product resolution to handle old cart items
+    const possibleIds = items.flatMap(i => [i.productId, i.id, i.variantId]).filter(Boolean);
+    
+    // First, try to find any variants that might match these IDs to get their productIds
+    const matchedVariants = await this.prisma.variant.findMany({
+      where: { id: { in: possibleIds } },
+      select: { id: true, productId: true }
+    });
+    
+    const resolvedProductIds = [
+      ...possibleIds,
+      ...matchedVariants.map(v => v.productId)
+    ];
+
+    const dbProducts = await this.prisma.product.findMany({
+      where: { id: { in: resolvedProductIds } },
+      select: { 
+        id: true, 
+        title: true, 
+        category: true, 
+        collection: true,
+        handle: true,
+        collections: { select: { handle: true } }
+      }
+    });
+
+    const hydratedItems = items.map(item => {
+      const vMatch = matchedVariants.find(v => v.id === item.id || v.id === item.variantId);
+      const targetProductId = item.productId || (vMatch ? vMatch.productId : item.id);
+      return {
+        ...item,
+        productId: targetProductId,
+        dbProduct: dbProducts.find(p => p.id === targetProductId)
+      };
+    });
+
     // Check product/category applicability
     if (coupon.applicableProducts.length > 0 || coupon.applicableCategories.length > 0) {
-      const isApplicable = items.some(item => 
+      const isApplicable = hydratedItems.some(item => 
         coupon.applicableProducts.includes(item.productId) || 
-        (item.product?.categories && item.product.categories.some((c: any) => coupon.applicableCategories.includes(c.id)))
+        coupon.applicableCategories.some(cat => {
+          const catLow = cat.toLowerCase();
+          return (
+            (item.dbProduct?.category && catLow === item.dbProduct.category.toLowerCase()) ||
+            (item.dbProduct?.collection && catLow === item.dbProduct.collection.toLowerCase()) ||
+            (item.dbProduct?.title && item.dbProduct.title.toLowerCase().includes(catLow)) ||
+            (item.dbProduct?.handle && item.dbProduct.handle.toLowerCase() === catLow) ||
+            (item.dbProduct?.collections?.some((c: any) => c.handle.toLowerCase() === catLow))
+          );
+        })
       );
-      if (!isApplicable) throw new BadRequestException('Coupon not applicable to items in cart');
+      if (!isApplicable) {
+        console.log(`[Coupon Validation] Failed: Not applicable to items in cart for ${code}. Applicable products: ${coupon.applicableProducts}, Categories: ${coupon.applicableCategories}`);
+        console.log(`[Coupon Validation] Hydrated Items:`, JSON.stringify(hydratedItems.map(i => i.dbProduct), null, 2));
+        throw new BadRequestException('Coupon not applicable to items in cart');
+      }
     }
 
     if (coupon.minQuantity && coupon.minQuantity > 0) {
       let relevantQty = 0;
       if (coupon.applicableProducts.length > 0 || coupon.applicableCategories.length > 0) {
-        const relevantItems = items.filter(item => 
+        const relevantItems = hydratedItems.filter(item => 
           coupon.applicableProducts.includes(item.productId) || 
-          (item.product?.categories && item.product.categories.some((c: any) => coupon.applicableCategories.includes(c.id)))
+          coupon.applicableCategories.some(cat => {
+            const catLow = cat.toLowerCase();
+            return (
+              (item.dbProduct?.category && catLow === item.dbProduct.category.toLowerCase()) ||
+              (item.dbProduct?.collection && catLow === item.dbProduct.collection.toLowerCase()) ||
+              (item.dbProduct?.title && item.dbProduct.title.toLowerCase().includes(catLow)) ||
+              (item.dbProduct?.handle && item.dbProduct.handle.toLowerCase() === catLow) ||
+              (item.dbProduct?.collections?.some((c: any) => c.handle.toLowerCase() === catLow))
+            );
+          })
         );
         relevantQty = relevantItems.reduce((sum, item) => sum + item.quantity, 0);
       } else {
-        relevantQty = items.reduce((sum, item) => sum + item.quantity, 0);
+        relevantQty = hydratedItems.reduce((sum, item) => sum + item.quantity, 0);
       }
 
       if (relevantQty < coupon.minQuantity) {
+        console.log(`[Coupon Validation] Failed: Minimum quantity ${coupon.minQuantity} required, got ${relevantQty} for ${code}`);
         throw new BadRequestException(`Minimum quantity of ${coupon.minQuantity} required`);
       }
     }
@@ -193,6 +254,7 @@ export class GrowthService {
       discountAmount = Number(coupon.value);
     }
 
+    console.log(`[Coupon Validation] Success: ${code} valid with discount ${discountAmount}`);
     return { coupon, discountAmount };
   }
 
@@ -218,17 +280,52 @@ export class GrowthService {
 
     for (const coupon of autoCoupons) {
       try {
+        console.log(`[Auto-Apply] Evaluating coupon: ${coupon.code}`);
         const { discountAmount } = await this.validateCoupon(coupon.code, userId, cartValue, items);
         if (discountAmount > maxDiscountAmount) {
           maxDiscountAmount = discountAmount;
           bestDiscount = { coupon, discountAmount };
         }
       } catch (e) {
+        console.log(`[Auto-Apply] Coupon ${coupon.code} skipped: ${e.message}`);
         // Skip this coupon if validation fails
       }
     }
 
+    console.log(`[Auto-Apply] Best discount found:`, bestDiscount ? bestDiscount.coupon.code : 'None');
     return bestDiscount;
+  }
+
+  async getApplicableDiscounts(cartValue: number, items: any[], userId?: string) {
+    const now = new Date();
+    const autoCoupons = await this.prisma.discount.findMany({
+      where: {
+        isActive: true,
+        autoApply: true,
+        OR: [
+          { startDate: null },
+          { startDate: { lte: now } }
+        ],
+        AND: [
+          { OR: [{ endDate: null }, { endDate: { gte: now } }] }
+        ]
+      }
+    });
+
+    let applicableDiscounts: any[] = [];
+
+    for (const coupon of autoCoupons) {
+      try {
+        const { discountAmount } = await this.validateCoupon(coupon.code, userId, cartValue, items);
+        applicableDiscounts.push({ coupon, discountAmount });
+      } catch (e) {
+        // Skip this coupon if validation fails
+      }
+    }
+
+    // Sort by highest discount amount
+    applicableDiscounts.sort((a, b) => b.discountAmount - a.discountAmount);
+    return applicableDiscounts;
   }
 
   // Automated Offer Engine

@@ -64,7 +64,18 @@ export class LogisticsService {
       'madhyapradesh': ['Madhya Pradesh', 'MadhyaPradesh', 'MP'],
       'jammuandkashmir': ['Jammu and Kashmir', 'Jammu & Kashmir', 'J&K', 'JK'],
     };
-    return map[raw] || [state, state.trim(), state.toLowerCase(), state.toUpperCase()];
+    
+    const baseList = map[raw] || [state, state.trim()];
+    
+    // Auto-generate lower and UPPER case variations to combat inconsistent DB entries
+    const expandedList = new Set<string>();
+    for (const item of baseList) {
+      expandedList.add(item);
+      expandedList.add(item.toLowerCase());
+      expandedList.add(item.toUpperCase());
+    }
+    
+    return Array.from(expandedList);
   }
 
   async getShippingOptions(state: string, cartTotal: number, items: any[] = []) {

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import Cookies from "js-cookie";
 import { API_URL } from "@/lib/api";
 
 export interface CartItem {
@@ -91,14 +92,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }, eventId);
     });
 
-    fetch(API_URL + "/marketing/capi/track", {
+    fetch(API_URL + "/api/v1/marketing/capi/track", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         eventName: "AddToCart",
         amount: newItem.price,
         currency: "INR",
-        metaEventId: eventId
+        metaEventId: eventId,
+        contentIds: [newItem.variantId],
+        fbp: Cookies.get("_fbp"),
+        fbc: Cookies.get("_fbc")
       })
     }).catch(() => {});
   };

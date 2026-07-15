@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, BadRequestException, Header } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, BadRequestException, Header, Req } from '@nestjs/common';
+import { Request } from 'express';
 import { MarketingService } from './marketing.service';
 import { LeadStatus } from '@raaghas/database';
 import { Public } from '../auth/public.decorator';
@@ -123,7 +124,7 @@ export class MarketingController {
 
   @Public()
   @Post('capi/track')
-  async trackCapiEvent(@Body() body: {
+  async trackCapiEvent(@Req() req: Request, @Body() body: {
     eventName: string;
     orderId?: string;
     amount?: number;
@@ -132,6 +133,9 @@ export class MarketingController {
     email?: string;
     name?: string;
     metaEventId?: string;
+    fbp?: string;
+    fbc?: string;
+    contentIds?: string[];
   }) {
     // Fire and forget so we don't block the client
     this.marketingService.syncEventToMetaCapi(body.eventName, {
@@ -142,6 +146,12 @@ export class MarketingController {
       email: body.email,
       name: body.name,
       metaEventId: body.metaEventId,
+      fbp: body.fbp,
+      fbc: body.fbc,
+      contentIds: body.contentIds,
+      contentType: 'product',
+      clientIpAddress: req.ip || req.headers['x-forwarded-for'] as string,
+      clientUserAgent: req.headers['user-agent'],
     }).catch(() => {});
     
     return { success: true };

@@ -25,8 +25,10 @@ export default function CouponManagement() {
     usageLimitPerUser: 1,
     startDate: "",
     endDate: "",
+    endDate: "",
     autoApply: false,
     minQuantity: 0,
+    applicableCategoriesText: "",
   });
 
   const fetchCoupons = async () => {
@@ -60,13 +62,18 @@ export default function CouponManagement() {
       const url = editingId ? `${baseUrl}/growth/coupons/${editingId}` : `${baseUrl}/growth/coupons`;
       const method = editingId ? "PATCH" : "POST";
 
+      const payload = {
+        ...newCoupon,
+        applicableCategories: newCoupon.applicableCategoriesText ? newCoupon.applicableCategoriesText.split(',').map((s: string) => s.trim()).filter(Boolean) : []
+      };
+
       const res = await fetch(url, {
         method,
         headers: { 
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}` 
         },
-        body: JSON.stringify(newCoupon)
+        body: JSON.stringify(payload)
       });
       
       if (res.ok) {
@@ -76,7 +83,7 @@ export default function CouponManagement() {
         setNewCoupon({
           code: "", type: "PERCENTAGE", value: 10, minOrderValue: 0,
           maxDiscount: 0, usageLimit: 1000, usageLimitPerUser: 1, startDate: "", endDate: "",
-          autoApply: false, minQuantity: 0,
+          autoApply: false, minQuantity: 0, applicableCategoriesText: "",
         });
       } else {
         const err = await res.json();
@@ -102,6 +109,7 @@ export default function CouponManagement() {
       endDate: coupon.endDate ? new Date(coupon.endDate).toISOString().split('T')[0] : "",
       autoApply: coupon.autoApply || false,
       minQuantity: coupon.minQuantity || 0,
+      applicableCategoriesText: Array.isArray(coupon.applicableCategories) ? coupon.applicableCategories.join(', ') : "",
     });
     setShowAddModal(true);
   };
@@ -154,7 +162,7 @@ export default function CouponManagement() {
                 setEditingId(null);
                 setNewCoupon({
                   code: "", type: "PERCENTAGE", value: 10, minOrderValue: 0, maxDiscount: 0,
-                  usageLimit: 1000, usageLimitPerUser: 1, startDate: "", endDate: "", autoApply: false, minQuantity: 0,
+                  usageLimit: 1000, usageLimitPerUser: 1, startDate: "", endDate: "", autoApply: false, minQuantity: 0, applicableCategoriesText: "",
                 });
                 setShowAddModal(true);
               }}
@@ -376,6 +384,18 @@ export default function CouponManagement() {
                   <span className="text-sm font-bold text-charcoal">Auto-Apply this coupon</span>
                 </label>
               </div>
+
+              {newCoupon.autoApply && (
+                <div className="col-span-2 space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 ml-1">Applicable Collections</label>
+                  <input 
+                    value={newCoupon.applicableCategoriesText}
+                    onChange={e => setNewCoupon({...newCoupon, applicableCategoriesText: e.target.value})}
+                    placeholder="e.g. Bridal, Festive (Comma separated)"
+                    className="w-full bg-gray-50 border border-wine/20 rounded-2xl px-4 py-3 text-sm font-bold outline-none focus:border-wine"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="flex gap-4 pt-4">

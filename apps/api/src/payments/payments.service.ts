@@ -409,6 +409,8 @@ export class PaymentsService implements OnModuleInit {
     paymentId: string;
     gateway: 'RAZORPAY' | 'PHONEPE';
     metaEventId?: string;
+    fbp?: string;
+    fbc?: string;
   }) {
     const settings = await this._getSettings();
 
@@ -571,6 +573,8 @@ export class PaymentsService implements OnModuleInit {
           name: order.customerName,
           amount: Number(order.totalAmount),
           metaEventId: data.metaEventId,
+          fbp: data.fbp,
+          fbc: data.fbc,
         });
         
         if (order.userId) {

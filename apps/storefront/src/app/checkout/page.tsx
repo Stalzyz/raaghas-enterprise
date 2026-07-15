@@ -5,7 +5,7 @@ import { API_URL } from "@/lib/api";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Lock, Loader2, CheckCircle, ChevronRight, AlertCircle, Tag as TagIcon, Zap, IndianRupee, Sparkles, Star } from "lucide-react";
+import { ArrowLeft, Lock, Loader2, CheckCircle, ChevronRight, AlertCircle, Tag, Zap, IndianRupee, Sparkles, Star, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/context/CartContext";
 import { getAssetUrl } from "@/lib/utils/assets";
@@ -66,6 +66,8 @@ export default function CheckoutPage() {
   const [wallet, setWallet] = useState<{ balance: number; use: boolean }>({ balance: 0, use: false });
   const [maxCreditUsagePercent, setMaxCreditUsagePercent] = useState(50);
   const [autoOffer, setAutoOffer] = useState<{ id: string; name: string; amount: number } | null>(null);
+  const [applicableOffers, setApplicableOffers] = useState<any[]>([]);
+  const [showOffersDrawer, setShowOffersDrawer] = useState(false);
   
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
   const [selectedSavedAddressId, setSelectedSavedAddressId] = useState<string>("");
@@ -191,7 +193,10 @@ export default function CheckoutPage() {
           eventName: "InitiateCheckout",
           amount: baseTotal,
           currency: "INR",
-          metaEventId: eventId
+          metaEventId: eventId,
+          contentIds: items.map(i => i.variantId),
+          fbp: Cookies.get("_fbp"),
+          fbc: Cookies.get("_fbc")
         })
       }).catch(() => {});
     }
@@ -235,23 +240,19 @@ export default function CheckoutPage() {
           }
         }
         
-        // Fetch Auto-Apply Coupons
-        const autoApplyRes = await fetch(`${API_URL}/api/v1/growth/offers/auto-apply`, {
+        // Fetch Applicable Offers
+        const applicableRes = await fetch(`${API_URL}/api/v1/growth/offers/applicable`, {
           method: "POST",
           headers: { "Content-Type": "application/json", ...(token && { Authorization: `Bearer ${token}` }) },
           body: JSON.stringify({ cartValue: baseTotal, items }),
         });
-        if (autoApplyRes.ok) {
-          const autoCoupon = await autoApplyRes.json();
-          if (autoCoupon && autoCoupon.coupon) {
-            // Only auto-apply if user hasn't already applied one manually
-            setPromoCode((prev) => {
-              if (!prev || prev === autoCoupon.coupon.code) {
-                setPromoState({ status: "SUCCESS", message: "Auto-applied!", amount: autoCoupon.discountAmount });
-                return autoCoupon.coupon.code;
-              }
-              return prev;
-            });
+        if (applicableRes.ok) {
+          const offers = await applicableRes.json();
+          if (Array.isArray(offers)) {
+            setApplicableOffers(offers);
+            
+            // If the currently applied promo code is no longer in the applicable offers list, and it was applied by us, we might want to warn them.
+            // But for now, we'll just let the backend validate it.
           }
         }
         
@@ -526,7 +527,9 @@ export default function CheckoutPage() {
                 signature: response.razorpay_signature,
                 discountCode: promoState.status === "SUCCESS" ? promoCode : undefined,
                 discountAmount: promoState.amount,
-                metaEventId: purchaseEventId
+                metaEventId: purchaseEventId,
+                fbp: Cookies.get("_fbp"),
+                fbc: Cookies.get("_fbc")
               }),
             });
             if (vRes.ok) {
@@ -620,6 +623,27 @@ export default function CheckoutPage() {
           "Payment failed. Please try a different payment method.";
         alert(`Payment Failed: ${errMsg}`);
       });
+      
+      const paymentEventId = "evt_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9);
+      import("@/components/analytics/MetaPixel").then((m) => {
+        m.trackMetaEvent("AddPaymentInfo", {
+          currency: "INR",
+          value: baseTotal,
+        }, paymentEventId);
+      });
+      fetch(API_URL + "/api/v1/marketing/capi/track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          eventName: "AddPaymentInfo",
+          amount: baseTotal,
+          currency: "INR",
+          metaEventId: paymentEventId,
+          fbp: Cookies.get("_fbp"),
+          fbc: Cookies.get("_fbc")
+        })
+      }).catch(() => {});
+
       rzp.open();
     } catch (error: any) {
       console.error("Payment initiation error:", error);
@@ -1004,7 +1028,7 @@ export default function CheckoutPage() {
 
           <div className="border-t border-theme-border pt-6 space-y-4">
             {/* Coupon */}
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
               <input
                 type="text"
                 placeholder="Gift card or discount code"
@@ -1027,6 +1051,44 @@ export default function CheckoutPage() {
                 </button>
               )}
             </div>
+            
+            {applicableOffers.length > 0 && promoState.status !== "SUCCESS" && (
+              <div className="mt-4 space-y-3">
+                <h3 className="text-sm font-medium text-theme-text-muted flex items-center gap-2">
+                  <Tag size={16} className="text-wine" /> Available Offers
+                </h3>
+                <div className="grid gap-3">
+                  {applicableOffers.map((offer, idx) => (
+                    <button 
+                      key={idx}
+                      onClick={() => {
+                        setPromoCode(offer.coupon.code);
+                        setPromoState({ status: "SUCCESS", message: "Coupon Applied!", amount: offer.discountAmount });
+                      }}
+                      className="text-left relative overflow-hidden rounded-xl border border-wine/30 bg-wine/5 hover:bg-wine/10 hover:border-wine hover:shadow-[0_0_15px_rgba(200,50,100,0.2)] transition-all p-4 group"
+                    >
+                      <div className="absolute top-0 left-0 w-1 h-full bg-wine group-hover:w-1.5 transition-all"></div>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-bold text-wine text-sm tracking-widest uppercase mb-1">
+                            {offer.coupon.code}
+                          </div>
+                          <p className="text-xs text-theme-text-muted mt-1 pr-4 leading-relaxed">
+                            {offer.coupon.type === 'PERCENTAGE' 
+                              ? `Get ${offer.coupon.value}% off on your order.` 
+                              : `Flat ₹${offer.coupon.value} off on eligible items.`}
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0 bg-green-500/10 px-3 py-1.5 rounded-lg border border-green-500/20 shadow-sm">
+                          <div className="text-[10px] text-green-500/80 dark:text-green-400/80 uppercase font-bold tracking-wider mb-0.5">Save</div>
+                          <div className="font-bold text-green-600 dark:text-green-500 text-base">₹{offer.discountAmount.toLocaleString()}</div>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <AnimatePresence>
               {promoState.status === "ERROR" && (
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="text-red-500 text-xs flex items-center gap-1">

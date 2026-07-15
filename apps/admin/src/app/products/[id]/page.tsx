@@ -81,8 +81,12 @@ export default function EditProductPage() {
       });
 
       if (res.ok) {
+        const updatedProduct = await res.json();
+        setProduct(updatedProduct);
         setSuccess(true);
         setTimeout(() => setSuccess(false), 3000);
+      } else {
+        alert("Failed to save product.");
       }
     } catch (err) {
       alert("Failed to save product.");

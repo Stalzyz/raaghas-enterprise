@@ -58,6 +58,13 @@ export class GrowthController {
     return this.growthService.getAutoApplicableDiscount(data.cartValue, data.items, userId);
   }
 
+  @Public()
+  @Post('offers/applicable')
+  getApplicableDiscounts(@Body() data: { cartValue: number; items: any[]; userId?: string }, @CurrentUser() user?: any) {
+    const userId = data.userId || user?.id;
+    return this.growthService.getApplicableDiscounts(data.cartValue, data.items, userId);
+  }
+
   // ─── Wallet ─────────────────────────────────────────────────────────────────
 
   @UseGuards(AuthGuard)

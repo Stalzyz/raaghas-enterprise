@@ -253,12 +253,13 @@ export class MarketingService {
   // ─── EVENT LISTENERS ──────────────────────────────────────────────────────
   
   @OnEvent('order.placed')
-  async handleOrderPlaced(payload: { phone: string; name: string; orderId: string; amount: number; metaEventId?: string }) {
+  async handleOrderPlaced(payload: { phone: string; name: string; orderId: string; amount: number; metaEventId?: string; fbp?: string; fbc?: string; }) {
     this.logger.log(`🔔 Order Placed Event received for ${payload.orderId}. Syncing to Grafty...`);
     
     // 1. Send WhatsApp Confirmation
     const order = await this.prisma.order.findUnique({
       where: { id: payload.orderId },
+      include: { items: true },
     });
     
     if (order) {
@@ -270,6 +271,17 @@ export class MarketingService {
 
     // 3. Sync to Meta CAPI
     if (order) {
+      let historicalLtv = payload.amount;
+      try {
+        const pastOrders = await this.prisma.order.findMany({
+          where: {
+            OR: [{ customerEmail: order.customerEmail }, { customerPhone: payload.phone }],
+            status: { in: ['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED'] }
+          }
+        });
+        historicalLtv = pastOrders.reduce((sum, o) => sum + Number(o.totalAmount || 0), 0);
+      } catch (e) {}
+
       this.syncEventToMetaCapi('Purchase', {
         orderId: payload.orderId,
         amount: payload.amount,
@@ -277,6 +289,12 @@ export class MarketingService {
         email: order.customerEmail,
         name: payload.name,
         metaEventId: payload.metaEventId,
+        fbp: payload.fbp,
+        fbc: payload.fbc,
+        externalId: order.userId || undefined,
+        contentIds: order.items?.map(i => i.variantId) || [],
+        contentType: 'product',
+        historicalLtv,
       }).catch(e => this.logger.error('Meta CAPI error', e));
     }
   }
@@ -428,6 +446,14 @@ export class MarketingService {
     name?: string;
     currency?: string;
     metaEventId?: string;
+    externalId?: string;
+    clientIpAddress?: string;
+    clientUserAgent?: string;
+    fbp?: string;
+    fbc?: string;
+    contentIds?: string[];
+    contentType?: string;
+    historicalLtv?: number;
   }) {
     const settings = await this.prisma.storeSettings.findUnique({
       where: { id: 'global' },
@@ -445,6 +471,7 @@ export class MarketingService {
       let hashedPhone: string | undefined;
       let hashedEmail: string | undefined;
       let hashedFirstName: string | undefined;
+      let hashedExternalId: string | undefined;
 
       if (payload.phone) {
         let cleanPhone = payload.phone.replace(/\D/g, '');
@@ -461,6 +488,13 @@ export class MarketingService {
         hashedFirstName = this.hashData(firstName);
       }
 
+      if (payload.externalId) {
+        hashedExternalId = this.hashData(payload.externalId);
+      } else if (payload.email) {
+        // Fallback to email as external ID if no user account exists
+        hashedExternalId = hashedEmail;
+      }
+
       const body = {
         data: [
           {
@@ -472,11 +506,19 @@ export class MarketingService {
               ...(hashedPhone ? { ph: [hashedPhone] } : {}),
               ...(hashedEmail ? { em: [hashedEmail] } : {}),
               ...(hashedFirstName ? { fn: [hashedFirstName] } : {}),
+              ...(hashedExternalId ? { external_id: [hashedExternalId] } : {}),
+              ...(payload.clientIpAddress ? { client_ip_address: payload.clientIpAddress } : {}),
+              ...(payload.clientUserAgent ? { client_user_agent: payload.clientUserAgent } : {}),
+              ...(payload.fbp ? { fbp: payload.fbp } : {}),
+              ...(payload.fbc ? { fbc: payload.fbc } : {}),
             },
             custom_data: {
               value: payload.amount,
               currency: payload.currency || 'INR',
-              order_id: payload.orderId
+              order_id: payload.orderId,
+              ...(payload.contentIds?.length ? { content_ids: payload.contentIds } : {}),
+              ...(payload.contentType ? { content_type: payload.contentType } : {}),
+              ...(payload.historicalLtv ? { predictive_ltv: payload.historicalLtv } : {}),
             }
           }
         ]
@@ -617,7 +659,7 @@ export class MarketingService {
       if (!p.variants || p.variants.length === 0) continue;
 
       const description = this.escapeXml(p.description || p.title);
-      const link = `https://raaghas.in/products/${p.handle}`;
+      const link = this.escapeXml(`https://raaghas.in/products/${p.handle}`);
       const primaryImage = p.images && p.images.length > 0 ? this.escapeXml(p.images[0].url) : 'https://raaghas.in/logo-dark.svg';
       const additionalImages = (p.images || []).slice(1).map((img: any) =>
         `      <g:additional_image_link>${this.escapeXml(img.url)}</g:additional_image_link>`
@@ -635,9 +677,25 @@ export class MarketingService {
         const salePriceTag = hasSale ? `<g:sale_price>${variant.price} INR</g:sale_price>` : '';
         const skuTag = variant.sku ? `<g:sku>${this.escapeXml(variant.sku)}</g:sku>` : '';
 
+        let sizeTag = '';
+        let colorTag = '';
+        let materialTag = '';
+
+        const checkOption = (name?: string | null, val?: string | null) => {
+          if (!name || !val) return;
+          const n = name.toLowerCase();
+          if (n.includes('size')) sizeTag = `<g:size>${this.escapeXml(val)}</g:size>`;
+          else if (n.includes('color') || n.includes('colour')) colorTag = `<g:color>${this.escapeXml(val)}</g:color>`;
+          else if (n.includes('material') || n.includes('fabric')) materialTag = `<g:material>${this.escapeXml(val)}</g:material>`;
+        };
+
+        checkOption(variant.option1Name, variant.option1Value);
+        checkOption(variant.option2Name, variant.option2Value);
+        checkOption(variant.option3Name, variant.option3Value);
+
         itemsXml += `
     <item>
-      <g:id>${variant.sku || variantId}</g:id>
+      <g:id>${this.escapeXml(variantId)}</g:id>
       <g:title>${variantTitle}</g:title>
       <g:description>${description}</g:description>
       <g:link>${link}</g:link>
@@ -645,13 +703,17 @@ export class MarketingService {
 ${additionalImages}
       <g:brand>${brand}</g:brand>
       <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
       <g:availability>${availability}</g:availability>
       <g:quantity_to_sell_on_facebook>${Math.max(0, variant.inventory)}</g:quantity_to_sell_on_facebook>
       <g:price>${regularPrice}</g:price>
       ${salePriceTag}
       ${skuTag}
-      <g:google_product_category>Apparel &gt; Clothing &gt; Casual and office wear</g:google_product_category>
-      <g:item_group_id>${p.id}</g:item_group_id>
+      ${sizeTag}
+      ${colorTag}
+      ${materialTag}
+      <g:google_product_category>${this.escapeXml(p.category || 'Apparel > Clothing > Casual and office wear')}</g:google_product_category>
+      <g:item_group_id>${this.escapeXml(p.id)}</g:item_group_id>
     </item>`;
       }
     }
@@ -667,8 +729,12 @@ ${additionalImages}
 </rss>`;
   }
 
-  private escapeXml(unsafe: string): string {
-    return unsafe.replace(/[<>&'"]/g, (c) => {
+  private escapeXml(unsafe: any): string {
+    if (typeof unsafe !== 'string') {
+      if (unsafe == null) return '';
+      unsafe = String(unsafe);
+    }
+    return unsafe.replace(/[<>&'"]/g, (c: string) => {
       switch (c) {
         case '<': return '&lt;';
         case '>': return '&gt;';

@@ -20,8 +20,18 @@ interface Discount {
 
 function CreateDiscountModal({ onClose, onSubmit }: { onClose: () => void, onSubmit: (form: any) => void }) {
   const [form, setForm] = useState({
-    code: "", type: "PERCENTAGE", value: 10, minOrderValue: 0, maxUses: "", expiresAt: ""
+    code: "", type: "PERCENTAGE", value: 10, minOrderValue: 0, maxUses: "", expiresAt: "",
+    autoApply: false, applicableCategoriesText: "", minQuantity: ""
   });
+
+  const handleSubmit = () => {
+    const payload = {
+      ...form,
+      minQuantity: form.minQuantity ? Number(form.minQuantity) : null,
+      applicableCategories: form.applicableCategoriesText ? form.applicableCategoriesText.split(',').map((s: string) => s.trim()).filter(Boolean) : []
+    };
+    onSubmit(payload);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/40 backdrop-blur-sm p-4">
@@ -109,11 +119,46 @@ function CreateDiscountModal({ onClose, onSubmit }: { onClose: () => void, onSub
               onChange={e => setForm({ ...form, expiresAt: e.target.value })}
             />
           </div>
+          {/* Automated Offers / Collections */}
+          <div className="bg-wine/5 border border-wine/10 p-5 rounded-xl space-y-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input 
+                type="checkbox" 
+                checked={form.autoApply}
+                onChange={e => setForm({ ...form, autoApply: e.target.checked })}
+                className="w-4 h-4 rounded text-wine focus:ring-wine"
+              />
+              <span className="text-sm font-bold text-wine">Auto-Apply this offer (No code needed)</span>
+            </label>
+            
+            {form.autoApply && (
+              <div className="grid grid-cols-2 gap-4 mt-3">
+                <div>
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-wine block mb-1.5">Applicable Collections</label>
+                  <input
+                    placeholder="e.g. Bridal, Festive (Comma separated)"
+                    className="w-full bg-white border border-wine/20 rounded-xl px-4 py-3 text-sm outline-none focus:border-wine"
+                    value={form.applicableCategoriesText}
+                    onChange={e => setForm({ ...form, applicableCategoriesText: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-wine block mb-1.5">Min Item Quantity</label>
+                  <input
+                    type="number" min={1} placeholder="e.g. 3"
+                    className="w-full bg-white border border-wine/20 rounded-xl px-4 py-3 text-sm outline-none focus:border-wine"
+                    value={form.minQuantity}
+                    onChange={e => setForm({ ...form, minQuantity: e.target.value })}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="p-6 border-t border-gray-100 flex justify-end gap-3 bg-gray-50/50 rounded-b-2xl">
           <button onClick={onClose} className="px-5 py-2.5 border border-gray-200 text-xs font-bold uppercase tracking-widest text-gray-500 hover:bg-gray-100 rounded-xl transition-colors">Cancel</button>
-          <button onClick={() => onSubmit(form)} className="px-5 py-2.5 bg-wine text-white text-xs font-bold uppercase tracking-widest hover:bg-charcoal rounded-xl transition-colors disabled:opacity-50" disabled={!form.code}>
+          <button onClick={handleSubmit} className="px-5 py-2.5 bg-wine text-white text-xs font-bold uppercase tracking-widest hover:bg-charcoal rounded-xl transition-colors disabled:opacity-50" disabled={!form.code}>
             Generate Code
           </button>
         </div>
