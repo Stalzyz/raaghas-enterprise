@@ -1,4 +1,5 @@
 import { Controller, Post, Get, Param, Body, UseGuards, Req } from '@nestjs/common';
+import { Request } from 'express';
 import { AuthGuard } from '../auth/auth.guard';
 import { Public } from '../auth/public.decorator';
 import { RequirePermission } from '../auth/permissions.decorator';
@@ -27,8 +28,12 @@ export class PaymentsController {
   @Public()
   @Throttle({ default: { limit: 20, ttl: 60000 } })
   @Post('verify')
-  verifyAndConfirmOrder(@Body() body: any) {
-    return this.paymentsService.verifyAndConfirmOrder(body);
+  verifyAndConfirmOrder(@Body() body: any, @Req() req: Request) {
+    return this.paymentsService.verifyAndConfirmOrder({
+      ...body,
+      clientIpAddress: req.ip || req.headers['x-forwarded-for'] as string,
+      clientUserAgent: req.headers['user-agent']
+    });
   }
 
   @Public()

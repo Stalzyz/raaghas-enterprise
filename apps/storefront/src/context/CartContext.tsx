@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import Cookies from "js-cookie";
 import { API_URL } from "@/lib/api";
+import { useAuth } from "@/components/providers/AuthProvider";
 
 export interface CartItem {
   id: string;
@@ -39,6 +40,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const { user } = useAuth();
 
   // Load from LocalStorage
   useEffect(() => {
@@ -102,7 +104,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
         metaEventId: eventId,
         contentIds: [newItem.variantId],
         fbp: Cookies.get("_fbp"),
-        fbc: Cookies.get("_fbc")
+        fbc: Cookies.get("_fbc"),
+        email: user?.email,
+        phone: user?.phone,
+        name: user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user?.name,
       })
     }).catch(() => {});
   };

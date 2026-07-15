@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Lock, Loader2, CheckCircle, ChevronRight, AlertCircle, Tag, Zap, IndianRupee, Sparkles, Star, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/components/providers/AuthProvider";
 import { getAssetUrl } from "@/lib/utils/assets";
 import Cookies from "js-cookie";
 import { OffersProgress } from "@/components/ui/OffersProgress";
@@ -41,6 +42,7 @@ function loadRazorpayScript(): Promise<boolean> {
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, cartTotal: baseTotal, isInitialized: isCartReady } = useCart();
+  const { user } = useAuth();
 
   const getToken = () => {
     const t = Cookies.get("auth_token");
@@ -196,7 +198,10 @@ export default function CheckoutPage() {
           metaEventId: eventId,
           contentIds: items.map(i => i.variantId),
           fbp: Cookies.get("_fbp"),
-          fbc: Cookies.get("_fbc")
+          fbc: Cookies.get("_fbc"),
+          email: user?.email,
+          phone: user?.phone,
+          name: user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user?.name,
         })
       }).catch(() => {});
     }

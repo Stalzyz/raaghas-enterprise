@@ -411,6 +411,8 @@ export class PaymentsService implements OnModuleInit {
     metaEventId?: string;
     fbp?: string;
     fbc?: string;
+    clientIpAddress?: string;
+    clientUserAgent?: string;
   }) {
     const settings = await this._getSettings();
 
@@ -575,6 +577,8 @@ export class PaymentsService implements OnModuleInit {
           metaEventId: data.metaEventId,
           fbp: data.fbp,
           fbc: data.fbc,
+          clientIpAddress: data.clientIpAddress,
+          clientUserAgent: data.clientUserAgent,
         });
         
         if (order.userId) {

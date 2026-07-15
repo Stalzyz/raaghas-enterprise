@@ -253,7 +253,7 @@ export class MarketingService {
   // ─── EVENT LISTENERS ──────────────────────────────────────────────────────
   
   @OnEvent('order.placed')
-  async handleOrderPlaced(payload: { phone: string; name: string; orderId: string; amount: number; metaEventId?: string; fbp?: string; fbc?: string; }) {
+  async handleOrderPlaced(payload: { phone: string; name: string; orderId: string; amount: number; metaEventId?: string; fbp?: string; fbc?: string; clientIpAddress?: string; clientUserAgent?: string; }) {
     this.logger.log(`🔔 Order Placed Event received for ${payload.orderId}. Syncing to Grafty...`);
     
     // 1. Send WhatsApp Confirmation
@@ -291,6 +291,8 @@ export class MarketingService {
         metaEventId: payload.metaEventId,
         fbp: payload.fbp,
         fbc: payload.fbc,
+        clientIpAddress: payload.clientIpAddress,
+        clientUserAgent: payload.clientUserAgent,
         externalId: order.userId || undefined,
         contentIds: order.items?.map(i => i.variantId) || [],
         contentType: 'product',
@@ -655,6 +657,18 @@ export class MarketingService {
 
     let itemsXml = '';
 
+    const getMetaCategoryId = (cat?: string | null) => {
+      if (!cat) return '2271'; // Default Dresses / Apparel
+      const c = cat.toLowerCase();
+      if (c.includes('shirt') || c.includes('top') || c.includes('t-shirt') || c.includes('blouse') || c.includes('tunic')) return '212';
+      if (c.includes('pant') || c.includes('trouser') || c.includes('bottom') || c.includes('jeans')) return '213';
+      if (c.includes('skirt')) return '214';
+      if (c.includes('dress') || c.includes('kurti') || c.includes('suit') || c.includes('gown') || c.includes('lehenga')) return '2271';
+      if (c.includes('jacket') || c.includes('coat') || c.includes('outerwear')) return '203';
+      if (c.includes('accessory') || c.includes('bag') || c.includes('jewelry')) return '111';
+      return '2271'; // Fallback
+    };
+
     for (const p of products) {
       if (!p.variants || p.variants.length === 0) continue;
 
@@ -712,7 +726,7 @@ ${additionalImages}
       ${sizeTag}
       ${colorTag}
       ${materialTag}
-      <g:google_product_category>${this.escapeXml(p.category || 'Apparel > Clothing > Casual and office wear')}</g:google_product_category>
+      <g:google_product_category>${getMetaCategoryId(p.category)}</g:google_product_category>
       <g:item_group_id>${this.escapeXml(p.id)}</g:item_group_id>
     </item>`;
       }
