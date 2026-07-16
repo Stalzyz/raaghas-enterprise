@@ -73,6 +73,7 @@ async function bootstrap() {
   // 1. MUST BE FIRST: Enable CORS with Strict Whitelist
   const whitelist = [
     'https://raaghas.in',
+    'https://www.raaghas.in',
     'https://admin.raaghas.in',
     'https://api.raaghas.in',
     'http://localhost:6001',
