@@ -35,10 +35,7 @@ export function CategoryShowcase({ content }: CategoryShowcaseProps) {
         {categories.map((cat, idx) => (
           <motion.div
             key={cat.handle}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.1 }}
-            viewport={{ once: true }}
+            initial={{ opacity: 1, y: 0 }}
             className="group relative h-[500px] overflow-hidden cursor-pointer"
           >
             <Link href={`/collections/${cat.handle}`} className="block h-full w-full">

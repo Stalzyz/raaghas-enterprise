@@ -40,7 +40,7 @@ export function ProductGridSection({ content, style }: { content: Record<string,
         
         // If collection was empty, DO NOT fetch generic products
         if (productsList.length > 0) {
-          const limit = content.limit || 8;
+          const limit = content.limit || 16;
           const mapped = productsList.slice(0, limit).map((p: any) => {
             const mainVariant = p.variants?.[0];
             return {
@@ -118,10 +118,7 @@ export function ProductGridSection({ content, style }: { content: Record<string,
         ) : products?.map((product: any, idx: number) => (
           <motion.div
             key={product.id}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: idx * 0.1 }}
+            initial={{ opacity: 1, y: 0 }}
           >
             <ProductCard product={product} />
           </motion.div>
