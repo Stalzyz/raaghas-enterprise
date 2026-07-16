@@ -227,7 +227,7 @@ function ProductCard({ product }: { product: any }) {
     >
       <Link 
         href={`/products/${product.handle || product.id}`} 
-        className="relative aspect-[3/4] pb-[133.33%] overflow-hidden bg-primary/5 rounded-2xl block"
+        className="relative aspect-[3/4] overflow-hidden bg-primary/5 rounded-2xl block"
       >
         {/* Floating Labels */}
         <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">

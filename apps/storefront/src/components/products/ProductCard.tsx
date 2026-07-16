@@ -120,7 +120,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     >
       <Link 
         href={`/products/${product.handle}`}
-        className="relative aspect-[3/4] pb-[133.33%] w-full overflow-hidden bg-theme-surface cursor-pointer group/image block"
+        className="relative aspect-[3/4] w-full overflow-hidden bg-theme-surface cursor-pointer group/image block"
       >
         <div 
           className="absolute inset-0 bg-theme-text/10 mix-blend-multiply z-10 opacity-0 group-hover/image:opacity-100 transition-opacity duration-700" 
