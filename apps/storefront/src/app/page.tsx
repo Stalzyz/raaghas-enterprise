@@ -147,15 +147,18 @@ const FALLBACK_SECTIONS: Section[] = [
   }
 ];
 
+import { safeFetch } from "@/lib/safe-fetch";
+
 // ─── Data Fetching ────────────────────────────────────────────────────────────
 
 async function getHomePageData(): Promise<any> {
   try {
-    const res = await fetch(`${API_URL}/api/v1/cms/pages/home`, {
+    const { data, error } = await safeFetch(`/cms/pages/home`, {
       next: { revalidate: 60 }, // ISR: Cache for 60 seconds
+      timeoutMs: 5000, // Strict timeout for SSR
     });
-    if (!res.ok) throw new Error("API unavailable");
-    return await res.json();
+    if (error || !data) return null;
+    return data;
   } catch {
     return null;
   }
@@ -184,10 +187,13 @@ export default async function Home() {
     if (section.type === "PRODUCT_GRID" || section.type === "PRODUCT_SCROLL" || section.type === "SMART_GRID") {
       const handle = section.content?.collectionHandle === 'all' ? '' : section.content?.collectionHandle;
       try {
-        const url = `${API_URL}/api/v1/products${handle ? `?collection=${handle}` : ''}`;
-        const res = await fetch(url, { next: { revalidate: 60 } });
-        if (res.ok) {
-          const data = await res.json();
+        const { data, error } = await safeFetch(`/products${handle ? `?collection=${handle}` : ''}`, { 
+          next: { revalidate: 60 },
+          timeoutMs: 6000, // Give products slightly longer
+          retries: 3
+        });
+        
+        if (!error && data) {
           let productsList = Array.isArray(data) ? data : (data.data || data.products || []);
           if (productsList.length > 0) {
             const limit = section.content?.limit || 16;
@@ -222,11 +228,19 @@ export default async function Home() {
                 }))
               };
             });
-            section.content = { ...section.content, products: mapped };
+            section.content = { ...section.content, products: mapped, ssrFetchStatus: 'SUCCESS' };
+          } else {
+             // Successfully fetched, but empty
+             section.content = { ...section.content, products: [], ssrFetchStatus: 'EMPTY' };
           }
+        } else {
+          // Explicitly mark failure so the client can try to recover or gracefully degrade
+          console.warn(`[SSR] Failed to fetch products for collection: ${handle || 'all'}. Error:`, error);
+          section.content = { ...section.content, ssrFetchStatus: 'ERROR', ssrError: error };
         }
       } catch (err) {
-        console.error("SSR Product fetch failed:", err);
+        console.error("SSR Product fetch failed critically:", err);
+        section.content = { ...section.content, ssrFetchStatus: 'ERROR' };
       }
     }
     return section;

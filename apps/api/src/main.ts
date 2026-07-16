@@ -70,26 +70,21 @@ async function bootstrap() {
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ limit: '50mb', extended: true }));
   
-  // 1. MUST BE FIRST: Enable CORS with Strict Whitelist
-  const whitelist = [
-    'https://raaghas.in',
-    'https://www.raaghas.in',
-    'https://admin.raaghas.in',
-    'https://api.raaghas.in',
-    'http://localhost:6001',
-    'http://localhost:6002',
-    'http://localhost:6005',
-  ];
-
+  // 1. MUST BE FIRST: Enable Dynamic CORS
   app.enableCors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps or curl)
-      if (!origin) return callback(null, true);
+      // Allow requests with no origin (like mobile apps, curl, or SSR fetch)
+      if (!origin) {
+        return callback(null, true);
+      }
       
-      if (whitelist.indexOf(origin) !== -1) {
+      const allowedRegex = /^https?:\/\/(?:[a-zA-Z0-9-]+\.)*raaghas\.in$/;
+      const isLocalhost = /^http:\/\/localhost:\d+$/.test(origin);
+
+      if (allowedRegex.test(origin) || isLocalhost) {
         callback(null, true);
       } else {
-        console.warn(`[CORS] Blocked request from unauthorized origin: ${origin}`);
+        console.error(`🚨 [CORS] FATAL: Blocked unauthorized request from origin: ${origin}`);
         callback(new Error('Not allowed by CORS'));
       }
     },

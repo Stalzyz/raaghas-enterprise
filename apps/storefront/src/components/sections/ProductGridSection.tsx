@@ -1,9 +1,9 @@
 "use client";
 
-import { API_URL } from "@/lib/api";
+import { safeFetch } from "@/lib/safe-fetch";
 
 import { motion } from "framer-motion";
-import { Heart, ShoppingBag, Zap, Search, X, SlidersHorizontal } from "lucide-react";
+import { Heart, ShoppingBag, Zap, Search, X, SlidersHorizontal, AlertCircle } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -16,29 +16,38 @@ export function ProductGridSection({ content, style }: { content: Record<string,
   content = content || {};
   style = style || {};
   const [products, setProducts] = useState<any[]>(content.products || []);
-  const [loading, setLoading] = useState(!content.products);
+  
+  // If SSR failed, we should try loading on client. If SSR was successful but empty, it's just empty.
+  const initialLoading = content.ssrFetchStatus === 'ERROR' || !content.products;
+  const [loading, setLoading] = useState(initialLoading);
+  const [error, setError] = useState(false);
   const textAlign = style?.textAlign || "left";
 
   useEffect(() => {
-    if (content.products && content.products.length > 0) {
-      setProducts(content.products);
+    // If SSR was explicitly successful (even if empty), don't refetch
+    if (content.ssrFetchStatus === 'SUCCESS' || content.ssrFetchStatus === 'EMPTY') {
+      setProducts(content.products || []);
       setLoading(false);
       return;
     }
 
+    // Only fetch if products are missing or SSR explicitly failed
     async function fetchProducts() {
       setLoading(true);
+      setError(false);
       try {
         const handle = content.collectionHandle === 'all' ? '' : content.collectionHandle;
-        const apiUrl = API_URL;
+        const { data, error: fetchError } = await safeFetch(`/products${handle ? `?collection=${handle}` : ''}`, {
+          retries: 2,
+          timeoutMs: 8000
+        });
         
-        const url = `${apiUrl}/api/v1/products${handle ? `?collection=${handle}` : ''}`;
-        let res = await fetch(url);
-        let data = await res.json();
-        // API returns plain array or paginated { data: [], meta: {} }
+        if (fetchError || !data) {
+          throw new Error(fetchError || "Failed to fetch");
+        }
+
         let productsList = Array.isArray(data) ? data : (data.data || data.products || []);
         
-        // If collection was empty, DO NOT fetch generic products
         if (productsList.length > 0) {
           const limit = content.limit || 16;
           const mapped = productsList.slice(0, limit).map((p: any) => {
@@ -58,7 +67,6 @@ export function ProductGridSection({ content, style }: { content: Record<string,
               image2: p.images?.[1]?.url || p.images?.[0]?.url || "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800",
               label: p.type || "New Arrival",
               badge: p.tags?.toLowerCase().includes('bestseller') ? 'Bestseller' : ((p.variants?.reduce((sum: number, v: any) => sum + (v.availableStock ?? v.inventory ?? v.inventoryQuantity ?? 0), 0) || 0) <= 0 ? 'Sold Out' : null),
-              // Full variants array for Quick View picker
               variants: (p.variants || []).map((v: any) => ({
                 id: v.id,
                 option1Name: v.option1Name,
@@ -78,7 +86,8 @@ export function ProductGridSection({ content, style }: { content: Record<string,
           setProducts([]);
         }
       } catch (err) {
-        console.error("Failed to fetch products for grid:", err);
+        console.error("Client fallback fetch failed for grid:", err);
+        setError(true);
         setProducts([]);
       } finally {
         setLoading(false);
@@ -86,7 +95,7 @@ export function ProductGridSection({ content, style }: { content: Record<string,
     }
 
     fetchProducts();
-  }, [content.collectionHandle, content.products, content.limit]);
+  }, [content.collectionHandle, content.products, content.ssrFetchStatus, content.limit]);
 
   return (
     <div className="max-w-7xl mx-auto px-6">
@@ -110,19 +119,48 @@ export function ProductGridSection({ content, style }: { content: Record<string,
       </div>
 
       {/* Luxury Product Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-x-10 md:gap-y-16">
+      <div className={error || (!loading && products?.length === 0) ? "w-full" : "grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-x-10 md:gap-y-16"}>
         {loading ? (
-          [1,2,3,4].map(i => (
-            <div key={i} className="aspect-[3/4] bg-gray-100 animate-pulse rounded-lg" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-x-10 md:gap-y-16 w-full">
+            {[1,2,3,4].map(i => (
+              <div key={i} className="aspect-[3/4] bg-gray-100/50 animate-pulse rounded-2xl w-full" />
+            ))}
+          </div>
+        ) : error ? (
+          <div className="py-24 flex flex-col items-center justify-center text-center space-y-6 bg-theme-surface/30 rounded-3xl border border-theme-border/50 backdrop-blur-sm">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-2">
+              <AlertCircle size={28} strokeWidth={1.5} />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-2xl font-serif text-theme-text">Curating Collection</h3>
+              <p className="text-theme-text/60 max-w-sm text-sm font-light">
+                We're currently updating our catalog to bring you the latest pieces. Please check back shortly.
+              </p>
+            </div>
+            <button 
+              onClick={() => window.location.reload()}
+              className="mt-4 px-8 py-3 text-[10px] uppercase tracking-[0.2em] font-bold border border-theme-border rounded-full hover:border-primary hover:text-primary transition-all duration-300"
+            >
+              Refresh
+            </button>
+          </div>
+        ) : products?.length === 0 ? (
+          <div className="py-24 flex flex-col items-center justify-center text-center space-y-4">
+            <h3 className="text-2xl font-serif text-theme-text">Collection Empty</h3>
+            <p className="text-theme-text/60 max-w-sm text-sm font-light">
+              No pieces found in this collection right now. Explore our other selections.
+            </p>
+          </div>
+        ) : (
+          products?.map((product: any, idx: number) => (
+            <motion.div
+              key={product.id}
+              initial={{ opacity: 1, y: 0 }}
+            >
+              <ProductCard product={product} />
+            </motion.div>
           ))
-        ) : products?.map((product: any, idx: number) => (
-          <motion.div
-            key={product.id}
-            initial={{ opacity: 1, y: 0 }}
-          >
-            <ProductCard product={product} />
-          </motion.div>
-        ))}
+        )}
       </div>
     </div>
   );
