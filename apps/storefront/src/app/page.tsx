@@ -16,114 +16,133 @@ interface Section {
 
 const FALLBACK_SECTIONS: Section[] = [
   {
-    id: "cmrnk0ssq0001uuxaxmk93w1w",
-    type: "HERO",
-    order: 0,
-    content: {
-      fabrics: [
-        { x: 25, y: 35, scale: 1.1, speed: 0.2, opacity: 0.12 },
-        { x: 72, y: 62, scale: 1.3, speed: 0.3, opacity: 0.1 }
-      ],
-      variant: "aesthetic",
-      headline: "Office Elegance.\nKalamkari Art.",
-      primaryCta: {
-        link: "/collections/office-wear",
-        text: "Shop Office Wear"
-      },
-      uiElements: [
-        {
-          x: 82,
-          y: 18,
-          size: 1.1,
-          text: "OFFICE",
-          shape: "circle",
-          speed: 0.5,
-          opacity: 0.8,
-          subtext: "LUXURY",
-          iconName: "KalamkariFlower"
-        },
-        {
-          x: 18,
-          y: 78,
-          size: 0.9,
-          text: "10% OFF",
-          shape: "rounded",
-          speed: 0.3,
-          opacity: 0.7,
-          subtext: "NEW ORDER",
-          iconName: "LuxuryHanger"
-        }
-      ],
-      subheadline: "Hand-painted kurtis crafted for the modern workspace. Graceful, breathable, and unmistakably Raaghas.",
-      secondaryCta: {
-        link: "/collections/kalamkari",
-        text: "View Kalamkari"
-      }
+    "id": "cmrnnd0900000l6ug2f7yexmn",
+    "type": "CUSTOM_HTML",
+    "order": 0,
+    "content": {
+      "html": "\n<div class=\"bg-gradient-to-r from-[#591B24] to-[#3A1017] p-6 rounded-2xl border border-white/10 text-center max-w-4xl mx-auto my-8 mt-12 shadow-2xl\">\n  <h2 class=\"text-[10px] uppercase tracking-[0.3em] text-[#E0C097] mb-2 font-bold\">Exclusive Offer</h2>\n  <h3 class=\"text-2xl md:text-3xl font-serif text-white mb-6\">UNVEIL THE ELEGANCE WITH RAAGHAS</h3>\n  <div class=\"flex flex-col md:flex-row gap-4 justify-center mb-6\">\n    <div class=\"bg-white/10 border border-white/20 rounded-lg p-4 flex-1 backdrop-blur-sm\">\n       <span class=\"block text-2xl font-bold text-white\">5% OFF</span>\n       <span class=\"block text-xs text-white/70 uppercase mt-1\">Prepaid Orders</span>\n    </div>\n    <div class=\"bg-white/10 border border-white/20 rounded-lg p-4 flex-1 backdrop-blur-sm\">\n       <span class=\"block text-2xl font-bold text-white\">10% OFF</span>\n       <span class=\"block text-xs text-white/70 uppercase mt-1\">On Orders ₹2999+</span>\n    </div>\n  </div>\n  <p class=\"text-[10px] uppercase tracking-widest text-white/50 mb-6\">Use Code: WELCOME10 at Checkout</p>\n  <a href=\"/collections/all\" class=\"bg-[#E0C097] text-[#3A1017] px-10 py-3 rounded-full text-xs font-bold uppercase tracking-widest inline-block hover:bg-white transition-colors shadow-xl\">Shop Collection</a>\n</div>\n"
     }
   },
   {
-    id: "cmrnk0ssq0002uuxaj8pk8hij",
-    type: "TRUST_BAR",
-    order: 1,
-    content: {
-      items: [
-        { icon: "Truck", text: "Free Shipping on First Order" },
-        { icon: "CheckCircle", text: "100% Authentic Kalamkari" },
-        { icon: "Clock", text: "7-Day Easy Exchange" },
-        { icon: "Shield", text: "Safe & Secure Checkout" }
+    "id": "cmrnnd0900001l6ugto6c4pwg",
+    "type": "CATEGORY_STRIP",
+    "order": 1,
+    "content": {
+      "categories": [
+        {
+          "image": "https://images.unsplash.com/photo-1589310243389-96a5483213a8?q=80&w=400",
+          "label": "Kurtis",
+          "handle": "pure-cotton-kurtis"
+        },
+        {
+          "image": "https://images.unsplash.com/photo-1610030469983-98e550d615e1?q=80&w=400",
+          "label": "Sets",
+          "handle": "cotton-salwar-set"
+        },
+        {
+          "image": "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=400",
+          "label": "Dupatta",
+          "handle": "kalamkari-dupatta"
+        },
+        {
+          "image": "https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=400",
+          "label": "Premium",
+          "handle": "Premium-Wear"
+        },
+        {
+          "image": "https://images.unsplash.com/photo-1594235412402-b1ed2efaa873?q=80&w=400",
+          "label": "Office",
+          "handle": "office-wear"
+        }
       ]
     }
   },
   {
-    id: "cmrnk0ssq0003uuxayi4cq4uy",
-    type: "PRODUCT_GRID",
-    order: 2,
-    content: {
-      count: 16,
-      title: "Fresh Drops",
-      collectionHandle: "Fresh-Drops"
+    "id": "cmrnnd0900002l6ugu2gaz345",
+    "type": "PRODUCT_GRID",
+    "order": 2,
+    "content": {
+      "limit": 8,
+      "title": "Fresh Drops",
+      "collectionHandle": "Fresh-Drops"
     }
   },
   {
-    id: "cmrnk0ssq0004uuxaia6sh4g7",
-    type: "DEAL_BANNER",
-    order: 3,
-    content: {
-      ctaLink: "/collections/all",
-      ctaText: "Claim My Discount",
-      subtext: "Get Flat 10% OFF on your first purchase. Use Code: RAAGHAS10",
-      headline: "EXCLUSIVE WELCOME OFFER"
-    }
-  },
-  {
-    id: "cmrnk0ssr0005uuxaawywgzl7",
-    type: "SOCIAL_PROOF",
-    order: 4,
-    content: {
-      items: [
+    "id": "cmrnnd0900003l6ugffonollx",
+    "type": "CATEGORIES_MOSAIC",
+    "order": 3,
+    "content": {
+      "headline": "Shop By Mood",
+      "categories": [
         {
-          city: "Bangalore",
-          name: "Riya",
-          image: "https://images.unsplash.com/photo-1594235412402-b1ed2efaa873?q=80&w=400"
+          "id": "1",
+          "size": "large",
+          "image": "https://images.unsplash.com/photo-1589310243389-96a5483213a8?q=80&w=800",
+          "label": "Casual Edit",
+          "handle": "flex-cotton-kurtis"
         },
         {
-          city: "Mumbai",
-          name: "Ananya",
-          image: "https://images.unsplash.com/photo-1589310243389-96a5483213a8?q=80&w=400"
+          "id": "2",
+          "size": "small",
+          "image": "https://images.unsplash.com/photo-1610030469983-98e550d615e1?q=80&w=600",
+          "label": "Evening Elegance",
+          "handle": "Premium-Wear"
+        },
+        {
+          "id": "3",
+          "size": "small",
+          "image": "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=600",
+          "label": "Festive Ready",
+          "handle": "kalamkari"
+        },
+        {
+          "id": "4",
+          "size": "medium",
+          "image": "https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=800",
+          "label": "Work Wear",
+          "handle": "office-wear"
         }
-      ],
-      subtext: "Join thousands of professionals who choose grace for their workday.",
-      headline: "The Raaghas Woman"
+      ]
     }
   },
   {
-    id: "cmrnk0ssr0006uuxa5wpq7n70",
-    type: "INSTAGRAM_FEED",
-    order: 5,
-    content: {
-      url: "https://instagram.com/raaghas.official",
-      headline: "Follow Our Story",
-      handleText: "@raaghas.official"
+    "id": "cmrnnd0900004l6ug69atusy9",
+    "type": "PRODUCT_GRID",
+    "order": 4,
+    "content": {
+      "limit": 4,
+      "title": "Trending Office Essentials",
+      "collectionHandle": "office-wear"
+    }
+  },
+  {
+    "id": "cmrnnd0900005l6uguauiy3uf",
+    "type": "PRODUCT_GRID",
+    "order": 5,
+    "content": {
+      "limit": 4,
+      "title": "Best Sellers",
+      "collectionHandle": "best-sellers"
+    }
+  },
+  {
+    "id": "cmrnnd0900006l6ugzxmej0xz",
+    "type": "BRAND_STORY",
+    "order": 6,
+    "content": {
+      "body": "Raaghas is a celebration of Indian heritage, crafted with precision and passion. We bring you the finest handloom pieces that blend traditional artistry with modern silhouettes. From our artisans to your wardrobe, every thread tells a story of elegance.",
+      "image": "https://images.unsplash.com/photo-1610030469983-98e550d615e1?q=80&w=800",
+      "ctaLink": "/about",
+      "ctaText": "Read Our Story",
+      "headline": "About Raaghas"
+    }
+  },
+  {
+    "id": "cmrnnd0900007l6ugm4tx0z0m",
+    "type": "CUSTOM_HTML",
+    "order": 7,
+    "content": {
+      "html": "\n<div class=\"max-w-7xl mx-auto px-6 py-16\">\n  <h2 class=\"text-3xl font-serif text-theme-text mb-10\">Customer Reviews</h2>\n  <div class=\"grid grid-cols-2 md:grid-cols-4 gap-4\">\n    <div class=\"bg-theme-surface border border-theme-border rounded-xl p-2 shadow-sm overflow-hidden\"><img src=\"https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=400\" alt=\"Review 1\" class=\"w-full h-auto rounded-lg object-cover\" /></div>\n    <div class=\"bg-theme-surface border border-theme-border rounded-xl p-2 shadow-sm overflow-hidden\"><img src=\"https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?q=80&w=400\" alt=\"Review 2\" class=\"w-full h-auto rounded-lg object-cover\" /></div>\n    <div class=\"bg-theme-surface border border-theme-border rounded-xl p-2 shadow-sm overflow-hidden\"><img src=\"https://images.unsplash.com/photo-1611162618071-b39a2ec055fb?q=80&w=400\" alt=\"Review 3\" class=\"w-full h-auto rounded-lg object-cover\" /></div>\n    <div class=\"bg-theme-surface border border-theme-border rounded-xl p-2 shadow-sm overflow-hidden\"><img src=\"https://images.unsplash.com/photo-1611162616475-46b635cb6868?q=80&w=400\" alt=\"Review 4\" class=\"w-full h-auto rounded-lg object-cover\" /></div>\n  </div>\n</div>\n"
     }
   }
 ];
