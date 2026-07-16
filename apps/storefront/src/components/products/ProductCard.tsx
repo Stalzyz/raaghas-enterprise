@@ -115,15 +115,12 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+      initial={{ opacity: 1, y: 0 }}
       className="group relative flex flex-col"
     >
       <Link 
         href={`/products/${product.handle}`}
-        className="relative aspect-[3/4] w-full overflow-hidden bg-theme-surface cursor-pointer group/image block"
+        className="relative aspect-[3/4] pb-[133.33%] w-full overflow-hidden bg-theme-surface cursor-pointer group/image block"
       >
         <div 
           className="absolute inset-0 bg-theme-text/10 mix-blend-multiply z-10 opacity-0 group-hover/image:opacity-100 transition-opacity duration-700" 
@@ -132,7 +129,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         <img
           src={product.imageUrl}
           alt={product.title}
-          className="h-full w-full object-cover object-center transition-transform duration-[1.2s] ease-[0.16,1,0.3,1] group-hover/image:scale-105"
+          className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-[1.2s] ease-[0.16,1,0.3,1] group-hover/image:scale-105"
         />
         
         {/* Badges */}

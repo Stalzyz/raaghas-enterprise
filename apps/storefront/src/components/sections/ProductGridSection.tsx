@@ -227,7 +227,7 @@ function ProductCard({ product }: { product: any }) {
     >
       <Link 
         href={`/products/${product.handle || product.id}`} 
-        className="relative aspect-[3/4] overflow-hidden bg-primary/5 rounded-2xl"
+        className="relative aspect-[3/4] pb-[133.33%] overflow-hidden bg-primary/5 rounded-2xl block"
       >
         {/* Floating Labels */}
         <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
@@ -265,7 +265,7 @@ function ProductCard({ product }: { product: any }) {
         </div>
 
         {/* Smooth Image Crossfade */}
-        <div className="relative w-full h-full">
+        <div className="absolute inset-0 w-full h-full">
            <img 
             src={getAssetUrl(product.image1)} 
             alt={product.name} 
