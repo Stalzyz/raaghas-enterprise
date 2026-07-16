@@ -177,7 +177,60 @@ export async function generateMetadata(): Promise<import("next").Metadata> {
 
 export default async function Home() {
   const page = await getHomePageData();
-  const sections = page?.sections && page.sections.length > 0 ? page.sections : FALLBACK_SECTIONS;
+  let sections = page?.sections && page.sections.length > 0 ? page.sections : FALLBACK_SECTIONS;
+
+  // SSR Products for Grids
+  sections = await Promise.all(sections.map(async (section: any) => {
+    if (section.type === "PRODUCT_GRID" || section.type === "PRODUCT_SCROLL" || section.type === "SMART_GRID") {
+      const handle = section.content?.collectionHandle === 'all' ? '' : section.content?.collectionHandle;
+      try {
+        const url = `${API_URL}/api/v1/products${handle ? `?collection=${handle}` : ''}`;
+        const res = await fetch(url, { next: { revalidate: 60 } });
+        if (res.ok) {
+          const data = await res.json();
+          let productsList = Array.isArray(data) ? data : (data.data || data.products || []);
+          if (productsList.length > 0) {
+            const limit = section.content?.limit || 16;
+            const mapped = productsList.slice(0, limit).map((p: any) => {
+              const mainVariant = p.variants?.[0];
+              return {
+                id: p.id,
+                variantId: mainVariant?.id,
+                handle: p.handle,
+                name: p.title,
+                numericPrice: Number(mainVariant?.price || 0),
+                price: mainVariant?.price ? `₹${Number(mainVariant.price).toLocaleString()}` : "N/A",
+                originalPrice: mainVariant?.compareAtPrice ? `₹${Number(mainVariant.compareAtPrice).toLocaleString()}` : null,
+                inventory: p.variants?.reduce((sum: number, v: any) => sum + (v.availableStock ?? v.inventory ?? v.inventoryQuantity ?? 0), 0) || 0,
+                taxInclusive: p.taxInclusive,
+                taxRate: p.taxRate,
+                image1: p.images?.[0]?.url || "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800",
+                image2: p.images?.[1]?.url || p.images?.[0]?.url || "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800",
+                label: p.type || "New Arrival",
+                badge: p.tags?.toLowerCase().includes('bestseller') ? 'Bestseller' : ((p.variants?.reduce((sum: number, v: any) => sum + (v.availableStock ?? v.inventory ?? v.inventoryQuantity ?? 0), 0) || 0) <= 0 ? 'Sold Out' : null),
+                variants: (p.variants || []).map((v: any) => ({
+                  id: v.id,
+                  option1Name: v.option1Name,
+                  option1Value: v.option1Value,
+                  option2Name: v.option2Name,
+                  option2Value: v.option2Value,
+                  option3Name: v.option3Name,
+                  option3Value: v.option3Value,
+                  price: Number(v.price || 0),
+                  mrp: Number(v.mrp || v.compareAtPrice || 0),
+                  inventory: v.availableStock ?? v.inventory ?? v.inventoryQuantity ?? 0,
+                }))
+              };
+            });
+            section.content = { ...section.content, products: mapped };
+          }
+        }
+      } catch (err) {
+        console.error("SSR Product fetch failed:", err);
+      }
+    }
+    return section;
+  }));
 
   const schema = {
     "@context": "https://schema.org",
