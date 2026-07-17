@@ -31,18 +31,18 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     );
 
     // Prepare a refined "Luxury" error message for the client
-    let message = 'An unexpected error occurred. Our team has been notified.';
+    let message = 'Something went wrong on our end. Please try again later.';
     let detail = null;
 
     if (exception instanceof HttpException) {
       const res = exception.getResponse() as any;
       message = typeof res === 'string' ? res : res.message || message;
     } else if (exception.code === 'P2002') {
-      message = 'A record with this value already exists (Duplicate entry).';
+      message = 'This information is already in our system.';
       status = HttpStatus.CONFLICT;
     } else if (exception.code?.startsWith('P')) {
       // General Prisma errors
-      message = 'We encountered a temporary issue processing your request. Please try again.';
+      message = 'Our website is very busy right now. Please wait a moment and try again.';
       if (process.env.NODE_ENV !== 'production') detail = exception.message;
     }
 

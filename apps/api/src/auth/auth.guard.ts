@@ -63,7 +63,7 @@ export class AuthGuard implements CanActivate {
         if (!isPublic) throw new UnauthorizedException('Invalid or expired token');
       }
     } else if (!isPublic) {
-      throw new UnauthorizedException('Missing or invalid Authorization header');
+      throw new UnauthorizedException('You have been logged out. Please log in again.');
     }
 
     return true;

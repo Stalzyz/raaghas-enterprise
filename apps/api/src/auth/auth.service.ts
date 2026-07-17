@@ -33,18 +33,18 @@ export class AuthService {
 
     if (!user) {
       this.logger.warn(`Login failed: User ${normalizedEmail} not found in database`);
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Wrong email or password. Please try again.');
     }
 
     if (!user.password) {
       this.logger.warn(`Login failed: User ${normalizedEmail} has no password set (possibly Google-only)`);
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Wrong email or password. Please try again.');
     }
 
     const isMatch = await bcrypt.compare(pass, user.password);
     if (!isMatch) {
       this.logger.warn(`Login failed: Incorrect password for ${normalizedEmail}`);
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Wrong email or password. Please try again.');
     }
 
     this.logger.log(`Login successful for: ${normalizedEmail}. Generating token...`);
@@ -63,7 +63,7 @@ export class AuthService {
     });
 
     if (!dbUser) {
-      throw new UnauthorizedException('User not found');
+      throw new UnauthorizedException('We can\\'t find an account with this email.');
     }
 
     const permissions = dbUser?.roleRef?.permissions?.map(p => p.action) || [];
@@ -176,7 +176,7 @@ export class AuthService {
     }
 
     const user = await this.prisma.user.findUnique({ where: { email: normalizedEmail } });
-    if (!user) throw new UnauthorizedException('User no longer exists');
+    if (!user) throw new UnauthorizedException('We can\\'t find an account with this email.');
 
     return this.generateToken(user);
   }
@@ -292,7 +292,7 @@ export class AuthService {
     if (user.password) {
       // If the user already has a password, verify the current one
       const isMatch = await bcrypt.compare(currentPass, user.password);
-      if (!isMatch) throw new BadRequestException('Incorrect current password');
+      if (!isMatch) throw new BadRequestException('Your current password is wrong.');
     }
     // If user.password is null (logged in via OTP/Google), allow them to set one directly
 
@@ -314,7 +314,7 @@ export class AuthService {
           id: { not: userId }
         }
       });
-      if (existing) throw new BadRequestException('Email already in use');
+      if (existing) throw new BadRequestException('This email is already taken. Please log in.');
       data.email = normalizedEmail;
     }
 

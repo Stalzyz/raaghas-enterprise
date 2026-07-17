@@ -363,7 +363,7 @@ export class LogisticsService {
       include: { items: { include: { variant: { include: { product: true } } } } }
     });
 
-    if (!order) throw new NotFoundException('Order not found');
+    if (!order) throw new NotFoundException('We can\\'t find this order. Please check the order number.');
 
     const address = order.shippingAddress as any;
     
@@ -512,7 +512,7 @@ export class LogisticsService {
       }
     });
 
-    if (!shipment) throw new NotFoundException('Shipment or Tracking ID not found');
+    if (!shipment) throw new NotFoundException('Tracking is not ready yet. Please check back later.');
 
     return {
       id: shipment.id,

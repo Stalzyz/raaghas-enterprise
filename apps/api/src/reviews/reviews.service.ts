@@ -68,7 +68,7 @@ export class ReviewsService {
     });
 
     if (!hasPurchased) {
-      throw new BadRequestException('You can only review products you have purchased.');
+      throw new BadRequestException('You can only review items you have bought from us.');
     }
 
     return this.prisma.review.create({
