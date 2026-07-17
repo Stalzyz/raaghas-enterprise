@@ -280,13 +280,7 @@ function CollectionPageContent({ handle }: { handle: string }) {
                    <input type="checkbox" className="hidden" checked={inStockOnly} onChange={(e) => setInStockOnly(e.target.checked)} />
                  </label>
 
-                 <label className="flex items-center gap-3 cursor-pointer group">
-                   <div className={`w-4 h-4 rounded-sm border flex items-center justify-center transition-colors ${showCombo ? 'bg-wine border-wine text-white' : 'border-theme-border bg-transparent'}`}>
-                     {showCombo && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="w-3 h-3"><polyline points="20 6 9 17 4 12"></polyline></svg>}
-                   </div>
-                   <span className="text-[10px] font-bold text-theme-text-muted group-hover:text-theme-text uppercase tracking-widest">Combo Packs</span>
-                   <input type="checkbox" className="hidden" checked={showCombo} onChange={(e) => setShowCombo(e.target.checked)} />
-                 </label>
+
               </div>
            </div>
         </aside>
@@ -466,7 +460,7 @@ function CollectionPageContent({ handle }: { handle: string }) {
                        >
                          {tab.label}
                          {tab.id === 'size' && selectedSizes.length > 0 && <span className="inline-block w-2 h-2 rounded-full bg-wine ml-2" />}
-                         {tab.id === 'availability' && (inStockOnly || showCombo) && <span className="inline-block w-2 h-2 rounded-full bg-wine ml-2" />}
+                         {tab.id === 'availability' && inStockOnly && <span className="inline-block w-2 h-2 rounded-full bg-wine ml-2" />}
                          {tab.id === 'price' && (maxPrice < 10000 || minPrice > 0) && <span className="inline-block w-2 h-2 rounded-full bg-wine ml-2" />}
                        </button>
                     ))}
@@ -522,13 +516,7 @@ function CollectionPageContent({ handle }: { handle: string }) {
                             <input type="checkbox" className="hidden" checked={inStockOnly} onChange={(e) => setInStockOnly(e.target.checked)} />
                           </label>
 
-                          <label className="flex items-center justify-between cursor-pointer group py-2">
-                            <span className={`text-xs font-bold ${showCombo ? 'text-wine' : 'text-theme-text'}`}>Combo Packs</span>
-                            <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${showCombo ? 'bg-wine border-wine text-white' : 'border-theme-border bg-transparent'}`}>
-                              {showCombo && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="w-3 h-3"><polyline points="20 6 9 17 4 12"></polyline></svg>}
-                            </div>
-                            <input type="checkbox" className="hidden" checked={showCombo} onChange={(e) => setShowCombo(e.target.checked)} />
-                          </label>
+
                        </div>
                     )}
 

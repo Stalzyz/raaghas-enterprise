@@ -7,8 +7,8 @@ import { FeaturedCollectionSection } from "./FeaturedCollectionSection";
 import LookbookSection from "@/components/cms/LookbookSection";
 import dynamic from 'next/dynamic';
 
-const ProductGridSection = dynamic(() => import('./ProductGridSection').then(mod => mod.ProductGridSection), { ssr: false });
-const ProductScrollSection = dynamic(() => import('./ProductScrollSection').then(mod => mod.ProductScrollSection), { ssr: false });
+const ProductGridSection = dynamic(() => import('./ProductGridSection').then(mod => mod.ProductGridSection));
+const ProductScrollSection = dynamic(() => import('./ProductScrollSection').then(mod => mod.ProductScrollSection));
 
 import { ErrorBoundary } from "../ErrorBoundary";
 

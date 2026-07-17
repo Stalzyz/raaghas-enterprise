@@ -22,12 +22,12 @@ export default function ScrollReveal({
 
   const variants = {
     "none": { initial: { opacity: 1 }, animate: { opacity: 1 } },
-    "fade": { initial: { opacity: 0 }, animate: { opacity: 1 } },
-    "zoom": { initial: { opacity: 0, scale: 0.95 }, animate: { opacity: 1, scale: 1 } },
-    "slide-up": { initial: { opacity: 0, y: 30 }, animate: { opacity: 1, y: 0 } },
-    "slide-down": { initial: { opacity: 0, y: -30 }, animate: { opacity: 1, y: 0 } },
-    "slide-left": { initial: { opacity: 0, x: 30 }, animate: { opacity: 1, x: 0 } },
-    "slide-right": { initial: { opacity: 0, x: -30 }, animate: { opacity: 1, x: 0 } },
+    "fade": { initial: { opacity: 1 }, animate: { opacity: 1 } },
+    "zoom": { initial: { opacity: 1, scale: 0.95 }, animate: { opacity: 1, scale: 1 } },
+    "slide-up": { initial: { opacity: 1, y: 30 }, animate: { opacity: 1, y: 0 } },
+    "slide-down": { initial: { opacity: 1, y: -30 }, animate: { opacity: 1, y: 0 } },
+    "slide-left": { initial: { opacity: 1, x: 30 }, animate: { opacity: 1, x: 0 } },
+    "slide-right": { initial: { opacity: 1, x: -30 }, animate: { opacity: 1, x: 0 } },
   };
 
   const selected = (variants as any)[anim] || variants["fade"];

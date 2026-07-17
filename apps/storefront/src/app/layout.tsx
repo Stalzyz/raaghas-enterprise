@@ -32,10 +32,10 @@ const MOCK_SETTINGS = {
 
 const MOCK_MAIN_MENU = {
   items: [
-    { id: 'shop', label: 'Shop', url: '/products' },
+    { id: 'shop', label: 'Shop', url: '/collections/all' },
     { id: '1', label: 'Collections', url: '/collections', children: [
-      { id: '1-1', label: 'New Arrivals', url: '/collections/new-arrivals' },
-      { id: '1-2', label: 'Bestsellers', url: '/collections/bestsellers' },
+      { id: '1-1', label: 'New Arrivals', url: '/collections/Fresh-Drops' },
+      { id: '1-2', label: 'Bestsellers', url: '/collections/best-sellers' },
       { id: '1-3', label: 'Silk Edit', url: '/collections/silk' },
     ]},
     { id: '2', label: 'Our Story', url: '/about' },
@@ -47,7 +47,7 @@ const MOCK_FOOTER_MENU = {
   items: [
     { id: 'f1', label: 'Office Kurtis', url: '/collections/office-wear' },
     { id: 'f2', label: 'Kalamkari Edit', url: '/collections/kalamkari' },
-    { id: 'f3', label: 'New Arrivals', url: '/collections/new-arrivals' },
+    { id: 'f3', label: 'New Arrivals', url: '/collections/Fresh-Drops' },
     { id: 'f4', label: 'Bestsellers', url: '/collections/best-sellers' },
   ],
 };
