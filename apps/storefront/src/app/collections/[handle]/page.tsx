@@ -10,8 +10,8 @@ import ProductCard from "@/components/products/ProductCard";
 import { ChevronDown, Filter, X, Loader2, SlidersHorizontal, ShoppingBag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDebounce } from "@/hooks/useDebounce";
+import { safeFetch } from "@/lib/safe-fetch";
 import Breadcrumb from "@/components/layout/Breadcrumb";
-
 // ── Inner component (uses useSearchParams — must be inside Suspense) ──────────
 function CollectionPageContent({ handle }: { handle: string }) {
   const decodedHandle = decodeURIComponent(handle);
@@ -100,14 +100,18 @@ function CollectionPageContent({ handle }: { handle: string }) {
 
   const fetchCollections = async () => {
     try {
-      const [colRes, themeRes] = await Promise.all([
-        fetch(`${API_URL}/api/v1/products/collections`),
-        fetch(`${API_URL}/api/v1/cms/theme`)
+      // Use safeFetch to prevent mobile network dropouts
+      const [colData, themeDataRes] = await Promise.all([
+        safeFetch("/products/collections", { retries: 3, timeoutMs: 8000 }),
+        safeFetch("/cms/theme", { retries: 2, timeoutMs: 5000 })
       ]);
-      const data = await colRes.json();
-      const rawTheme = await themeRes.json();
+      
+      const data = colData.data || [];
+      const rawTheme = themeDataRes.data || {};
       const themeData = rawTheme.config || rawTheme;
-      let validCollections = data.filter((c: any) => !c.isVirtual);
+      
+      let validCollections = Array.isArray(data) ? data.filter((c: any) => !c.isVirtual) : [];
+      
       if (themeData.headerCollections && Array.isArray(themeData.headerCollections) && themeData.headerCollections.length > 0) {
         validCollections = themeData.headerCollections
           .map((h: string) => validCollections.find((c: any) => c.handle === h))
@@ -140,17 +144,28 @@ function CollectionPageContent({ handle }: { handle: string }) {
       if (inStockOnly) query.append("inStock", "true");
       if (showCombo) query.append("combo", "true");
 
-      const res = await fetch(`${API_URL}/api/v1/products?${query.toString()}`);
-      const result = await res.json();
-      if (result.data && result.meta) {
-        setProducts(result.data);
-        setTotalPages(result.meta.totalPages);
+      const { data, error } = await safeFetch(`/products?${query.toString()}`, {
+        retries: 3,
+        timeoutMs: 10000
+      });
+      
+      if (error) {
+         console.error("safeFetch returned error:", error);
+         setProducts([]);
+         setTotalPages(1);
+         return;
+      }
+
+      if (data && data.data && data.meta) {
+        setProducts(data.data);
+        setTotalPages(data.meta.totalPages);
       } else {
-        setProducts(result);
+        setProducts(Array.isArray(data) ? data : []);
         setTotalPages(1);
       }
     } catch (error) {
       console.error("Error fetching products:", error);
+      setProducts([]);
     } finally {
       setIsLoading(false);
       window.scrollTo({ top: 0, behavior: "smooth" });
