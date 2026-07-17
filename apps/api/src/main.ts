@@ -62,8 +62,11 @@ import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
 const cookieParser = require('cookie-parser');
 const express = require('express');
 
+import { NestExpressApplication } from '@nestjs/platform-express';
+
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { rawBody: true });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true });
+  app.set('trust proxy', 1);
 
   // 0. Security: Request body size limit (prevent memory DoS attacks)
   // Increased to 50mb to allow large CMS page saves with extensive content
