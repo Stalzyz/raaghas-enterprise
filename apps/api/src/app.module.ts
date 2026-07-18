@@ -43,6 +43,7 @@ import { SizeGuidesModule } from './size-guides/size-guides.module';
 import { SupportModule } from './support/support.module';
 import { WishlistModule } from './wishlist/wishlist.module';
 import { BackupModule } from './backup/backup.module';
+import { CustomThrottlerGuard } from './common/guards/custom-throttler.guard';
 
 @Global()
 @Module({
@@ -105,7 +106,7 @@ import { BackupModule } from './backup/backup.module';
     },
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: CustomThrottlerGuard,
     },
   ],
   exports: [PrismaService],
