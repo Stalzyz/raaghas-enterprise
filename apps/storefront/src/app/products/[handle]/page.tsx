@@ -19,7 +19,7 @@ import Breadcrumb from "@/components/layout/Breadcrumb";
 async function getProduct(handle: string) {
   const url = `${API_URL}/api/v1/products/${encodeURIComponent(handle)}`;
   try {
-    const res = await fetch(url, { cache: "no-store" });
+    const res = await fetch(url, { next: { revalidate: 60 } });
     if (res.status === 404) return { notFound: true };
     if (!res.ok) throw new Error("API error");
     const data = await res.json();
