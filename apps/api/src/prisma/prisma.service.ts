@@ -7,7 +7,15 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   private readonly logger = new Logger(PrismaService.name);
 
   constructor() {
+    let url = process.env.DATABASE_URL;
+    if (url && !url.includes('connection_limit')) {
+      url += url.includes('?') ? '&connection_limit=50' : '?connection_limit=50';
+    }
+
     super({
+      datasources: {
+        db: { url },
+      },
       log:
         process.env.NODE_ENV === 'production'
           ? ['error', 'warn']
