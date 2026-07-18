@@ -38,8 +38,14 @@ export async function safeFetch<T = any>(
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
+      const headers = new Headers(fetchOptions.headers || {});
+      if (typeof window === 'undefined') {
+        headers.set('x-internal-secret', process.env.INTERNAL_API_SECRET || 'raaghas_internal_bypass_99x');
+      }
+
       const response = await fetch(url, {
         ...fetchOptions,
+        headers,
         signal: controller.signal as AbortSignal,
       });
 

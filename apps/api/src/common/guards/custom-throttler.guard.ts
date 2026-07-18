@@ -17,6 +17,8 @@ export class CustomThrottlerGuard extends ThrottlerGuard {
     this.localIps.add('127.0.0.1');
     this.localIps.add('::1');
     this.localIps.add('::ffff:127.0.0.1');
+    this.localIps.add('72.61.231.187');
+    this.localIps.add('::ffff:72.61.231.187');
     
     // Add all local network interfaces (including VPS public IP attached to eth0)
     const interfaces = os.networkInterfaces();
@@ -36,6 +38,11 @@ export class CustomThrottlerGuard extends ThrottlerGuard {
   protected async getTracker(req: Record<string, any>): Promise<string> {
     const ip = req.ip || req.connection?.remoteAddress || 'unknown';
     
+    // Check for internal secret token from Next.js server (immune to NAT routing issues)
+    if (req.headers && req.headers['x-internal-secret'] === (process.env.INTERNAL_API_SECRET || 'raaghas_internal_bypass_99x')) {
+       return `bypass_${Math.random().toString(36).substring(7)}`;
+    }
+
     // If the request comes from our own server (Next.js SSR), bypass rate limiting
     // by returning a unique tracker per request so it never accumulates in a bucket.
     if (this.localIps.has(ip)) {

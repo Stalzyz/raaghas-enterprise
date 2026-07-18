@@ -3,12 +3,12 @@ import { API_URL } from "@/lib/api";
 import { Metadata } from "next";
 
 
+import { safeFetch } from "@/lib/safe-fetch";
+
 async function getCollection(handle: string) {
   try {
-    const res = await fetch(`${API_URL}/api/v1/products/collections/${encodeURIComponent(handle)}`, { cache: "no-store" });
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (data.success === false) return null;
+    const { data, error } = await safeFetch(`/products/collections/${encodeURIComponent(handle)}`, { cache: "no-store" });
+    if (error || !data) return null;
     return data;
   } catch (err) {
     return null;
