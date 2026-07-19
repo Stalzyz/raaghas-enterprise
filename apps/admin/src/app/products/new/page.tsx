@@ -257,8 +257,11 @@ export default function AddProductPage() {
     if (!form.title) return alert("Product title is required");
     setIsUploading(true);
     try {
+      const virtualCategory = selectedCollectionIds.find(id => id.startsWith('virtual-'))?.replace('virtual-', '');
+      
       const payload = {
         ...form,
+        ...(virtualCategory && { category: virtualCategory }),
         taxRate: parseFloat(form.taxRate) || 5,
         collections: selectedCollectionIds.filter(id => !id.startsWith('virtual-')),
         images: images.map(img => ({ url: img.url, isPrimary: img.isPrimary })),
