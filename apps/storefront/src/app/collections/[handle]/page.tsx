@@ -49,13 +49,18 @@ function CollectionPageContent({ handle }: { handle: string }) {
 
   useEffect(() => {
     if (showFilters) {
-      setTempSizes(selectedSizes);
-      setTempInStock(inStockOnly);
-      setTempMinPrice(minPrice);
-      setTempMaxPrice(maxPrice);
-      setTempSort(sort);
+      // Read directly from searchParams inside the effect so this ONLY fires
+      // when the drawer opens/closes — NOT on every render.
+      // selectedSizes = searchParams.getAll("sizes") creates a new array ref
+      // every render, which would re-trigger this effect and reset temp state.
+      setTempSizes(searchParams.getAll("sizes"));
+      setTempInStock(searchParams.get("inStock") === "true");
+      setTempMinPrice(Number(searchParams.get("minPrice") || "0"));
+      setTempMaxPrice(Number(searchParams.get("maxPrice") || "10000"));
+      setTempSort(searchParams.get("sort") || "newest");
     }
-  }, [showFilters, selectedSizes, inStockOnly, minPrice, maxPrice, sort]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showFilters]); // ← ONLY re-init when drawer opens, never on temp state changes
 
   const debouncedMinPrice = useDebounce(minPrice, 500);
   const debouncedMaxPrice = useDebounce(maxPrice, 500);
