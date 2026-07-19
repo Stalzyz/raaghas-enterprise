@@ -63,7 +63,7 @@ export class AuthService {
     });
 
     if (!dbUser) {
-      throw new UnauthorizedException('We can\\'t find an account with this email.');
+      throw new UnauthorizedException("We can't find an account with this email.");
     }
 
     const permissions = dbUser?.roleRef?.permissions?.map(p => p.action) || [];
@@ -176,7 +176,7 @@ export class AuthService {
     }
 
     const user = await this.prisma.user.findUnique({ where: { email: normalizedEmail } });
-    if (!user) throw new UnauthorizedException('We can\\'t find an account with this email.');
+    if (!user) throw new UnauthorizedException("We can't find an account with this email.");
 
     return this.generateToken(user);
   }
