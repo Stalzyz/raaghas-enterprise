@@ -545,8 +545,8 @@ function CollectionPageContent({ handle }: { handle: string }) {
                  </div>
               </div>
 
-              {/* Bottom Sticky Action Bar */}
-              <div className="p-4 pb-safe border-t border-theme-border/10 bg-theme-surface shrink-0 flex gap-4 shadow-[0_-10px_20px_rgba(0,0,0,0.05)]" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
+              {/* Bottom Sticky Action Bar — padded to clear MobileBottomDock (fixed bottom-6 + ~70px) */}
+              <div className="p-4 border-t border-theme-border/10 bg-theme-surface shrink-0 flex gap-4 shadow-[0_-10px_20px_rgba(0,0,0,0.05)]" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 100px)' }}>
                  <button onClick={() => { setTempSizes([]); setTempInStock(false); setTempMinPrice(0); setTempMaxPrice(10000); setTempSort("newest"); }} className="flex-1 bg-white border border-theme-border text-wine py-4 text-xs font-bold hover:bg-theme-bg transition-all rounded-xl shadow-sm">
                     Clear
                  </button>
