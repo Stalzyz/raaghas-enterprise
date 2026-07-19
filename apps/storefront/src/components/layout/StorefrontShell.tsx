@@ -43,7 +43,7 @@ export function StorefrontShell({
   return (
     <>
       <Header settings={settings} theme={theme} menu={mainMenu} />
-      <main className="flex-1 flex flex-col pt-[120px] md:pt-[200px] pb-16 md:pb-0">
+      <main className="flex-1 flex flex-col pt-[68px] md:pt-[200px] pb-16 md:pb-0">
         <PageTransition>
           {children}
         </PageTransition>

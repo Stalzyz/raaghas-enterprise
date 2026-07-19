@@ -1,6 +1,6 @@
 "use client";
 
-import { ShoppingBag, Search, ChevronDown, Menu, User, LogOut, ChevronRight } from "lucide-react";
+import { ShoppingBag, Search, ChevronDown, Menu, User, LogOut, ChevronRight, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import MagneticLink from "../ui/MagneticLink";
@@ -20,20 +20,17 @@ export function Header({ settings, theme: themeConfig, menu }: { settings: any, 
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
-  const [isScrolledDown, setIsScrolledDown] = useState(false);
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      const scrollingDown = currentScrollY > lastScrollY && currentScrollY > 60;
-      // Hide entire header when scrolling down past 100px
       if (currentScrollY > lastScrollY && currentScrollY > 100) {
         setIsVisible(false);
+        setShowMobileSearch(false); // close search on scroll down
       } else {
         setIsVisible(true);
       }
-      // Collapse search bar earlier (after 60px) to reclaim space while reading
-      setIsScrolledDown(scrollingDown || currentScrollY > 60);
       setLastScrollY(currentScrollY);
     };
 
@@ -104,13 +101,11 @@ export function Header({ settings, theme: themeConfig, menu }: { settings: any, 
             <ThemeToggle />
             <MagneticLink>
               <button 
-                onClick={() => {
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                  setTimeout(() => document.getElementById('smart-search-input')?.focus(), 300);
-                }} 
+                onClick={() => setShowMobileSearch(prev => !prev)}
                 className="p-2 hover:opacity-70 transition-colors text-primary md:hidden"
+                aria-label={showMobileSearch ? 'Close Search' : 'Open Search'}
               >
-                <Search className="w-5 h-5" />
+                {showMobileSearch ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
               </button>
             </MagneticLink>
             <MagneticLink>
@@ -167,16 +162,19 @@ export function Header({ settings, theme: themeConfig, menu }: { settings: any, 
           </div>
         </div>
 
-        {/* Smart AI Search Bar — collapses on scroll to reclaim vertical space on mobile */}
+        {/* Smart AI Search Bar
+            - Mobile: hidden by default, slides in when search icon is tapped
+            - Desktop: always visible below nav row
+        */}
         <div
-          className={`overflow-hidden transition-all duration-300 ease-in-out md:max-h-24 md:opacity-100 md:pb-6 ${
-            isScrolledDown
-              ? 'max-h-0 opacity-0 pb-0'
-              : 'max-h-24 opacity-100 pb-4'
-          }`}
+          className={`overflow-hidden transition-all duration-300 ease-in-out ${
+            showMobileSearch
+              ? 'max-h-24 opacity-100 pb-3'
+              : 'max-h-0 opacity-0 pb-0'
+          } md:max-h-24 md:opacity-100 md:pb-6`}
         >
           <div className="max-w-4xl mx-auto px-4 md:px-6">
-            <SmartSearchBar />
+            <SmartSearchBar onSearch={() => setShowMobileSearch(false)} />
           </div>
         </div>
       </nav>
