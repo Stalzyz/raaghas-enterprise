@@ -83,12 +83,14 @@ export default function ProductCard({ product }: ProductCardProps) {
     if (hasVariants) {
       openQuickView(e);
     } else {
+      const vId = product.variants?.[0]?.id || product.variantId || product.id;
       addItem({
-        id: product.id,
-        variantId: product.variants?.[0]?.id || product.variantId || product.id,
+        id: `${product.id}-${vId}`,
+        variantId: vId,
         title: product.title,
         price: Number(product.price),
         quantity: 1,
+        maxStock: (product as any).inventoryQuantity || 999,
         image: product.imageUrl,
         taxInclusive: (product as any).taxInclusive,
         handle: product.handle,
@@ -100,11 +102,12 @@ export default function ProductCard({ product }: ProductCardProps) {
   const handleQuickViewAdd = () => {
     if (!selectedVariant || selectedVariant.inventory <= 0) return;
     addItem({
-      id: product.id,
+      id: `${product.id}-${selectedVariant.id}`,
       variantId: selectedVariant.id,
       title: product.title,
       price: Number(selectedVariant.price),
       quantity: 1,
+      maxStock: selectedVariant.inventory,
       image: product.imageUrl,
       taxInclusive: (product as any).taxInclusive,
       handle: product.handle,
@@ -177,7 +180,7 @@ export default function ProductCard({ product }: ProductCardProps) {
            <button 
               onClick={handleQuickBagClick}
               disabled={product.isOutOfStock}
-              className={`w-full py-4 backdrop-blur-md text-[10px] font-bold uppercase tracking-[0.3em] shadow-[0_10px_30px_rgba(0,0,0,0.4)] transition-all rounded-xl flex items-center justify-center gap-2 border border-white/20 ${
+              className={`w-full py-4 backdrop-blur-md text-sm font-semibold shadow-[0_10px_30px_rgba(0,0,0,0.4)] transition-all rounded-xl flex items-center justify-center gap-2 border border-white/20 ${
                 product.isOutOfStock 
                   ? 'bg-gray-900/70 text-gray-400 cursor-not-allowed' 
                   : 'bg-black/70 text-white hover:bg-wine active:scale-95'
@@ -195,10 +198,10 @@ export default function ProductCard({ product }: ProductCardProps) {
       </Link>
 
       <div className="mt-6 flex flex-col items-center text-center space-y-2">
-        <span className="text-[8px] uppercase tracking-[0.4em] text-theme-text-muted font-bold">
+        <span className="text-[10px] text-theme-text-muted font-medium">
            {product.category || "Main Collection"}
         </span>
-        <h3 className="text-xs font-medium text-theme-text tracking-widest uppercase line-clamp-1 px-4">
+        <h3 className="text-xs font-medium text-theme-text line-clamp-1 px-4">
           <Link href={`/products/${product.handle}`} className="hover:text-wine transition-colors underline-offset-4 hover:underline">
             {product.title}
           </Link>
@@ -209,7 +212,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             <span className="text-xs text-theme-text-muted line-through">₹{compareAtPrice.toLocaleString()}</span>
           )}
         </div>
-        <span className="text-[8px] text-theme-text-muted uppercase tracking-[0.2em] font-medium">
+        <span className="text-[10px] text-theme-text-muted font-medium">
           {product.taxInclusive !== false ? "Incl. of GST" : "+ 12% GST"}
         </span>
       </div>
@@ -250,9 +253,9 @@ export default function ProductCard({ product }: ProductCardProps) {
                       <span className="text-2xl font-bold text-wine">
                         ₹{selectedVariant ? Number(selectedVariant.price).toLocaleString() : price.toLocaleString()}
                       </span>
-                      {selectedVariant?.compareAtPrice > selectedVariant?.price && (
+                      {(selectedVariant?.mrp || selectedVariant?.compareAtPrice) && Number(selectedVariant.mrp || selectedVariant.compareAtPrice) > Number(selectedVariant.price) && (
                         <span className="text-sm text-theme-text-muted line-through">
-                          ₹{Number(selectedVariant.compareAtPrice).toLocaleString()}
+                          ₹{Number(selectedVariant.mrp || selectedVariant.compareAtPrice).toLocaleString()}
                         </span>
                       )}
                     </div>
@@ -323,7 +326,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                   <button
                     onClick={handleQuickViewAdd}
                     disabled={!quickViewInStock}
-                    className={`w-full py-4 text-xs font-bold uppercase tracking-[0.2em] rounded-2xl flex items-center justify-center gap-2 transition-all ${
+                    className={`w-full py-4 text-sm font-semibold rounded-2xl flex items-center justify-center gap-2 transition-all ${
                       !quickViewInStock
                         ? 'bg-theme-bg border border-theme-border text-theme-text-muted cursor-not-allowed'
                         : 'bg-wine text-white hover:bg-black active:scale-[0.98] shadow-lg hover:shadow-xl'
@@ -334,7 +337,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                   </button>
                   <Link
                     href={`/products/${product.handle}`}
-                    className="w-full py-3.5 text-xs font-bold uppercase tracking-[0.2em] rounded-2xl flex items-center justify-center border-2 border-theme-border hover:border-wine text-theme-text transition-colors"
+                    className="w-full py-3.5 text-sm font-semibold rounded-2xl flex items-center justify-center border-2 border-theme-border hover:border-wine text-theme-text transition-colors"
                   >
                     View Full Details
                   </Link>

@@ -223,7 +223,7 @@ function CollectionPageContent({ handle }: { handle: string }) {
   return (
     <div className="bg-theme-bg min-h-screen">
       {/* Header */}
-      <div className="pt-[140px] md:pt-[120px] pb-16 px-6 md:px-12 text-center max-w-4xl mx-auto border-b border-theme-border/10">
+      <div className="py-8 md:py-12 px-6 md:px-12 text-center max-w-4xl mx-auto border-b border-theme-border/10">
         <div className="flex justify-center mb-4">
           <Breadcrumb items={[
             { label: "Home", href: "/" },
@@ -231,10 +231,7 @@ function CollectionPageContent({ handle }: { handle: string }) {
             { label: displayTitle, href: `/collections/${decodedHandle}` },
           ]} />
         </div>
-        <h1 className="text-4xl md:text-7xl font-serif text-theme-text mb-6 tracking-tight">{displayTitle}</h1>
-        <p className="text-theme-text/80 font-sans tracking-wide leading-relaxed text-sm md:text-lg max-w-2xl mx-auto">
-          Refined aesthetics and traditional craftsmanship. Discover our Must-Have Picks from our luxury {displayTitle.toLowerCase()} designed for modern elegance and timeless grace.
-        </p>
+        <h1 className="text-4xl md:text-5xl font-serif text-theme-text mb-2 tracking-tight">{displayTitle}</h1>
       </div>
 
       <div className="max-w-[1600px] mx-auto px-6 md:px-12 py-12 flex flex-col lg:flex-row gap-12">

@@ -48,7 +48,7 @@ export function Footer({
              <div className="flex gap-4 pt-4">
                 {socialLinks.map(social => (
                    <a key={social.label} href={social.url} target="_blank" rel="noreferrer" className="text-theme-text-muted hover:text-primary transition-colors">
-                      <span className="text-[10px] uppercase font-bold tracking-widest">{social.label}</span>
+                      <span className="text-xs font-semibold">{social.label}</span>
                    </a>
                 ))}
              </div>
@@ -118,7 +118,7 @@ export function Footer({
         />
       )}
 
-      <div className="max-w-7xl mx-auto border-t border-theme-border mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] text-theme-text/40 uppercase tracking-widest">
+      <div className="max-w-7xl mx-auto border-t border-theme-border mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-theme-text/50">
         <div className="flex flex-col md:flex-row items-center gap-4">
           <span>{copyright}</span>
           {showPaymentIcons && (

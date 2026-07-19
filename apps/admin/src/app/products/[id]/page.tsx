@@ -71,13 +71,37 @@ export default function EditProductPage() {
     setSaving(true);
     try {
       const baseUrl = API_BASE;
+      
+      // Separate virtual collections (categories) from real collections
+      const realCollections = selectedCollectionIds.filter(id => !id.startsWith('virtual-'));
+      const virtualCategory = selectedCollectionIds.find(id => id.startsWith('virtual-'))?.replace('virtual-', '');
+      
+      // Clean payload to prevent Prisma errors
+      const {
+        id: _id,
+        _count,
+        reviews,
+        WishlistItem,
+        orderItems,
+        cartItems,
+        sizeGuide,
+        createdAt,
+        updatedAt,
+        bundleProducts,
+        ...cleanProduct
+      } = product;
+
+      if (virtualCategory) {
+        cleanProduct.category = virtualCategory;
+      }
+
       const res = await fetch(`${baseUrl}/products/${product.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ ...product, collections: selectedCollectionIds })
+        body: JSON.stringify({ ...cleanProduct, collections: realCollections })
       });
 
       if (res.ok) {
