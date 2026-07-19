@@ -363,7 +363,7 @@ export class LogisticsService {
       include: { items: { include: { variant: { include: { product: true } } } } }
     });
 
-    if (!order) throw new NotFoundException('We can\\'t find this order. Please check the order number.');
+    if (!order) throw new NotFoundException("We can't find this order. Please check the order number.");
 
     const address = order.shippingAddress as any;
     
