@@ -37,7 +37,7 @@ function CollectionPageContent({ handle }: { handle: string }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [activeFilterTab, setActiveFilterTab] = useState<"categories" | "size" | "availability" | "price" | "sort">("categories");
+  const [activeFilterTab, setActiveFilterTab] = useState<"size" | "availability" | "price" | "sort">("size");
   const [totalPages, setTotalPages] = useState(1);
   const limit = 12;
 
@@ -306,11 +306,8 @@ function CollectionPageContent({ handle }: { handle: string }) {
               </summary>
               <div className="flex flex-col gap-4 mt-6">
                  <label className="flex items-center gap-3 cursor-pointer group">
-                   <div className={`w-4 h-4 rounded-sm border flex items-center justify-center transition-colors ${inStockOnly ? 'bg-wine border-wine text-white' : 'border-theme-border bg-transparent'}`}>
-                     {inStockOnly && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="w-3 h-3"><polyline points="20 6 9 17 4 12"></polyline></svg>}
-                   </div>
+                   <input type="checkbox" className="w-4 h-4 cursor-pointer accent-wine" checked={inStockOnly} onChange={(e) => setInStockOnly(e.target.checked)} />
                    <span className="text-[10px] font-bold text-theme-text/80 group-hover:text-theme-text uppercase tracking-widest">In Stock Only</span>
-                   <input type="checkbox" className="hidden" checked={inStockOnly} onChange={(e) => setInStockOnly(e.target.checked)} />
                  </label>
               </div>
            </details>
@@ -387,7 +384,7 @@ function CollectionPageContent({ handle }: { handle: string }) {
             {isLoading && page === 1 ? (
               <div className="py-32 flex flex-col items-center justify-center gap-4">
                  <Loader2 className="animate-spin text-wine" size={32} />
-                 <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-theme-text/70">Hydrating the lookbook...</p>
+                 <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-theme-text/80">Hydrating the lookbook...</p>
               </div>
             ) : products.length > 0 ? (
               <>
@@ -422,10 +419,10 @@ function CollectionPageContent({ handle }: { handle: string }) {
               </>
             ) : (
               <div className="py-32 text-center space-y-4">
-                 <div className="w-16 h-16 bg-theme-text/5 rounded-full flex items-center justify-center mx-auto text-theme-text/70">
+                 <div className="w-16 h-16 bg-theme-text/5 rounded-full flex items-center justify-center mx-auto text-theme-text/80">
                     <ShoppingBag size={24} />
                  </div>
-                 <p className="text-[11px] uppercase font-bold text-theme-text/70 tracking-widest">No products found matching criteria</p>
+                 <p className="text-[11px] uppercase font-bold text-theme-text/80 tracking-widest">No products found matching criteria</p>
                  <button onClick={clearAllFilters} className="text-primary text-[10px] uppercase font-bold border-b border-primary pb-0.5">Reset Filters</button>
               </div>
             )}
@@ -460,7 +457,6 @@ function CollectionPageContent({ handle }: { handle: string }) {
                  {/* Left Tabs */}
                  <div className="w-[35%] bg-theme-bg border-r border-theme-border/10 overflow-y-auto">
                     {[
-                      { id: "categories", label: "Category" },
                       { id: "size", label: "Size" },
                       { id: "availability", label: "Stock" },
                       { id: "price", label: "Price" },
@@ -481,30 +477,6 @@ function CollectionPageContent({ handle }: { handle: string }) {
 
                  {/* Right Content */}
                  <div className="w-[65%] p-6 overflow-y-auto custom-scrollbar">
-                    {activeFilterTab === "categories" && (
-                       <div className="flex flex-col gap-4">
-                          <Link
-                            href={`/collections/all?${searchParams.toString()}`}
-                            onClick={() => setShowFilters(false)}
-                            className={`flex items-center justify-between text-xs font-bold transition-colors py-2 ${handle === 'all' ? 'text-wine' : 'text-theme-text'}`}
-                          >
-                            All Collections
-                            {handle === 'all' && <div className="w-2 h-2 bg-wine rounded-full" />}
-                          </Link>
-                          {collections.map(col => (
-                            <Link
-                              key={col.id}
-                              href={`/collections/${col.handle}?${searchParams.toString()}`}
-                              onClick={() => setShowFilters(false)}
-                              className={`flex items-center justify-between text-xs font-bold transition-colors py-2 ${handle === col.handle ? 'text-wine' : 'text-theme-text'}`}
-                            >
-                              {col.title}
-                              {handle === col.handle && <div className="w-2 h-2 bg-wine rounded-full" />}
-                            </Link>
-                          ))}
-                       </div>
-                    )}
-
                     {activeFilterTab === "sort" && (
                        <div className="flex flex-col gap-4">
                           {[
@@ -513,12 +485,9 @@ function CollectionPageContent({ handle }: { handle: string }) {
                             { value: "price_desc", label: "Price: High to Low" },
                             { value: "alphabetical", label: "Alphabetical A-Z" }
                           ].map(s => (
-                            <label key={s.value} className="flex items-center justify-between cursor-pointer group py-2">
+                            <label key={s.value} className="flex items-center gap-3 cursor-pointer group py-2">
+                              <input type="radio" name="sort" className="w-4 h-4 cursor-pointer accent-wine" checked={tempSort === s.value} onChange={() => setTempSort(s.value)} />
                               <span className={`text-xs font-bold ${tempSort === s.value ? 'text-wine' : 'text-theme-text'}`}>{s.label}</span>
-                              <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${tempSort === s.value ? 'border-wine' : 'border-theme-border'}`}>
-                                {tempSort === s.value && <div className="w-2 h-2 bg-wine rounded-full" />}
-                              </div>
-                              <input type="radio" name="sort" className="hidden" checked={tempSort === s.value} onChange={() => setTempSort(s.value)} />
                             </label>
                           ))}
                        </div>
@@ -527,12 +496,9 @@ function CollectionPageContent({ handle }: { handle: string }) {
                     {activeFilterTab === "size" && (
                        <div className="flex flex-col gap-4">
                           {["XS", "S", "M", "L", "XL", "XXL", "XXXL", "Free Size"].map(size => (
-                            <label key={size} className="flex items-center justify-between cursor-pointer group py-2">
+                            <label key={size} className="flex items-center gap-3 cursor-pointer group py-2">
+                              <input type="checkbox" className="w-4 h-4 cursor-pointer accent-wine" checked={tempSizes.includes(size)} onChange={() => toggleTempSize(size)} />
                               <span className={`text-xs font-bold ${tempSizes.includes(size) ? 'text-wine' : 'text-theme-text'}`}>{size}</span>
-                              <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${tempSizes.includes(size) ? 'bg-wine border-wine text-white' : 'border-theme-border bg-transparent'}`}>
-                                {tempSizes.includes(size) && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="w-3 h-3"><polyline points="20 6 9 17 4 12"></polyline></svg>}
-                              </div>
-                              <input type="checkbox" className="hidden" checked={tempSizes.includes(size)} onChange={() => toggleTempSize(size)} />
                             </label>
                           ))}
                        </div>
@@ -540,12 +506,9 @@ function CollectionPageContent({ handle }: { handle: string }) {
 
                     {activeFilterTab === "availability" && (
                        <div className="flex flex-col gap-4">
-                          <label className="flex items-center justify-between cursor-pointer group py-2">
+                          <label className="flex items-center gap-3 cursor-pointer group py-2">
+                            <input type="checkbox" className="w-4 h-4 cursor-pointer accent-wine" checked={tempInStock} onChange={(e) => setTempInStock(e.target.checked)} />
                             <span className={`text-xs font-bold ${tempInStock ? 'text-wine' : 'text-theme-text'}`}>In Stock Only</span>
-                            <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${tempInStock ? 'bg-wine border-wine text-white' : 'border-theme-border bg-transparent'}`}>
-                              {tempInStock && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="w-3 h-3"><polyline points="20 6 9 17 4 12"></polyline></svg>}
-                            </div>
-                            <input type="checkbox" className="hidden" checked={tempInStock} onChange={(e) => setTempInStock(e.target.checked)} />
                           </label>
                        </div>
                     )}
