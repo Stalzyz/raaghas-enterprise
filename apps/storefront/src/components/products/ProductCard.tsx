@@ -29,6 +29,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { isInWishlist, toggleWishlist } = useWishlist();
   const { addItem, toggleDrawer } = useCart();
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
+  const [showInlineVariants, setShowInlineVariants] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -80,8 +81,8 @@ export default function ProductCard({ product }: ProductCardProps) {
   const handleQuickBagClick = (e: React.MouseEvent) => {
     e.preventDefault();
     if (product.isOutOfStock) return;
-    if (hasVariants) {
-      openQuickView(e);
+    if (hasVariants && variants.length > 1) {
+      setShowInlineVariants(true);
     } else {
       const vId = product.variants?.[0]?.id || product.variantId || product.id;
       addItem({
@@ -97,6 +98,25 @@ export default function ProductCard({ product }: ProductCardProps) {
       });
       toggleDrawer(true);
     }
+  };
+
+  const handleInlineVariantAdd = (e: React.MouseEvent, variant: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (variant.inventory <= 0) return;
+    addItem({
+      id: `${product.id}-${variant.id}`,
+      variantId: variant.id,
+      title: product.title,
+      price: Number(variant.price),
+      quantity: 1,
+      maxStock: variant.inventory,
+      image: product.imageUrl,
+      taxInclusive: (product as any).taxInclusive,
+      handle: product.handle,
+    });
+    setShowInlineVariants(false);
+    toggleDrawer(true);
   };
 
   const handleQuickViewAdd = () => {
@@ -120,6 +140,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     <motion.div 
       initial={{ opacity: 1, y: 0 }}
       className="group relative flex flex-col"
+      onMouseLeave={() => setShowInlineVariants(false)}
     >
       <Link 
         href={`/products/${product.handle}`}
@@ -177,23 +198,66 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         {/* High-Luxury Quick Bag Overlay (Bottom) */}
         <div className="absolute inset-x-4 bottom-4 z-20 translate-y-4 group-hover/image:translate-y-0 opacity-0 group-hover/image:opacity-100 transition-all duration-700 ease-[0.16,1,0.3,1]">
-           <button 
-              onClick={handleQuickBagClick}
-              disabled={product.isOutOfStock}
-              className={`w-full py-4 backdrop-blur-md text-sm font-semibold shadow-[0_10px_30px_rgba(0,0,0,0.4)] transition-all rounded-xl flex items-center justify-center gap-2 border border-white/20 ${
-                product.isOutOfStock 
-                  ? 'bg-gray-900/70 text-gray-400 cursor-not-allowed' 
-                  : 'bg-black/70 text-white hover:bg-wine active:scale-95'
-              }`}
-           >
-               {product.isOutOfStock ? (
-                 <><ShoppingBag size={14} strokeWidth={2.5} /> Out of Stock</>
-               ) : hasVariants ? (
-                 <><SlidersHorizontal size={14} strokeWidth={2.5} /> <ShoppingBag size={14} strokeWidth={2.5} /></>
-               ) : (
-                 <><ShoppingBag size={14} strokeWidth={2.5} /> Quick Bag</>
-               )}
-           </button>
+          <AnimatePresence mode="wait">
+            {showInlineVariants ? (
+              <motion.div
+                key="variants"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                className="bg-black/80 backdrop-blur-md rounded-xl p-3 shadow-2xl border border-white/20"
+              >
+                <div className="flex justify-between items-center mb-2 px-1">
+                  <span className="text-white text-[10px] font-bold uppercase tracking-widest">Select Size</span>
+                  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowInlineVariants(false); }} className="text-white/60 hover:text-white transition-colors">
+                    <X size={12} />
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-1.5 justify-center">
+                  {variants.map(v => {
+                    const label = [v.option1Value, v.option2Value, v.option3Value].filter(Boolean).join(' ') || 'Default';
+                    return (
+                      <button 
+                        key={v.id}
+                        disabled={v.inventory <= 0}
+                        onClick={(e) => handleInlineVariantAdd(e, v)}
+                        className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${
+                          v.inventory <= 0 
+                            ? 'bg-white/5 text-white/30 cursor-not-allowed line-through' 
+                            : 'bg-white/10 text-white hover:bg-wine hover:text-white hover:shadow-lg'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            ) : (
+               <motion.button 
+                  key="quickbag"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={handleQuickBagClick}
+                  disabled={product.isOutOfStock}
+                  className={`w-full py-3.5 backdrop-blur-md text-[13px] font-semibold shadow-[0_10px_30px_rgba(0,0,0,0.4)] transition-all rounded-xl flex items-center justify-center gap-2 border border-white/20 ${
+                    product.isOutOfStock 
+                      ? 'bg-gray-900/70 text-gray-400 cursor-not-allowed' 
+                      : 'bg-black/70 text-white hover:bg-wine active:scale-95'
+                  }`}
+               >
+                   {product.isOutOfStock ? (
+                     <><ShoppingBag size={14} strokeWidth={2.5} /> Out of Stock</>
+                   ) : hasVariants && variants.length > 1 ? (
+                     <><SlidersHorizontal size={14} strokeWidth={2.5} /> Select Options</>
+                   ) : (
+                     <><ShoppingBag size={14} strokeWidth={2.5} /> Quick Bag</>
+                   )}
+               </motion.button>
+            )}
+          </AnimatePresence>
         </div>
       </Link>
 
