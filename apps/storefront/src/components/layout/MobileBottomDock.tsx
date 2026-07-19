@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Home, Search, ShoppingBag, User, Heart } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export function MobileBottomDock() {
   const pathname = usePathname();
@@ -19,6 +19,24 @@ export function MobileBottomDock() {
     { icon: Heart, label: "Wishlist", href: "/wishlist" },
     { icon: User, label: "Profile", href: "/account" },
   ];
+
+  const [isDockVisible, setIsDockVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      // Auto-hide dock when scrolling down, show when scrolling up
+      if (currentScrollY > lastScrollY && currentScrollY > 80) {
+        setIsDockVisible(false);
+      } else {
+        setIsDockVisible(true);
+      }
+      setLastScrollY(currentScrollY);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
 
   const handleNav = (item: any) => {
     if (item.isCart) {
@@ -41,12 +59,13 @@ export function MobileBottomDock() {
   };
 
   return (
-    <div className="fixed bottom-6 inset-x-6 z-[9998] md:hidden">
-      <motion.div 
-        initial={{ y: 100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="bg-theme-surface/80 backdrop-blur-xl border border-white/20 rounded-[2rem] p-2 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.15)]"
-      >
+    <div
+      className={`fixed bottom-0 inset-x-0 z-[9998] md:hidden transition-transform duration-300 ${
+        isDockVisible ? 'translate-y-0' : 'translate-y-full'
+      }`}
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+    >
+      <div className="bg-theme-surface/90 backdrop-blur-xl border-t border-white/10 px-4 py-2 flex items-center justify-between shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
         {navItems.map((item, idx) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
@@ -90,7 +109,7 @@ export function MobileBottomDock() {
             </button>
           );
         })}
-      </motion.div>
+      </div>
     </div>
   );
 }

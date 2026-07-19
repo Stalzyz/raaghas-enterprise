@@ -35,7 +35,7 @@ export function BackToTopFAB() {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.5, y: 20 }}
           onClick={scrollToTop}
-          className="fixed bottom-48 left-6 md:bottom-8 md:left-8 z-[9996] w-12 h-12 bg-theme-surface/80 backdrop-blur-md border border-theme-border text-theme-text rounded-full flex items-center justify-center shadow-xl hover:bg-primary hover:text-white transition-colors group"
+          className="fixed bottom-16 left-4 md:bottom-8 md:left-8 z-[9996] w-11 h-11 bg-theme-surface/80 backdrop-blur-md border border-theme-border text-theme-text rounded-full flex items-center justify-center shadow-xl hover:bg-primary hover:text-white transition-colors group"
         >
           <ArrowUp size={20} className="group-hover:-translate-y-1 transition-transform" />
         </motion.button>

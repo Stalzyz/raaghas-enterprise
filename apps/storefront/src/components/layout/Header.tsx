@@ -20,16 +20,20 @@ export function Header({ settings, theme: themeConfig, menu }: { settings: any, 
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [isScrolledDown, setIsScrolledDown] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      // Auto-hide only when scrolling down past 100px
+      const scrollingDown = currentScrollY > lastScrollY && currentScrollY > 60;
+      // Hide entire header when scrolling down past 100px
       if (currentScrollY > lastScrollY && currentScrollY > 100) {
         setIsVisible(false);
       } else {
         setIsVisible(true);
       }
+      // Collapse search bar earlier (after 60px) to reclaim space while reading
+      setIsScrolledDown(scrollingDown || currentScrollY > 60);
       setLastScrollY(currentScrollY);
     };
 
@@ -45,7 +49,7 @@ export function Header({ settings, theme: themeConfig, menu }: { settings: any, 
         </div>
       )}
       <nav className={`fixed ${themeConfig?.announcementBar ? 'top-8' : 'top-0'} left-0 right-0 z-[10000] bg-theme-bg/95 backdrop-blur-2xl border-b border-theme-border transition-transform duration-300 shadow-sm ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-        <div className="max-w-7xl mx-auto flex justify-between items-center py-6 px-6 md:px-12">
+        <div className="max-w-7xl mx-auto flex justify-between items-center py-3 md:py-6 px-6 md:px-12">
           {/* Mobile Menu Icon */}
           <div className="md:hidden flex-shrink-0">
             <button 
@@ -163,9 +167,17 @@ export function Header({ settings, theme: themeConfig, menu }: { settings: any, 
           </div>
         </div>
 
-        {/* Smart AI Search Bar */}
-        <div className="block max-w-4xl mx-auto px-4 md:px-6 pb-4 md:pb-6 mt-[-10px]">
-          <SmartSearchBar />
+        {/* Smart AI Search Bar — collapses on scroll to reclaim vertical space on mobile */}
+        <div
+          className={`overflow-hidden transition-all duration-300 ease-in-out md:max-h-24 md:opacity-100 md:pb-6 ${
+            isScrolledDown
+              ? 'max-h-0 opacity-0 pb-0'
+              : 'max-h-24 opacity-100 pb-4'
+          }`}
+        >
+          <div className="max-w-4xl mx-auto px-4 md:px-6">
+            <SmartSearchBar />
+          </div>
         </div>
       </nav>
 
