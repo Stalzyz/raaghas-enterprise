@@ -485,32 +485,38 @@ function CollectionPageContent({ handle }: { handle: string }) {
                             { value: "price_desc", label: "Price: High to Low" },
                             { value: "alphabetical", label: "Alphabetical A-Z" }
                           ].map(s => (
-                            <label key={s.value} onClick={(e) => { e.preventDefault(); setTempSort(s.value); }} className="flex items-center gap-3 cursor-pointer group py-2 w-full">
-                              <input type="radio" name="sort" className="w-4 h-4 cursor-pointer accent-wine pointer-events-none" checked={tempSort === s.value} readOnly />
-                              <span className={`text-xs font-bold flex-1 ${tempSort === s.value ? 'text-wine' : 'text-theme-text'}`}>{s.label}</span>
-                            </label>
+                            <button key={s.value} type="button" onClick={() => setTempSort(s.value)} className="flex items-center gap-3 py-3 w-full text-left">
+                              <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${tempSort === s.value ? 'border-wine' : 'border-theme-text/30'}`}>
+                                {tempSort === s.value && <span className="w-2.5 h-2.5 rounded-full bg-wine block" />}
+                              </span>
+                              <span className={`text-sm font-bold flex-1 ${tempSort === s.value ? 'text-wine' : 'text-theme-text'}`}>{s.label}</span>
+                            </button>
                           ))}
                        </div>
                     )}
 
                     {activeFilterTab === "size" && (
                        <div className="flex flex-col gap-4">
-                          {["XS", "S", "M", "L", "XL", "XXL", "XXXL", "Free Size"].map(size => (
-                            <label key={size} onClick={(e) => { e.preventDefault(); toggleTempSize(size); }} className="flex items-center gap-3 cursor-pointer group py-2 w-full">
-                              <input type="checkbox" className="w-4 h-4 cursor-pointer accent-wine pointer-events-none" checked={tempSizes.includes(size)} readOnly />
-                              <span className={`text-xs font-bold flex-1 ${tempSizes.includes(size) ? 'text-wine' : 'text-theme-text'}`}>{size}</span>
-                            </label>
-                          ))}
+                           {["XS", "S", "M", "L", "XL", "XXL", "XXXL", "Free Size"].map(size => (
+                             <button key={size} type="button" onClick={() => toggleTempSize(size)} className="flex items-center gap-3 py-3 w-full text-left">
+                               <span className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${tempSizes.includes(size) ? 'border-wine bg-wine' : 'border-theme-text/30 bg-transparent'}`}>
+                                 {tempSizes.includes(size) && <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" className="w-3 h-3"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                               </span>
+                               <span className={`text-sm font-bold flex-1 ${tempSizes.includes(size) ? 'text-wine' : 'text-theme-text'}`}>{size}</span>
+                             </button>
+                           ))}
                        </div>
                     )}
 
                     {activeFilterTab === "availability" && (
-                       <div className="flex flex-col gap-4">
-                          <label onClick={(e) => { e.preventDefault(); setTempInStock(!tempInStock); }} className="flex items-center gap-3 cursor-pointer group py-2 w-full">
-                            <input type="checkbox" className="w-4 h-4 cursor-pointer accent-wine pointer-events-none" checked={tempInStock} readOnly />
-                            <span className={`text-xs font-bold flex-1 ${tempInStock ? 'text-wine' : 'text-theme-text'}`}>In Stock Only</span>
-                          </label>
-                       </div>
+                        <div className="flex flex-col gap-4">
+                          <button type="button" onClick={() => setTempInStock(!tempInStock)} className="flex items-center gap-3 py-3 w-full text-left">
+                            <span className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${tempInStock ? 'border-wine bg-wine' : 'border-theme-text/30 bg-transparent'}`}>
+                              {tempInStock && <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" className="w-3 h-3"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                            </span>
+                            <span className={`text-sm font-bold flex-1 ${tempInStock ? 'text-wine' : 'text-theme-text'}`}>In Stock Only</span>
+                          </button>
+                        </div>
                     )}
 
                     {activeFilterTab === "price" && (
