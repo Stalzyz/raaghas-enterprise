@@ -305,9 +305,9 @@ function CollectionPageContent({ handle }: { handle: string }) {
                  <ChevronDown size={14} className="text-theme-text/80 transition-transform group-open:rotate-180" />
               </summary>
               <div className="flex flex-col gap-4 mt-6">
-                 <label className="flex items-center gap-3 cursor-pointer group">
-                   <input type="checkbox" className="w-4 h-4 cursor-pointer accent-wine" checked={inStockOnly} onChange={(e) => setInStockOnly(e.target.checked)} />
-                   <span className="text-[10px] font-bold text-theme-text/80 group-hover:text-theme-text uppercase tracking-widest">In Stock Only</span>
+                 <label onClick={(e) => { e.preventDefault(); setInStockOnly(!inStockOnly); }} className="flex items-center gap-3 cursor-pointer group">
+                   <input type="checkbox" className="w-4 h-4 cursor-pointer accent-wine pointer-events-none" checked={inStockOnly} readOnly />
+                   <span className="text-[10px] font-bold text-theme-text/80 group-hover:text-theme-text uppercase tracking-widest flex-1">In Stock Only</span>
                  </label>
               </div>
            </details>
@@ -485,9 +485,9 @@ function CollectionPageContent({ handle }: { handle: string }) {
                             { value: "price_desc", label: "Price: High to Low" },
                             { value: "alphabetical", label: "Alphabetical A-Z" }
                           ].map(s => (
-                            <label key={s.value} className="flex items-center gap-3 cursor-pointer group py-2">
-                              <input type="radio" name="sort" className="w-4 h-4 cursor-pointer accent-wine" checked={tempSort === s.value} onChange={() => setTempSort(s.value)} />
-                              <span className={`text-xs font-bold ${tempSort === s.value ? 'text-wine' : 'text-theme-text'}`}>{s.label}</span>
+                            <label key={s.value} onClick={(e) => { e.preventDefault(); setTempSort(s.value); }} className="flex items-center gap-3 cursor-pointer group py-2 w-full">
+                              <input type="radio" name="sort" className="w-4 h-4 cursor-pointer accent-wine pointer-events-none" checked={tempSort === s.value} readOnly />
+                              <span className={`text-xs font-bold flex-1 ${tempSort === s.value ? 'text-wine' : 'text-theme-text'}`}>{s.label}</span>
                             </label>
                           ))}
                        </div>
@@ -496,9 +496,9 @@ function CollectionPageContent({ handle }: { handle: string }) {
                     {activeFilterTab === "size" && (
                        <div className="flex flex-col gap-4">
                           {["XS", "S", "M", "L", "XL", "XXL", "XXXL", "Free Size"].map(size => (
-                            <label key={size} className="flex items-center gap-3 cursor-pointer group py-2">
-                              <input type="checkbox" className="w-4 h-4 cursor-pointer accent-wine" checked={tempSizes.includes(size)} onChange={() => toggleTempSize(size)} />
-                              <span className={`text-xs font-bold ${tempSizes.includes(size) ? 'text-wine' : 'text-theme-text'}`}>{size}</span>
+                            <label key={size} onClick={(e) => { e.preventDefault(); toggleTempSize(size); }} className="flex items-center gap-3 cursor-pointer group py-2 w-full">
+                              <input type="checkbox" className="w-4 h-4 cursor-pointer accent-wine pointer-events-none" checked={tempSizes.includes(size)} readOnly />
+                              <span className={`text-xs font-bold flex-1 ${tempSizes.includes(size) ? 'text-wine' : 'text-theme-text'}`}>{size}</span>
                             </label>
                           ))}
                        </div>
@@ -506,9 +506,9 @@ function CollectionPageContent({ handle }: { handle: string }) {
 
                     {activeFilterTab === "availability" && (
                        <div className="flex flex-col gap-4">
-                          <label className="flex items-center gap-3 cursor-pointer group py-2">
-                            <input type="checkbox" className="w-4 h-4 cursor-pointer accent-wine" checked={tempInStock} onChange={(e) => setTempInStock(e.target.checked)} />
-                            <span className={`text-xs font-bold ${tempInStock ? 'text-wine' : 'text-theme-text'}`}>In Stock Only</span>
+                          <label onClick={(e) => { e.preventDefault(); setTempInStock(!tempInStock); }} className="flex items-center gap-3 cursor-pointer group py-2 w-full">
+                            <input type="checkbox" className="w-4 h-4 cursor-pointer accent-wine pointer-events-none" checked={tempInStock} readOnly />
+                            <span className={`text-xs font-bold flex-1 ${tempInStock ? 'text-wine' : 'text-theme-text'}`}>In Stock Only</span>
                           </label>
                        </div>
                     )}
@@ -535,7 +535,7 @@ function CollectionPageContent({ handle }: { handle: string }) {
               </div>
 
               {/* Bottom Sticky Action Bar */}
-              <div className="p-4 pb-12 border-t border-theme-border/10 bg-theme-surface z-20 flex gap-4 shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
+              <div className="p-4 pb-28 border-t border-theme-border/10 bg-theme-surface z-20 flex gap-4 shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
                  <button onClick={() => { setTempSizes([]); setTempInStock(false); setTempMinPrice(0); setTempMaxPrice(10000); setTempSort("newest"); }} className="flex-1 bg-white border border-theme-border text-wine py-4 text-xs font-bold hover:bg-theme-bg transition-all rounded-xl shadow-sm">
                     Clear
                  </button>
