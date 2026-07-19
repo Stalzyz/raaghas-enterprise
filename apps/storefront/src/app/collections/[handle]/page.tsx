@@ -8,7 +8,6 @@ import { getAssetUrl } from "@/lib/utils/assets";
 import Link from "next/link";
 import ProductCard from "@/components/products/ProductCard";
 import { ChevronDown, Filter, X, Loader2, SlidersHorizontal, ShoppingBag } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { useDebounce } from "@/hooks/useDebounce";
 import { safeFetch } from "@/lib/safe-fetch";
 import Breadcrumb from "@/components/layout/Breadcrumb";
@@ -430,24 +429,25 @@ function CollectionPageContent({ handle }: { handle: string }) {
         </div>
       </div>
 
-      {/* Mobile Filter Sidebar Drawer */}
-      <AnimatePresence>
-        {showFilters && (
-          <div className="fixed inset-0 z-[100] flex items-end">
-            <motion.div
-              key="backdrop"
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setShowFilters(false)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            />
-            <motion.div
-              key="sheet"
-              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="relative w-full h-[85vh] bg-theme-surface rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] flex flex-col z-10 overflow-hidden"
-            >
+      {/* Mobile Filter Drawer - Pure CSS, NO framer-motion (avoids pointer capture bug on iOS) */}
+      <div
+        className={`fixed inset-0 z-[200] transition-opacity duration-300 ${showFilters ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+      >
+        {/* Backdrop */}
+        <div
+          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          onClick={() => setShowFilters(false)}
+        />
+
+        {/* Sheet */}
+        <div
+          style={{ touchAction: 'pan-y' }}
+          className={`absolute bottom-0 left-0 right-0 h-[85vh] bg-theme-surface rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.15)] flex flex-col overflow-hidden transition-transform duration-300 ease-out ${
+            showFilters ? 'translate-y-0' : 'translate-y-full'
+          }`}
+        >
               {/* Header */}
-              <div className="flex justify-between items-center p-6 pb-4 border-b border-theme-border/10 bg-theme-surface z-20">
+              <div className="flex justify-between items-center p-6 pb-4 border-b border-theme-border/10 bg-theme-surface shrink-0">
                  <h2 className="text-xl font-bold font-serif text-theme-text">Filters</h2>
                  <button onClick={() => setShowFilters(false)} className="p-2 bg-theme-bg rounded-full text-theme-text/80 hover:text-wine hover:bg-wine/10 transition-colors"><X size={18} /></button>
               </div>
@@ -476,47 +476,47 @@ function CollectionPageContent({ handle }: { handle: string }) {
                  </div>
 
                  {/* Right Content */}
-                 <div className="w-[65%] p-6 overflow-y-auto custom-scrollbar">
+                 <div className="w-[65%] p-6 overflow-y-auto">
                     {activeFilterTab === "sort" && (
-                       <div className="flex flex-col gap-4">
+                       <div className="flex flex-col">
                           {[
                             { value: "newest", label: "Newest First" },
                             { value: "price_asc", label: "Price: Low to High" },
                             { value: "price_desc", label: "Price: High to Low" },
                             { value: "alphabetical", label: "Alphabetical A-Z" }
                           ].map(s => (
-                            <button key={s.value} type="button" onClick={() => setTempSort(s.value)} className="flex items-center gap-3 py-3 w-full text-left">
+                            <button key={s.value} type="button" onClick={() => setTempSort(s.value)} className="flex items-center gap-3 py-4 w-full text-left border-b border-theme-border/5 last:border-0">
                               <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${tempSort === s.value ? 'border-wine' : 'border-theme-text/30'}`}>
                                 {tempSort === s.value && <span className="w-2.5 h-2.5 rounded-full bg-wine block" />}
                               </span>
-                              <span className={`text-sm font-bold flex-1 ${tempSort === s.value ? 'text-wine' : 'text-theme-text'}`}>{s.label}</span>
+                              <span className={`text-sm font-semibold flex-1 ${tempSort === s.value ? 'text-wine' : 'text-theme-text'}`}>{s.label}</span>
                             </button>
                           ))}
                        </div>
                     )}
 
                     {activeFilterTab === "size" && (
-                       <div className="flex flex-col gap-4">
-                           {["XS", "S", "M", "L", "XL", "XXL", "XXXL", "Free Size"].map(size => (
-                             <button key={size} type="button" onClick={() => toggleTempSize(size)} className="flex items-center gap-3 py-3 w-full text-left">
-                               <span className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${tempSizes.includes(size) ? 'border-wine bg-wine' : 'border-theme-text/30 bg-transparent'}`}>
-                                 {tempSizes.includes(size) && <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" className="w-3 h-3"><polyline points="20 6 9 17 4 12"></polyline></svg>}
-                               </span>
-                               <span className={`text-sm font-bold flex-1 ${tempSizes.includes(size) ? 'text-wine' : 'text-theme-text'}`}>{size}</span>
-                             </button>
-                           ))}
+                       <div className="flex flex-col">
+                          {["XS", "S", "M", "L", "XL", "XXL", "XXXL", "Free Size"].map(size => (
+                            <button key={size} type="button" onClick={() => toggleTempSize(size)} className="flex items-center gap-3 py-4 w-full text-left border-b border-theme-border/5 last:border-0">
+                              <span className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${tempSizes.includes(size) ? 'border-wine bg-wine' : 'border-theme-text/30 bg-transparent'}`}>
+                                {tempSizes.includes(size) && <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" className="w-3 h-3"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                              </span>
+                              <span className={`text-sm font-semibold flex-1 ${tempSizes.includes(size) ? 'text-wine' : 'text-theme-text'}`}>{size}</span>
+                            </button>
+                          ))}
                        </div>
                     )}
 
                     {activeFilterTab === "availability" && (
-                        <div className="flex flex-col gap-4">
-                          <button type="button" onClick={() => setTempInStock(!tempInStock)} className="flex items-center gap-3 py-3 w-full text-left">
-                            <span className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${tempInStock ? 'border-wine bg-wine' : 'border-theme-text/30 bg-transparent'}`}>
-                              {tempInStock && <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" className="w-3 h-3"><polyline points="20 6 9 17 4 12"></polyline></svg>}
-                            </span>
-                            <span className={`text-sm font-bold flex-1 ${tempInStock ? 'text-wine' : 'text-theme-text'}`}>In Stock Only</span>
-                          </button>
-                        </div>
+                       <div className="flex flex-col">
+                         <button type="button" onClick={() => setTempInStock(!tempInStock)} className="flex items-center gap-3 py-4 w-full text-left border-b border-theme-border/5">
+                           <span className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${tempInStock ? 'border-wine bg-wine' : 'border-theme-text/30 bg-transparent'}`}>
+                             {tempInStock && <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" className="w-3 h-3"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                           </span>
+                           <span className={`text-sm font-semibold flex-1 ${tempInStock ? 'text-wine' : 'text-theme-text'}`}>In Stock Only</span>
+                         </button>
+                       </div>
                     )}
 
                     {activeFilterTab === "price" && (
@@ -541,7 +541,7 @@ function CollectionPageContent({ handle }: { handle: string }) {
               </div>
 
               {/* Bottom Sticky Action Bar */}
-              <div className="p-4 pb-28 border-t border-theme-border/10 bg-theme-surface z-20 flex gap-4 shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
+              <div className="p-4 pb-safe border-t border-theme-border/10 bg-theme-surface shrink-0 flex gap-4 shadow-[0_-10px_20px_rgba(0,0,0,0.05)]" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
                  <button onClick={() => { setTempSizes([]); setTempInStock(false); setTempMinPrice(0); setTempMaxPrice(10000); setTempSort("newest"); }} className="flex-1 bg-white border border-theme-border text-wine py-4 text-xs font-bold hover:bg-theme-bg transition-all rounded-xl shadow-sm">
                     Clear
                  </button>
@@ -549,10 +549,8 @@ function CollectionPageContent({ handle }: { handle: string }) {
                     Show Products
                  </button>
               </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+        </div>
+      </div>
     </div>
   );
 }
