@@ -28,7 +28,7 @@
 
 /* ─── Dark Mode ─────────────────────────────────────────────────────────── */
 .dark {
-  --primary:        #8C1C2A;
+  --primary:        #C94060;
   --bg:             #0F0F10;
   --surface:        #1A1A1C;
   --text-primary:   #F5F5F5;
@@ -38,9 +38,9 @@
   --glass-border:   rgba(255, 255, 255, 0.1);
 
   /* Aliases */
-  --wine:       #8E1F2E;
-  --wine-light: #A3293B;
-  --wine-dark:  #6D0F1B;
+  --wine:       #C94060;
+  --wine-light: #E05070;
+  --wine-dark:  #A03050;
 }
 
 /* Force fix hardcoded colors in Dark Mode to ensure contrast */
