@@ -128,13 +128,19 @@ export class AnalyticsService {
 
   async getTaxReports(from?: string, to?: string) {
     const startDate = from ? new Date(from) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    const endDate = to ? new Date(to) : new Date();
+    let endDate = to ? new Date(to) : new Date();
+    if (to) {
+      endDate.setHours(23, 59, 59, 999);
+    }
 
     const orders = await this.prisma.order.findMany({
       where: {
         createdAt: { gte: startDate, lte: endDate },
-        financialStatus: 'paid',
-        status: { not: 'CANCELLED' }
+        status: { not: 'CANCELLED' },
+        OR: [
+          { financialStatus: { in: ['paid', 'partially_refunded', 'refunded'] } },
+          { status: 'DELIVERED' }
+        ]
       },
     });
 
