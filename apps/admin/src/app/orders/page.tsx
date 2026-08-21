@@ -25,7 +25,12 @@ import {
   Package,
   AlertTriangle,
   Users,
-  Plus
+  Plus,
+  Camera,
+  Columns,
+  LayoutList,
+  Zap,
+  ZoomIn
 } from "lucide-react";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
 import { motion, AnimatePresence } from "framer-motion";
@@ -34,6 +39,9 @@ import { InvoiceModal } from "@/components/modals/InvoiceModal";
 import { BulkFulfillModal } from "@/components/modals/BulkFulfillModal";
 import { PackingSlipModal } from "@/components/modals/PackingSlipModal";
 import { OrderDetailView } from "@/components/orders/OrderDetailView";
+import { CameraScannerModal } from "@/components/modals/CameraScannerModal";
+import { ImageLightboxModal } from "@/components/modals/ImageLightboxModal";
+import { SplitOrderView } from "@/components/orders/SplitOrderView";
 import { format } from "date-fns";
 import Link from "next/link";
 
@@ -95,6 +103,13 @@ export default function OrdersPage() {
   const [packingSlipOrders, setPackingSlipOrders] = useState<any[]>([]);
   const [isPackingSlipOpen, setIsPackingSlipOpen] = useState(false);
   const [storeSettings, setStoreSettings] = useState<any>(null);
+
+  // Tablet Advanced Features State
+  const [viewMode, setViewMode] = useState<'table' | 'split'>('table');
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [lightboxImageUrl, setLightboxImageUrl] = useState<string | null>(null);
+  const [lightboxTitle, setLightboxTitle] = useState<string | undefined>();
+  const [selectedSplitOrderId, setSelectedSplitOrderId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token) return;
@@ -349,30 +364,54 @@ export default function OrdersPage() {
     <div className="flex flex-col h-screen overflow-hidden bg-[#F9FAFB]">
       
       {/* ─── HEADER ─── */}
-      <header className="bg-white border-b border-gray-200 px-8 py-6 flex-shrink-0">
-        <div className="flex justify-between items-center">
+      <header className="bg-white border-b border-gray-200 px-4 md:px-6 lg:px-8 py-4 md:py-6 flex-shrink-0">
+        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Orders Control Center</h1>
-            <p className="text-sm text-gray-500 mt-1">Manage and fulfill your luxury collections</p>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">Orders Control Center</h1>
+            <p className="text-xs md:text-sm text-gray-500 mt-0.5">Manage and fulfill your luxury collections</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 md:gap-3">
+            {/* View Mode Toggle */}
+            <div className="flex bg-gray-100 p-1 rounded-lg">
+              <button
+                onClick={() => setViewMode('table')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
+                  viewMode === 'table' ? 'bg-white text-wine shadow-xs' : 'text-gray-500 hover:text-gray-900'
+                }`}
+                title="Standard Card/Table View"
+              >
+                <LayoutList size={14} />
+                <span className="hidden sm:inline">Table</span>
+              </button>
+              <button
+                onClick={() => setViewMode('split')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
+                  viewMode === 'split' ? 'bg-white text-wine shadow-xs' : 'text-gray-500 hover:text-gray-900'
+                }`}
+                title="Split Master-Detail View"
+              >
+                <Columns size={14} />
+                <span className="hidden sm:inline">Split View</span>
+              </button>
+            </div>
+
             <button 
               onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${showFilters ? 'bg-wine text-white shadow-lg' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'}`}
+              className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-semibold transition-all ${showFilters ? 'bg-wine text-white shadow-md' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'}`}
             >
               <Filter size={16} />
-              Advanced Filters
+              Filters
             </button>
             <button 
               onClick={handleExportCSV}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-all"
+              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-xs md:text-sm font-semibold hover:bg-gray-50 transition-all"
             >
               <Download size={16} />
               Export
             </button>
             <Link 
               href="/orders/new"
-              className="flex items-center gap-2 px-4 py-2 bg-charcoal text-white rounded-lg text-sm font-bold uppercase tracking-widest hover:bg-wine transition-all shadow-sm"
+              className="flex items-center gap-2 px-4 py-2 bg-charcoal text-white rounded-lg text-xs md:text-sm font-bold uppercase tracking-widest hover:bg-wine transition-all shadow-xs"
             >
               <Plus size={16} />
               Draft Order
@@ -381,20 +420,20 @@ export default function OrdersPage() {
         </div>
 
         {/* Quick Stats Strip */}
-        <div className="grid grid-cols-4 gap-6 mt-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mt-4 md:mt-6">
           {[
             { label: "Total Orders", value: stats.total, icon: ShoppingBag, color: "text-blue-600", bg: "bg-blue-50" },
             { label: "Revenue", value: `₹${stats.revenue.toLocaleString()}`, icon: CreditCard, color: "text-green-600", bg: "bg-green-50" },
-            { label: "Awaiting Fulfillment", value: stats.unfulfilled, icon: Package, color: "text-amber-600", bg: "bg-amber-50" },
+            { label: "Unfulfilled", value: stats.unfulfilled, icon: Package, color: "text-amber-600", bg: "bg-amber-50" },
             { label: "High Risk Alerts", value: stats.highRisk, icon: AlertTriangle, color: "text-red-600", bg: "bg-red-50" },
           ].map((stat, i) => (
-            <div key={i} className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-gray-50/50">
-              <div className={`${stat.bg} ${stat.color} p-2.5 rounded-lg`}>
-                <stat.icon size={20} />
+            <div key={i} className="flex items-center gap-3 p-3 md:p-4 rounded-xl border border-gray-100 bg-gray-50/50">
+              <div className={`${stat.bg} ${stat.color} p-2 md:p-2.5 rounded-lg flex-shrink-0`}>
+                <stat.icon size={18} />
               </div>
-              <div>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{stat.label}</p>
-                <p className="text-lg font-bold text-gray-900">{stat.value}</p>
+              <div className="min-w-0">
+                <p className="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest truncate">{stat.label}</p>
+                <p className="text-base md:text-lg font-bold text-gray-900 truncate">{stat.value}</p>
               </div>
             </div>
           ))}
@@ -405,43 +444,100 @@ export default function OrdersPage() {
       <div className="flex-1 flex overflow-hidden">
         
         {/* Table Area */}
-        <main className={`flex-1 overflow-auto p-8 relative transition-all duration-300 w-full`}>
+        <main className={`flex-1 overflow-auto p-4 md:p-6 lg:p-8 relative transition-all duration-300 w-full`}>
           
-          {/* Tabs & Search */}
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-8">
-            <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
-              <div className="flex bg-gray-100/80 p-1 rounded-xl overflow-x-auto no-scrollbar">
-                {[
-                  { key: "ALL", label: "All Orders" },
-                  { key: "CONFIRMED", label: "Confirmed" },
-                  { key: "PAYMENT_PENDING", label: "Pending" },
-                  { key: "ABANDONED", label: "Abandoned" },
-                  { key: "PROCESSING", label: "Processing" },
-                  { key: "SHIPPED", label: "Shipped" },
-                  { key: "DELIVERED", label: "Delivered" },
-                  { key: "CANCELLED", label: "Cancelled" },
-                  { key: "ACTIVE", label: "Active Orders" },
-                ].map(({ key, label }) => (
+          {/* 1-Tap Filter Preset Pills */}
+          <div className="flex items-center gap-2 mb-4 overflow-x-auto no-scrollbar pb-1">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 flex items-center gap-1 flex-shrink-0">
+              <Zap size={12} className="text-amber-500" /> Quick Presets:
+            </span>
+            <button
+              onClick={() => {
+                const todayStr = format(new Date(), 'yyyy-MM-dd');
+                setFilters(prev => ({ ...prev, dateFrom: todayStr, dateTo: todayStr }));
+              }}
+              className="px-3 py-1 bg-white border border-gray-200 rounded-full text-[10px] font-bold uppercase tracking-wider text-gray-700 hover:bg-wine hover:text-white transition-all flex-shrink-0"
+            >
+              Today
+            </button>
+            <button
+              onClick={() => setFilters(prev => ({ ...prev, fulfillmentStatus: 'unfulfilled' }))}
+              className="px-3 py-1 bg-amber-50 border border-amber-200 rounded-full text-[10px] font-bold uppercase tracking-wider text-amber-700 hover:bg-amber-600 hover:text-white transition-all flex-shrink-0"
+            >
+              Unfulfilled
+            </button>
+            <button
+              onClick={() => setFilters(prev => ({ ...prev, riskLevel: 'high' }))}
+              className="px-3 py-1 bg-red-50 border border-red-200 rounded-full text-[10px] font-bold uppercase tracking-wider text-red-700 hover:bg-red-600 hover:text-white transition-all flex-shrink-0"
+            >
+              High Risk
+            </button>
+            <button
+              onClick={() => setFilters(prev => ({ ...prev, financialStatus: 'pending' }))}
+              className="px-3 py-1 bg-blue-50 border border-blue-200 rounded-full text-[10px] font-bold uppercase tracking-wider text-blue-700 hover:bg-blue-600 hover:text-white transition-all flex-shrink-0"
+            >
+              Payment Pending
+            </button>
+            <button
+              onClick={() => setFilters({ search: "", source: "", riskLevel: "", dateFrom: "", dateTo: "", financialStatus: "", fulfillmentStatus: "" })}
+              className="px-3 py-1 bg-gray-100 rounded-full text-[10px] font-bold uppercase tracking-wider text-gray-500 hover:bg-gray-200 transition-all flex-shrink-0"
+            >
+              Clear Filters
+            </button>
+          </div>
+
+          {/* Render Split View or Normal View */}
+          {viewMode === 'split' ? (
+            <SplitOrderView
+              orders={orders}
+              selectedOrderId={selectedSplitOrderId}
+              onSelectOrder={(id) => setSelectedSplitOrderId(id)}
+              isLoading={isLoading}
+            />
+          ) : (
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-8">
+              <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div className="flex bg-gray-100/80 p-1 rounded-xl overflow-x-auto no-scrollbar">
+                  {[
+                    { key: "ALL", label: "All Orders" },
+                    { key: "CONFIRMED", label: "Confirmed" },
+                    { key: "PAYMENT_PENDING", label: "Pending" },
+                    { key: "ABANDONED", label: "Abandoned" },
+                    { key: "PROCESSING", label: "Processing" },
+                    { key: "SHIPPED", label: "Shipped" },
+                    { key: "DELIVERED", label: "Delivered" },
+                    { key: "CANCELLED", label: "Cancelled" },
+                    { key: "ACTIVE", label: "Active Orders" },
+                  ].map(({ key, label }) => (
+                    <button
+                      key={key}
+                      onClick={() => setActiveTab(key)}
+                      className={`px-4 py-2 whitespace-nowrap rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${activeTab === key ? 'bg-white text-wine shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <div className="relative w-full md:w-80 flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                    <input 
+                      type="text" 
+                      placeholder="ID, Customer, Email..."
+                      className="w-full bg-gray-50 border-none rounded-xl pl-11 pr-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-wine/10 transition-all outline-none"
+                      value={filters.search}
+                      onChange={(e) => setFilters({...filters, search: e.target.value})}
+                    />
+                  </div>
                   <button
-                    key={key}
-                    onClick={() => setActiveTab(key)}
-                    className={`px-4 py-2 whitespace-nowrap rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${activeTab === key ? 'bg-white text-wine shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                    onClick={() => setIsScannerOpen(true)}
+                    className="p-2.5 bg-gray-100 hover:bg-wine hover:text-white text-gray-600 rounded-xl transition-all"
+                    title="Scan Barcode / QR Code"
                   >
-                    {label}
+                    <Camera size={18} />
                   </button>
-                ))}
+                </div>
               </div>
-              <div className="relative w-full md:w-80">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                <input 
-                  type="text" 
-                  placeholder="ID, Customer, Email..."
-                  className="w-full bg-gray-50 border-none rounded-xl pl-11 pr-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-wine/10 transition-all outline-none"
-                  value={filters.search}
-                  onChange={(e) => setFilters({...filters, search: e.target.value})}
-                />
-              </div>
-            </div>
 
             {/* Table */}
             <div className="overflow-x-auto">
@@ -540,7 +636,18 @@ export default function OrdersPage() {
                               ? (rawUrl.startsWith('http') ? rawUrl : `${apiBase}${rawUrl}`)
                               : null;
                             return (
-                              <div key={idx} className="relative w-8 h-8 rounded-md bg-gray-100 overflow-hidden border border-gray-200" title={item.variant?.product?.title || item.productName}>
+                              <div 
+                                key={idx} 
+                                onClick={(e) => {
+                                  if (imageUrl) {
+                                    e.stopPropagation();
+                                    setLightboxImageUrl(imageUrl);
+                                    setLightboxTitle(item.variant?.product?.title || item.productName);
+                                  }
+                                }}
+                                className="relative w-8 h-8 rounded-md bg-gray-100 overflow-hidden border border-gray-200 cursor-zoom-in hover:scale-110 transition-transform" 
+                                title="Tap to Inspect Image"
+                              >
                                 {imageUrl ? (
                                   <img 
                                     src={imageUrl} 
@@ -632,6 +739,7 @@ export default function OrdersPage() {
               </table>
             </div>
           </div>
+        )}
           
           {/* Floating Bulk Action Bar */}
           <AnimatePresence>
@@ -827,6 +935,20 @@ export default function OrdersPage() {
         onClose={() => setIsPackingSlipOpen(false)}
         orders={packingSlipOrders}
         storeSettings={storeSettings}
+      />
+
+      {/* Camera Barcode Scanner Modal */}
+      <CameraScannerModal
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onScanResult={(code) => setFilters(prev => ({ ...prev, search: code }))}
+      />
+
+      {/* Image QC Lightbox Modal */}
+      <ImageLightboxModal
+        imageUrl={lightboxImageUrl}
+        title={lightboxTitle}
+        onClose={() => setLightboxImageUrl(null)}
       />
     </div>
   );
