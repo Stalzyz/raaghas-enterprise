@@ -8,7 +8,7 @@ set -euo pipefail
 
 VPS_IP="72.61.231.187"
 REMOTE_DIR="/var/www/raaghas_new"
-SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=30"
+SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=30 -o PubkeyAuthentication=no"
 
 echo "💎 RAAGHAS MASTER DEPLOYMENT v9.0 (rsync mode)"
 echo "════════════════════════════════════════════════"

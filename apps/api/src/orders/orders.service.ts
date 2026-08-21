@@ -86,16 +86,32 @@ export class OrdersService {
     });
   }
 
+  private buildOrderLookupWhere(id: string) {
+    const cleanId = id.trim().replace(/^#/, '');
+    const isNumeric = /^\d+$/.test(cleanId);
+    const parsedNum = isNumeric ? parseInt(cleanId, 10) : null;
+
+    const OR: any[] = [
+      { id: id },
+      { id: cleanId },
+      { formattedOrderNumber: id },
+      { formattedOrderNumber: cleanId },
+      { formattedOrderNumber: { contains: cleanId, mode: 'insensitive' } },
+    ];
+
+    if (parsedNum !== null) {
+      OR.push({ orderNumber: parsedNum });
+      if (parsedNum > 1000) {
+        OR.push({ orderNumber: parsedNum - 1000 });
+      }
+    }
+
+    return { OR };
+  }
+
   async getOrderById(id: string, user?: { id: string; email: string; role?: string }) {
-    const isNumeric = /^\d+$/.test(id);
     const order = await this.prisma.order.findFirst({
-      where: {
-        OR: [
-          ...(isNumeric ? [{ orderNumber: parseInt(id, 10) }] : []),
-          { id },
-          { formattedOrderNumber: id }
-        ]
-      },
+      where: this.buildOrderLookupWhere(id),
       include: {
         items: {
           include: {
@@ -126,15 +142,8 @@ export class OrdersService {
   }
 
   async trackGuestOrder(orderId: string, email: string) {
-    const isNumeric = /^\d+$/.test(orderId);
     const order = await this.prisma.order.findFirst({
-      where: {
-        OR: [
-          ...(isNumeric ? [{ orderNumber: parseInt(orderId, 10) }] : []),
-          { id: orderId },
-          { formattedOrderNumber: orderId }
-        ]
-      },
+      where: this.buildOrderLookupWhere(orderId),
       include: {
         items: {
           include: {
@@ -156,8 +165,8 @@ export class OrdersService {
     return order;
   }
 
-  async getAdminOrders(filters: {
-    status?: OrderStatus;
+  private buildOrderWhereClause(filters: {
+    status?: string;
     excludeStatus?: string;
     financialStatus?: string;
     fulfillmentStatus?: string;
@@ -171,41 +180,94 @@ export class OrdersService {
   }) {
     const where: any = {};
 
-    // 1. Exact Matches
-    if (filters.status) where.status = filters.status as any;
-    if (filters.excludeStatus) where.status = { not: filters.excludeStatus as any };
+    // 1. Status Handling (including virtual status ABANDONED)
+    if (filters.status) {
+      if (filters.status === 'ABANDONED') {
+        where.status = 'PAYMENT_PENDING';
+        const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000);
+        where.createdAt = { lte: thirtyMinsAgo };
+      } else if (filters.status === 'PAYMENT_PENDING') {
+        where.status = 'PAYMENT_PENDING';
+        const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000);
+        where.createdAt = { gte: thirtyMinsAgo };
+      } else {
+        where.status = filters.status as any;
+      }
+    }
+
+    if (filters.excludeStatus) {
+      where.status = { not: filters.excludeStatus as any };
+    }
+
     if (filters.financialStatus) where.financialStatus = filters.financialStatus;
     if (filters.fulfillmentStatus) where.fulfillmentStatus = filters.fulfillmentStatus;
     if (filters.source) where.source = filters.source;
     if (filters.riskLevel) where.riskLevel = filters.riskLevel;
     if (filters.staffId) where.staffId = filters.staffId;
 
-    // 2. Tag Filter (Array intersection)
+    // 2. Tag Filter
     if (filters.tag) {
       where.tags = { has: filters.tag };
     }
 
-    // 3. Date Range
+    // 3. Date Range Normalization
     if (filters.dateFrom || filters.dateTo) {
-      where.createdAt = {};
-      if (filters.dateFrom) where.createdAt.gte = new Date(filters.dateFrom);
+      where.createdAt = where.createdAt || {};
+      if (filters.dateFrom) {
+        const fromDate = new Date(filters.dateFrom);
+        fromDate.setUTCHours(0, 0, 0, 0);
+        where.createdAt.gte = fromDate;
+      }
       if (filters.dateTo) {
-        const to = new Date(filters.dateTo);
-        to.setUTCHours(23, 59, 59, 999);
-        where.createdAt.lte = to;
+        const toDate = new Date(filters.dateTo);
+        toDate.setUTCHours(23, 59, 59, 999);
+        where.createdAt.lte = toDate;
       }
     }
 
-    // 4. Global Search (Case-Insensitive)
+    // 4. Global Search (Case-Insensitive & Multi-Field)
     if (filters.search) {
-      where.OR = [
-        { id: { contains: filters.search, mode: 'insensitive' } },
-        { customerName: { contains: filters.search, mode: 'insensitive' } },
-        { customerEmail: { contains: filters.search, mode: 'insensitive' } },
-        { customerPhone: { contains: filters.search, mode: 'insensitive' } },
-        { paymentId: { contains: filters.search, mode: 'insensitive' } },
+      const cleanSearch = filters.search.trim().replace(/^#/, '');
+      
+      const searchConditions: any[] = [
+        { id: { contains: cleanSearch, mode: 'insensitive' } },
+        { formattedOrderNumber: { contains: cleanSearch, mode: 'insensitive' } },
+        { customerName: { contains: cleanSearch, mode: 'insensitive' } },
+        { customerEmail: { contains: cleanSearch, mode: 'insensitive' } },
+        { customerPhone: { contains: cleanSearch, mode: 'insensitive' } },
+        { paymentId: { contains: cleanSearch, mode: 'insensitive' } },
+        { paymentReference: { contains: cleanSearch, mode: 'insensitive' } },
+        { trackingId: { contains: cleanSearch, mode: 'insensitive' } },
       ];
+
+      const parsedNum = parseInt(cleanSearch.replace(/\D/g, ''), 10);
+      if (!isNaN(parsedNum)) {
+        searchConditions.push({ orderNumber: parsedNum });
+        if (parsedNum > 1000) {
+          searchConditions.push({ orderNumber: parsedNum - 1000 });
+        }
+      }
+
+      where.OR = searchConditions;
     }
+
+    return where;
+  }
+
+  async getAdminOrders(filters: {
+    status?: string;
+    excludeStatus?: string;
+    financialStatus?: string;
+    fulfillmentStatus?: string;
+    source?: string;
+    riskLevel?: string;
+    staffId?: string;
+    tag?: string;
+    search?: string;
+    dateFrom?: string;
+    dateTo?: string;
+  }) {
+    const where = this.buildOrderWhereClause(filters);
 
     const cacheKey = `admin_orders_${JSON.stringify(filters)}`;
     const cachedOrders = await this.cacheManager.get(cacheKey);
@@ -215,7 +277,7 @@ export class OrdersService {
 
     const orders = await this.prisma.order.findMany({
       where,
-      take: 100, // HARD LIMIT to prevent OOM. Admin should use date filters for older orders.
+      take: 100, // HARD LIMIT for normal UI table pagination.
       include: {
         items: {
           include: {
@@ -238,6 +300,28 @@ export class OrdersService {
 
     await this.cacheManager.set(cacheKey, orders, 60000); // 1 minute TTL
     return orders;
+  }
+
+  async getAdminOrdersExport(filters: any) {
+    const where = this.buildOrderWhereClause(filters);
+    return this.prisma.order.findMany({
+      where,
+      include: {
+        items: {
+          include: {
+            variant: {
+              include: {
+                product: {
+                  select: { title: true }
+                }
+              }
+            }
+          }
+        },
+        assignedStaff: { select: { name: true, email: true } }
+      },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
   async updateOrderStatus(id: string, status: OrderStatus) {
@@ -290,10 +374,16 @@ export class OrdersService {
   }
 
   async bulkUpdateStatus(ids: string[], status: OrderStatus) {
-    return this.prisma.order.updateMany({
-      where: { id: { in: ids } },
-      data: { status: status as any }
-    });
+    const results: any[] = [];
+    for (const id of ids) {
+      try {
+        const res = await this.updateOrderStatus(id, status);
+        results.push(res);
+      } catch (err) {
+        this.logger.error(`Failed to update status for order ${id}`, err);
+      }
+    }
+    return results;
   }
 
   async bulkAssignStaff(ids: string[], staffId: string) {

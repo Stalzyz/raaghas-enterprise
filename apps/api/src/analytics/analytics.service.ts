@@ -142,6 +142,18 @@ export class AnalyticsService {
           { status: 'DELIVERED' }
         ]
       },
+      select: {
+        id: true,
+        customerName: true,
+        customerEmail: true,
+        totalAmount: true,
+        taxes: true,
+        paymentMethod: true,
+        createdAt: true,
+        shippingAddress: true,
+        formattedOrderNumber: true,
+        orderNumber: true,
+      }
     });
 
     // Fetch all invoices linked to these orders via referenceId
@@ -165,8 +177,19 @@ export class AnalyticsService {
       totalTaxCollected += orderTax;
       totalTaxableValue += orderTaxable;
 
-      const formattedNum = (o as any).formattedOrderNumber || ((o as any).orderNumber != null ? `RGS-${Number((o as any).orderNumber) + 1000}` : null);
+      const formattedNum = o.formattedOrderNumber || (o.orderNumber != null ? `RGS-${Number(o.orderNumber) + 1000}` : null);
       const invoiceNumber = invoiceMap.get(o.id) || formattedNum || o.id.slice(-8).toUpperCase();
+
+      // Safely parse shippingAddress (stored as Json, can come back as object or string)
+      let shippingAddr: Record<string, any> = {};
+      if (o.shippingAddress) {
+        if (typeof o.shippingAddress === 'string') {
+          try { shippingAddr = JSON.parse(o.shippingAddress); } catch { shippingAddr = {}; }
+        } else {
+          shippingAddr = o.shippingAddress as Record<string, any>;
+        }
+      }
+      const placeOfSupply = shippingAddr.state || shippingAddr.province || 'N/A';
 
       return {
         orderId: o.id,
@@ -180,7 +203,8 @@ export class AnalyticsService {
         cgst: orderTax / 2,
         sgst: orderTax / 2,
         totalTax: orderTax,
-        paymentMethod: o.paymentMethod || 'COD'
+        paymentMethod: o.paymentMethod || 'COD',
+        placeOfSupply,
       };
     });
 

@@ -66,30 +66,40 @@ export default function GSTReportsPage() {
   }
 
   const exportCSV = () => {
-    if (!taxData.reports || taxData.reports.length === 0) return;
+    if (!filteredReports || filteredReports.length === 0) return;
+
+    // Escape a value for safe CSV output
+    const escapeCSV = (val: any): string => {
+      const str = val == null ? '' : String(val);
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
     
-    const headers = ["Invoice Number", "Order Number", "Customer Name", "Customer Email", "Date", "Taxable Value (INR)", "CGST (INR)", "SGST (INR)", "Total GST (INR)", "Total Amount (INR)", "Payment Method"];
-    const rows = taxData.reports.map((r: any) => [
+    const headers = ["Invoice Number", "Order Number", "Customer Name", "Customer Email", "Date", "Place of Supply", "Taxable Value (INR)", "CGST (INR)", "SGST (INR)", "Total GST (INR)", "Total Amount (INR)", "Payment Method"];
+    const rows = filteredReports.map((r: any) => [
       r.invoiceNumber || r.orderId.slice(-8).toUpperCase(),
       r.formattedOrderNumber || r.orderId.slice(-8).toUpperCase(),
       r.customerName,
       r.customerEmail,
       new Date(r.date).toLocaleDateString('en-GB'),
+      r.placeOfSupply || 'N/A',
       r.taxableValue.toFixed(2),
       r.cgst.toFixed(2),
       r.sgst.toFixed(2),
       r.totalTax.toFixed(2),
       r.totalAmount.toFixed(2),
       r.paymentMethod
-    ]);
+    ].map(escapeCSV));
 
-    const csvString = [headers.join(","), ...rows.map((e: any) => e.join(","))].join("\n");
-    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const csvString = [headers.map(escapeCSV).join(","), ...rows.map((e: any) => e.join(","))].join("\n");
+    const blob = new Blob(["\uFEFF" + csvString], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `GST_Tax_Report_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `GST_Tax_Report_${startDate}_to_${endDate}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -98,7 +108,9 @@ export default function GSTReportsPage() {
 
   const filteredReports = taxData.reports?.filter((r: any) => 
     r.customerName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    r.orderId?.toLowerCase().includes(searchQuery.toLowerCase())
+    r.orderId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    r.invoiceNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    r.formattedOrderNumber?.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
 
   if (loading) return (
@@ -201,6 +213,7 @@ export default function GSTReportsPage() {
                 <th className="px-8 py-5">Order No.</th>
                 <th className="px-8 py-5">Customer</th>
                 <th className="px-8 py-5">Date</th>
+                <th className="px-8 py-5">Place of Supply</th>
                 <th className="px-8 py-5 text-right">Taxable Value</th>
                 <th className="px-8 py-5 text-right">CGST (6%)</th>
                 <th className="px-8 py-5 text-right">SGST (6%)</th>
@@ -211,7 +224,7 @@ export default function GSTReportsPage() {
             <tbody className="divide-y divide-gray-50">
               {filteredReports.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-8 py-20 text-center">
+                  <td colSpan={10} className="px-8 py-20 text-center">
                     <div className="flex flex-col items-center justify-center text-gray-300 gap-3">
                       <FileText size={40} />
                       <p className="text-xs font-bold uppercase tracking-wider">No taxable sales found in this period</p>
@@ -233,6 +246,11 @@ export default function GSTReportsPage() {
                     </td>
                     <td className="px-8 py-5 text-xs text-gray-500 font-sans">
                       {new Date(r.date).toLocaleDateString('en-GB')}
+                    </td>
+                    <td className="px-8 py-5">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-wide">
+                        {r.placeOfSupply || 'N/A'}
+                      </span>
                     </td>
                     <td className="px-8 py-5 text-xs font-medium text-charcoal text-right">
                       ₹{r.taxableValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

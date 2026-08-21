@@ -33,7 +33,7 @@ import { useRouter } from "next/navigation";
 import { PackingSlipModal } from "@/components/modals/PackingSlipModal";
 import { ReturnExchangeModal } from "@/components/modals/ReturnExchangeModal";
 
-const CARRIERS = ["Delhivery", "BlueDart", "Pickrr", "Professional Couriers", "Express", "DHL", "FedEx"];
+const CARRIERS = ["Delhivery", "BlueDart", "Pickrr", "Professional Couriers", "Express", "DHL", "FedEx", "DTDC", "India Post", "ST Courier", "Others"];
 
 function getSmartStatus(order: any) {
   if (order.status === 'PAYMENT_PENDING') {
@@ -433,7 +433,13 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
   if (!order) return <div className="p-20 text-center font-bold text-gray-500 uppercase tracking-widest">Order not found</div>;
 
   // Support both new relational address and legacy JSON address
-  const getParsedAddress = (addr: any) => typeof addr === 'string' ? JSON.parse(addr || '{}') : (addr || {});
+  const getParsedAddress = (addr: any) => {
+    if (!addr) return {};
+    if (typeof addr === 'string') {
+      try { return JSON.parse(addr); } catch { return {}; }
+    }
+    return addr;
+  };
   const shippingAddr = order.shippingAddr || getParsedAddress(order.shippingAddress);
   const billingAddr = order.billingAddress || shippingAddr;
   const taxLines = order.taxLines || [];

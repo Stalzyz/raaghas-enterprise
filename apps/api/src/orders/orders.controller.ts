@@ -48,6 +48,24 @@ export class OrdersController {
     return this.ordersService.getAdminOrders(query as any);
   }
 
+  @Get('admin/export')
+  @UseGuards(AuthGuard)
+  async getAdminOrdersExport(@Query() query: {
+    status?: string;
+    excludeStatus?: string;
+    financialStatus?: string;
+    fulfillmentStatus?: string;
+    source?: string;
+    riskLevel?: string;
+    staffId?: string;
+    tag?: string;
+    search?: string;
+    dateFrom?: string;
+    dateTo?: string;
+  }) {
+    return this.ordersService.getAdminOrdersExport(query as any);
+  }
+
   @Get('admin/:id')
   @UseGuards(AuthGuard)
   async getAdminOrderById(@Param('id') id: string) {

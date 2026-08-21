@@ -190,12 +190,43 @@ export default function OrdersPage() {
     }
   };
 
-  const handleExportCSV = () => {
-    const ordersToExport = selectedIds.length > 0 
-      ? orders.filter(o => selectedIds.includes(o.id))
-      : orders;
+  const handleExportCSV = async () => {
+    let ordersToExport: any[] = [];
 
-    if (ordersToExport.length === 0) return;
+    if (selectedIds.length > 0) {
+      ordersToExport = orders.filter(o => selectedIds.includes(o.id));
+    } else if (token) {
+      try {
+        setIsLoading(true);
+        const queryParams = new URLSearchParams();
+        if (activeTab === "ACTIVE") queryParams.append("excludeStatus", "CANCELLED");
+        else if (activeTab !== "ALL") queryParams.append("status", activeTab);
+        if (filters.search) queryParams.append("search", filters.search);
+        if (filters.source) queryParams.append("source", filters.source);
+        if (filters.riskLevel) queryParams.append("riskLevel", filters.riskLevel);
+        if (filters.dateFrom) queryParams.append("dateFrom", filters.dateFrom);
+        if (filters.dateTo) queryParams.append("dateTo", filters.dateTo);
+        if (filters.financialStatus) queryParams.append("financialStatus", filters.financialStatus);
+        if (filters.fulfillmentStatus) queryParams.append("fulfillmentStatus", filters.fulfillmentStatus);
+
+        const apiBase = API_BASE;
+        const res = await fetch(`${apiBase}/orders/admin/export?${queryParams.toString()}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          ordersToExport = await res.json();
+        } else {
+          ordersToExport = orders;
+        }
+      } catch (err) {
+        console.error("Export fetch failed:", err);
+        ordersToExport = orders;
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    if (!ordersToExport || ordersToExport.length === 0) return;
 
     const headers = [
       "Order Number", "Order Date", "Customer Name", "Customer Email", "Customer Phone Number",
@@ -298,7 +329,7 @@ export default function OrdersPage() {
       });
     });
 
-    const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const csvContent = ["\uFEFF" + headers.join(","), ...rows.map(r => r.join(","))].join("\n");
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -381,8 +412,10 @@ export default function OrdersPage() {
             <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
               <div className="flex bg-gray-100/80 p-1 rounded-xl overflow-x-auto no-scrollbar">
                 {[
+                  { key: "ALL", label: "All Orders" },
                   { key: "CONFIRMED", label: "Confirmed" },
                   { key: "PAYMENT_PENDING", label: "Pending" },
+                  { key: "ABANDONED", label: "Abandoned" },
                   { key: "PROCESSING", label: "Processing" },
                   { key: "SHIPPED", label: "Shipped" },
                   { key: "DELIVERED", label: "Delivered" },
