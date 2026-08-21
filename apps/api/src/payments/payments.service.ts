@@ -458,6 +458,7 @@ export class PaymentsService implements OnModuleInit {
           financialStatus: 'paid',
           paidAt: new Date(),
           paymentId: data.paymentId,
+          paymentReference: data.paymentId,
           paymentMethod: data.gateway,
         }
       });
@@ -681,6 +682,7 @@ export class PaymentsService implements OnModuleInit {
           financialStatus: 'paid',
           paidAt: new Date(),
           paymentId,
+          paymentReference: paymentId,
           paymentMethod: gateway,
         },
       });
