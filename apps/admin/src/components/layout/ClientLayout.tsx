@@ -44,12 +44,12 @@ export default function ClientLayout({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  // Automatically collapse sidebar on tablet screens (< 1024px)
+  // Automatically collapse sidebar on tablet and iPad screens (< 1280px)
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 768 && window.innerWidth < 1024) {
+      if (window.innerWidth >= 768 && window.innerWidth < 1280) {
         setIsCollapsed(true);
-      } else if (window.innerWidth >= 1024) {
+      } else if (window.innerWidth >= 1280) {
         setIsCollapsed(false);
       }
     };
@@ -87,7 +87,7 @@ export default function ClientLayout({
                     {/* Mobile Hamburger Toggle */}
                     <button
                       onClick={() => setIsMobileOpen(!isMobileOpen)}
-                      className="lg:hidden p-2 rounded-lg text-gray-600 hover:text-wine hover:bg-gray-100 transition-colors"
+                      className="md:hidden p-2 rounded-lg text-gray-600 hover:text-wine hover:bg-gray-100 transition-colors"
                       title="Toggle Menu"
                     >
                       <Menu size={20} />

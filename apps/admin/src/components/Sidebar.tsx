@@ -88,18 +88,18 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse, isMobileOpen = 
       {isMobileOpen && (
         <div 
           onClick={onCloseMobile}
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-xs transition-opacity"
+          className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-xs transition-opacity"
         />
       )}
 
-      <aside className={`bg-white border-r border-gray-200 flex flex-col z-40 transition-all duration-300 ${
-        // Mobile Drawer behavior
+      <aside className={`bg-white border-r border-gray-200 flex flex-col z-40 transition-all duration-300 flex-shrink-0 ${
+        // Mobile Drawer behavior (< 768px)
         isMobileOpen 
-          ? "fixed inset-y-0 left-0 w-64 shadow-2xl translate-x-0" 
-          : "max-lg:fixed max-lg:inset-y-0 max-lg:left-0 max-lg:w-64 max-lg:-translate-x-full"
+          ? "max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:w-64 max-md:shadow-2xl max-md:translate-x-0" 
+          : "max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:w-64 max-md:-translate-x-full"
       } ${
-        // Desktop / Tablet Collapsed vs Expanded
-        isCollapsed ? "lg:w-20" : "lg:w-64"
+        // Tablet & Desktop Collapsed vs Expanded (>= 768px)
+        isCollapsed ? "md:w-20" : "md:w-64"
       }`}>
         {/* Header */}
         <div className={`h-16 flex items-center ${isCollapsed ? 'justify-center px-2' : 'justify-between px-6'} border-b border-gray-100`}>
