@@ -151,6 +151,7 @@ export class AnalyticsService {
         paymentMethod: true,
         createdAt: true,
         shippingAddress: true,
+        billingAddress: true,
         formattedOrderNumber: true,
         orderNumber: true,
       }
@@ -180,8 +181,10 @@ export class AnalyticsService {
       const formattedNum = o.formattedOrderNumber || (o.orderNumber != null ? `RGS-${Number(o.orderNumber) + 1000}` : null);
       const invoiceNumber = invoiceMap.get(o.id) || formattedNum || o.id.slice(-8).toUpperCase();
 
-      // Safely parse shippingAddress (stored as Json, can come back as object or string)
+      // Safely parse shippingAddress & billingAddress (stored as Json, can come back as object or string)
       let shippingAddr: Record<string, any> = {};
+      let billingAddr: Record<string, any> = {};
+
       if (o.shippingAddress) {
         if (typeof o.shippingAddress === 'string') {
           try { shippingAddr = JSON.parse(o.shippingAddress); } catch { shippingAddr = {}; }
@@ -189,7 +192,22 @@ export class AnalyticsService {
           shippingAddr = o.shippingAddress as Record<string, any>;
         }
       }
-      const placeOfSupply = shippingAddr.state || shippingAddr.province || 'N/A';
+
+      if (o.billingAddress) {
+        if (typeof o.billingAddress === 'string') {
+          try { billingAddr = JSON.parse(o.billingAddress); } catch { billingAddr = {}; }
+        } else {
+          billingAddr = o.billingAddress as Record<string, any>;
+        }
+      }
+
+      const placeOfSupply = shippingAddr.state 
+        || shippingAddr.province 
+        || shippingAddr.stateName 
+        || billingAddr.state 
+        || billingAddr.province 
+        || billingAddr.stateName 
+        || 'N/A';
 
       return {
         orderId: o.id,
