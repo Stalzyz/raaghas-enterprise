@@ -14,6 +14,11 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [period, setPeriod] = useState("30d");
   const [error, setError] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const fetchAnalytics = async () => {
     setIsLoading(true);
@@ -163,47 +168,55 @@ export default function Dashboard() {
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm h-96">
             <h3 className="text-sm font-bold text-charcoal mb-6 uppercase tracking-widest">Sales Trend</h3>
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data.trendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorB2C" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#701A31" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#701A31" stopOpacity={0}/>
-                  </linearGradient>
-                  <linearGradient id="colorB2B" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#94a3b8" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="date" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-                <YAxis tickFormatter={(val) => `₹${val/1000}k`} tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-                <Tooltip 
-                  formatter={(value: number) => [`₹${value.toLocaleString()}`, '']}
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                />
-                <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '20px' }} />
-                <Area type="monotone" dataKey="b2cSales" name="Retail Sales (B2C)" stroke="#701A31" strokeWidth={3} fillOpacity={1} fill="url(#colorB2C)" />
-                <Area type="monotone" dataKey="b2bSales" name="Wholesale (B2B)" stroke="#94a3b8" strokeWidth={3} fillOpacity={1} fill="url(#colorB2B)" />
-              </AreaChart>
-            </ResponsiveContainer>
+            {isMounted ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={data.trendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorB2C" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#701A31" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#701A31" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorB2B" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#94a3b8" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="date" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
+                  <YAxis tickFormatter={(val) => `₹${val/1000}k`} tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
+                  <Tooltip 
+                    formatter={(value: number) => [`₹${value.toLocaleString()}`, '']}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '20px' }} />
+                  <Area type="monotone" dataKey="b2cSales" name="Retail Sales (B2C)" stroke="#701A31" strokeWidth={3} fillOpacity={1} fill="url(#colorB2C)" />
+                  <Area type="monotone" dataKey="b2bSales" name="Wholesale (B2B)" stroke="#94a3b8" strokeWidth={3} fillOpacity={1} fill="url(#colorB2B)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="w-full h-full bg-gray-50 animate-pulse rounded-xl" />
+            )}
           </div>
           
           <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm h-72">
             <h3 className="text-sm font-bold text-charcoal mb-6 uppercase tracking-widest">Estimated Profit</h3>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data.trendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="date" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-                <YAxis tickFormatter={(val) => `₹${val/1000}k`} tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-                <Tooltip 
-                  formatter={(value: number) => [`₹${value.toLocaleString()}`, 'Profit']}
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  cursor={{ fill: '#f8fafc' }}
-                />
-                <Bar dataKey="profit" name="Profit Margin" fill="#10b981" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {isMounted ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={data.trendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="date" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
+                  <YAxis tickFormatter={(val) => `₹${val/1000}k`} tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
+                  <Tooltip 
+                    formatter={(value: number) => [`₹${value.toLocaleString()}`, 'Profit']}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    cursor={{ fill: '#f8fafc' }}
+                  />
+                  <Bar dataKey="profit" name="Profit Margin" fill="#10b981" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="w-full h-full bg-gray-50 animate-pulse rounded-xl" />
+            )}
           </div>
         </div>
 

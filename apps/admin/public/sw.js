@@ -10,6 +10,6 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Pass through fetch request for real-time admin API data
-  return;
+  // Pass through fetch request to network cleanly to prevent Safari hangs
+  event.respondWith(fetch(event.request));
 });
