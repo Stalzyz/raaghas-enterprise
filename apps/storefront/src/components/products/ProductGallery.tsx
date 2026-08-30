@@ -54,7 +54,8 @@ export default function ProductGallery({ images, product }: ProductGalleryProps)
           <motion.img
             key={currentIndex}
             src={getImageUrl(images[currentIndex])}
-            alt={typeof images[currentIndex] === 'string' ? "Product Image" : (images[currentIndex] as any).altText || "Product Image"}
+            alt={product ? `${product.title} - View ${currentIndex + 1}` : (typeof images[currentIndex] === 'string' ? "Product Image" : (images[currentIndex] as any).altText || "Product Image")}
+            fetchPriority="high"
             initial={{ opacity: 0, scale: 1.05 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
@@ -125,6 +126,7 @@ export default function ProductGallery({ images, product }: ProductGalleryProps)
                         maxStock: product.variants[0].inventory,
                         image: getImageUrl(images[currentIndex]),
                         handle: product.handle,
+                        size: product.variants[0].option1Value || '',
                         options: {
                           [product.variants[0].option1Name || 'Option 1']: product.variants[0].option1Value || '',
                           [product.variants[0].option2Name || 'Option 2']: product.variants[0].option2Value || '',
@@ -156,7 +158,7 @@ export default function ProductGallery({ images, product }: ProductGalleryProps)
                 currentIndex === idx ? "border-wine scale-95" : "border-transparent opacity-60 hover:opacity-100"
               }`}
             >
-              <img src={getImageUrl(image)} alt={image.altText || "Thumbnail"} className="w-full h-full object-cover" />
+              <img src={getImageUrl(image)} alt={product ? `${product.title} - Thumbnail ${idx + 1}` : (image.altText || "Thumbnail")} loading="lazy" className="w-full h-full object-cover" />
             </button>
           ))}
         </div>

@@ -143,15 +143,7 @@ export function CartDrawer() {
                         return;
                       }
                       
-                      // Track Meta InitiateCheckout Event
-                      import("@/components/analytics/MetaPixel").then((m) => {
-                        m.trackMetaEvent("InitiateCheckout", {
-                          value: cartTotal,
-                          currency: "INR",
-                          num_items: items.length,
-                          content_type: "product"
-                        });
-                      });
+                      // InitiateCheckout is tracked on the Checkout page load to prevent duplicate fires.
 
                       toggleDrawer(false);
                       router.push('/checkout');

@@ -198,6 +198,10 @@ function ScrollProductCard({ product }: { product: any }) {
     e.preventDefault();
     e.stopPropagation();
     if (isOutOfStock || hasOptions) return;
+    const firstVar = product.variants?.[0];
+    const sizeVal = firstVar?.option1Value && firstVar.option1Value !== "Default Title" && firstVar.option1Value !== "Default"
+      ? firstVar.option1Value
+      : "";
     addItem({
       id: product.id,
       variantId: product.variantId,
@@ -207,6 +211,7 @@ function ScrollProductCard({ product }: { product: any }) {
       maxStock: product.inventory,
       image: getAssetUrl(product.image1),
       taxInclusive: product.taxInclusive,
+      size: sizeVal,
       handle: product.handle,
     });
     toggleDrawer(true);

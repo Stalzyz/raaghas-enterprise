@@ -225,6 +225,10 @@ function ProductCard({ product }: { product: any }) {
     e.stopPropagation();
     if (isOutOfStock) return;
     if (optionGroups.length > 0) { openQuickView(e); return; } // has options → open picker
+    const firstVar = product.variants?.[0];
+    const sizeVal = firstVar?.option1Value && firstVar.option1Value !== "Default Title" && firstVar.option1Value !== "Default"
+      ? firstVar.option1Value
+      : "";
     addItem({
       id: product.id,
       variantId: product.variantId,
@@ -234,6 +238,7 @@ function ProductCard({ product }: { product: any }) {
       maxStock: product.inventory,
       image: getAssetUrl(product.image1),
       taxInclusive: product.taxInclusive,
+      size: sizeVal,
       handle: product.handle,
     });
     toggleDrawer(true);
@@ -242,6 +247,9 @@ function ProductCard({ product }: { product: any }) {
   // Add from Quick View with the selected variant
   const handleQuickViewAdd = () => {
     if (!selectedVariant || selectedVariant.inventory <= 0) return;
+    const sizeVal = selectedVariant.option1Value && selectedVariant.option1Value !== "Default Title" && selectedVariant.option1Value !== "Default"
+      ? selectedVariant.option1Value
+      : selectedVariant.title && selectedVariant.title !== "Default Title" ? selectedVariant.title : "";
     addItem({
       id: product.id,
       variantId: selectedVariant.id,
@@ -251,6 +259,7 @@ function ProductCard({ product }: { product: any }) {
       maxStock: selectedVariant.inventory,
       image: getAssetUrl(product.image1),
       taxInclusive: product.taxInclusive,
+      size: sizeVal,
       handle: product.handle,
     });
     setIsQuickViewOpen(false);

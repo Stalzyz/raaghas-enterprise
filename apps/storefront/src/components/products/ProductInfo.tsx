@@ -9,6 +9,7 @@ import { useEffect } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { API_URL } from "@/lib/api";
 import { useWishlist } from "@/hooks/useWishlist";
+import { trackMetaEvent } from "@/components/analytics/MetaPixel";
 
 interface Variant {
   id: string;
@@ -69,17 +70,6 @@ export default function ProductInfo({ product }: ProductInfoProps) {
     // Generate random viewers on client-side only to avoid hydration mismatch
     setViewers(Math.floor(Math.random() * 22) + 12);
 
-    // Track Meta ViewContent
-    import("@/components/analytics/MetaPixel").then((m) => {
-      m.trackMetaEvent("ViewContent", {
-        content_ids: product.variants?.map((v: any) => v.id) || [product.id],
-        content_name: product.title,
-        content_type: "product",
-        currency: "INR",
-        value: product.variants?.[0]?.price ? Number(product.variants[0].price) : 0,
-      });
-    });
-
     // Track view for interests
     if (authUser?.id && product.id) {
       fetch(`${API_URL}/api/v1/products/track-view`, {
@@ -99,7 +89,17 @@ export default function ProductInfo({ product }: ProductInfoProps) {
       })
       .catch(err => console.error("Referral fetch error:", err));
     }
-  }, [authUser?.id, product.id, token]);
+
+    // Track Meta ViewContent
+    trackMetaEvent("ViewContent", {
+      content_ids: [product.id],
+      content_name: product.title,
+      content_category: product.type || "Product",
+      currency: "INR",
+      value: Number(product.variants?.[0]?.price || 0)
+    });
+
+  }, [authUser?.id, product.id, token, product.title, product.type, product.variants]);
 
   const variantsArray = Array.isArray(product.variants) ? product.variants : [];
   
@@ -182,6 +182,15 @@ export default function ProductInfo({ product }: ProductInfoProps) {
   const handleAddToBag = async () => {
     if (!selectedVariant) return;
     
+    // Meta Pixel AddToCart
+    trackMetaEvent("AddToCart", {
+      content_ids: [product.id],
+      content_name: product.title,
+      currency: "INR",
+      value: Number(selectedVariant.price),
+      num_items: 1
+    });
+
     if (typeof window !== 'undefined' && window.navigator.vibrate) {
       window.navigator.vibrate(50);
     }
@@ -453,6 +462,30 @@ export default function ProductInfo({ product }: ProductInfoProps) {
             </motion.div>
           )}
         </AnimatePresence>
+      </div>
+
+      {/* AI Search Optimization: Style & Fit Guide */}
+      <div className="pt-8 border-t border-theme-border space-y-4">
+         <details className="group" open>
+           <summary className="flex justify-between items-center cursor-pointer list-none">
+             <span className="text-[10px] uppercase font-bold tracking-widest text-theme-text flex items-center gap-2"><Sparkles size={14} className="text-wine" /> Style & Fit Guide</span>
+             <ChevronDown size={14} className="group-open:rotate-180 transition-transform text-theme-text-muted" />
+           </summary>
+           <div className="pt-4 text-xs text-theme-text-muted leading-relaxed space-y-4">
+             <div>
+               <strong className="block text-theme-text mb-1 font-serif text-sm">What is this?</strong>
+               <p>A premium {product.title}, crafted for unparalleled comfort and modern elegance.</p>
+             </div>
+             <div>
+               <strong className="block text-theme-text mb-1 font-serif text-sm">Who is it for?</strong>
+               <p>Designed for the modern woman who values breathable, high-luxury ethnic wear for both office and festive occasions.</p>
+             </div>
+             <div>
+               <strong className="block text-theme-text mb-1 font-serif text-sm">How to style it?</strong>
+               <p>Pair effortlessly with minimal oxidized silver jewelry, an indigo or solid dupatta, and comfortable flats for a timeless ensemble.</p>
+             </div>
+           </div>
+         </details>
       </div>
 
       {/* Shipping & Returns Details */}

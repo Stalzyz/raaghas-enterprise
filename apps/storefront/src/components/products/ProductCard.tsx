@@ -84,7 +84,11 @@ export default function ProductCard({ product }: ProductCardProps) {
     if (hasVariants && variants.length > 1) {
       setShowInlineVariants(true);
     } else {
-      const vId = product.variants?.[0]?.id || product.variantId || product.id;
+      const defaultVariant = product.variants?.[0];
+      const vId = defaultVariant?.id || product.variantId || product.id;
+      const sizeVal = defaultVariant?.option1Value && defaultVariant.option1Value !== "Default Title" && defaultVariant.option1Value !== "Default"
+        ? defaultVariant.option1Value
+        : "";
       addItem({
         id: `${product.id}-${vId}`,
         variantId: vId,
@@ -94,6 +98,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         maxStock: (product as any).inventoryQuantity || 999,
         image: product.imageUrl,
         taxInclusive: (product as any).taxInclusive,
+        size: sizeVal,
         handle: product.handle,
       });
       toggleDrawer(true);
@@ -104,6 +109,9 @@ export default function ProductCard({ product }: ProductCardProps) {
     e.preventDefault();
     e.stopPropagation();
     if (variant.inventory <= 0) return;
+    const sizeVal = variant.option1Value && variant.option1Value !== "Default Title" && variant.option1Value !== "Default"
+      ? variant.option1Value
+      : variant.title && variant.title !== "Default Title" ? variant.title : "";
     addItem({
       id: `${product.id}-${variant.id}`,
       variantId: variant.id,
@@ -113,6 +121,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       maxStock: variant.inventory,
       image: product.imageUrl,
       taxInclusive: (product as any).taxInclusive,
+      size: sizeVal,
       handle: product.handle,
     });
     setShowInlineVariants(false);
@@ -121,6 +130,9 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const handleQuickViewAdd = () => {
     if (!selectedVariant || selectedVariant.inventory <= 0) return;
+    const sizeVal = selectedVariant.option1Value && selectedVariant.option1Value !== "Default Title" && selectedVariant.option1Value !== "Default"
+      ? selectedVariant.option1Value
+      : selectedVariant.title && selectedVariant.title !== "Default Title" ? selectedVariant.title : "";
     addItem({
       id: `${product.id}-${selectedVariant.id}`,
       variantId: selectedVariant.id,
@@ -130,6 +142,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       maxStock: selectedVariant.inventory,
       image: product.imageUrl,
       taxInclusive: (product as any).taxInclusive,
+      size: sizeVal,
       handle: product.handle,
     });
     setIsQuickViewOpen(false);
