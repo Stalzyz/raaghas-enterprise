@@ -4,6 +4,8 @@ import { ShipmentStatus, ReturnStatus } from '@raaghas/database';
 import { ConfigService } from '@nestjs/config';
 import { ShiprocketProvider } from './providers/shiprocket.provider';
 import { DelhiveryProvider } from './providers/delhivery.provider';
+import { STCourierProvider } from './providers/st-courier.provider';
+import { IndiaPostProvider } from './providers/india-post.provider';
 import { CreateShipmentDto, ShippingProvider } from './providers/shipping-provider.interface';
 import { forwardRef, Inject } from '@nestjs/common';
 import { PaymentsService } from '../payments/payments.service';
@@ -18,6 +20,8 @@ export class LogisticsService {
     private configService: ConfigService,
     private shiprocket: ShiprocketProvider,
     private delhivery: DelhiveryProvider,
+    private stCourier: STCourierProvider,
+    private indiaPost: IndiaPostProvider,
     @Inject(forwardRef(() => PaymentsService))
     private paymentsService: PaymentsService,
     @Inject(forwardRef(() => MarketingService))
@@ -344,13 +348,21 @@ export class LogisticsService {
 
   private getProvider(providerName?: string): ShippingProvider {
     const defaultProvider = this.configService.get<string>('DEFAULT_SHIPPING_PROVIDER') || 'shiprocket';
-    const name = providerName || defaultProvider;
+    const name = (providerName || defaultProvider).toLowerCase();
 
-    switch (name.toLowerCase()) {
-      case 'shiprocket':
-        return this.shiprocket;
+    switch (name) {
+      case 'st-courier':
+      case 'stcourier':
+      case 'st_courier':
+        return this.stCourier;
+      case 'india-post':
+      case 'indiapost':
+      case 'india_post':
+      case 'speedpost':
+        return this.indiaPost;
       case 'delhivery':
         return this.delhivery;
+      case 'shiprocket':
       default:
         return this.shiprocket;
     }
@@ -437,6 +449,195 @@ export class LogisticsService {
     return shipment;
   }
 
+  /**
+   * 1-Click Automated Dispatch & Consignment Booking with ST Courier V2 API
+   */
+  async bookWithSTCourier(orderId: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { items: { include: { variant: { include: { product: true } } } } }
+    });
+
+    if (!order) throw new NotFoundException("Order not found");
+
+    const address = (typeof order.shippingAddress === 'string' 
+      ? JSON.parse(order.shippingAddress) 
+      : order.shippingAddress) as any;
+
+    const shipmentDto: CreateShipmentDto = {
+      orderId: order.id,
+      customerName: order.customerName,
+      customerEmail: order.customerEmail,
+      customerPhone: order.customerPhone,
+      address: {
+        address: address.address || address.addressLine1 || address.line1 || 'Delivery Address',
+        city: address.city || 'Tamil Nadu',
+        state: address.state || 'Tamil Nadu',
+        pincode: String(address.pincode || address.zip || '600001'),
+        country: address.country || 'India',
+      },
+      items: order.items.map(item => ({
+        name: item.variant?.product?.title || 'Luxury Garment',
+        sku: item.variant?.sku || 'SKU-RG',
+        quantity: item.quantity,
+        price: Number(item.price),
+        weight: Number((item.variant as any)?.weight || 0.5),
+      })),
+      totalWeight: order.items.reduce((sum, i) => sum + Number((i.variant as any)?.weight || 0.5) * i.quantity, 0) || 0.5,
+      paymentMethod: order.paymentMethod === 'COD' ? 'COD' : 'Prepaid',
+      subTotal: Number(order.totalAmount || 0),
+    };
+
+    const bookingResult = await this.stCourier.createOrder(shipmentDto);
+
+    // Create or find fulfillment
+    let fulfillment = await this.prisma.fulfillment.findFirst({
+      where: { orderId: order.id }
+    });
+
+    if (!fulfillment) {
+      fulfillment = await this.prisma.fulfillment.create({
+        data: {
+          orderId: order.id,
+          status: 'FULFILLED',
+          items: {
+            create: order.items.map(i => ({
+              variantId: i.variantId,
+              quantity: i.quantity
+            }))
+          }
+        }
+      });
+    } else {
+      await this.prisma.fulfillment.update({
+        where: { id: fulfillment.id },
+        data: { status: 'FULFILLED' }
+      });
+    }
+
+    const courier = await this.prisma.courier.upsert({
+      where: { name: 'ST Courier' },
+      update: {},
+      create: { name: 'ST Courier', website: 'https://stcourier.com' }
+    });
+
+    // Save shipment record
+    const shipment = await this.prisma.shipment.create({
+      data: {
+        fulfillmentId: fulfillment.id,
+        trackingId: bookingResult.trackingId,
+        status: 'SHIPPED',
+        shippedAt: new Date(),
+        courierId: courier.id,
+        trackingHistory: [
+          {
+            status: 'SHIPPED',
+            timestamp: new Date(),
+            location: 'Raaghas Dispatch Center',
+            message: `Consignment booked successfully via ST Courier Express. AWB: ${bookingResult.trackingId}`
+          }
+        ]
+      }
+    });
+
+    // Update order status
+    await this.prisma.order.update({
+      where: { id: order.id },
+      data: {
+        status: 'SHIPPED',
+        fulfillmentStatus: 'fulfilled',
+        trackingId: bookingResult.trackingId,
+        carrierName: 'ST Courier',
+        fulfilledAt: new Date(),
+      }
+    });
+
+    // Send dispatch notification to customer
+    this.marketingService.sendOrderNotification(order, 'ORDER_SHIPPED')
+      .catch(e => this.logger.error(`Failed to send dispatch notification for order ${order.id}`, e));
+
+    return {
+      success: true,
+      awb: bookingResult.trackingId,
+      carrier: 'ST Courier',
+      trackingUrl: bookingResult.labelUrl,
+      shipment
+    };
+  }
+
+  /**
+   * Process 30-Minute Status Push Webhook from ST Courier
+   */
+  async handleSTCourierWebhook(body: any) {
+    this.logger.log(`Received ST Courier 30-min status push: ${JSON.stringify(body)}`);
+    const apiData = Array.isArray(body?.apiData) ? body.apiData : [];
+    const results: any[] = [];
+
+    for (const entry of apiData) {
+      const { awbno, trans_dtm, trans_for, trans_from, trans_to, delv_staff, status_code, pod_image } = entry;
+      if (!awbno) continue;
+
+      const normalizedStatus = this.stCourier.normalizeStatus(status_code);
+      const isDelivered = normalizedStatus === 'DELIVERED';
+
+      try {
+        const shipment = await this.prisma.shipment.findFirst({
+          where: { trackingId: String(awbno) },
+          include: { fulfillment: { include: { order: true } } }
+        });
+
+        if (shipment) {
+          const currentHistory = Array.isArray(shipment.trackingHistory) ? (shipment.trackingHistory as any[]) : [];
+          const newEvent = {
+            status: normalizedStatus,
+            rawCode: status_code,
+            location: trans_to || trans_from || 'In Transit',
+            message: trans_for || `Status updated to ${normalizedStatus}`,
+            timestamp: trans_dtm ? new Date(trans_dtm) : new Date(),
+            delvStaff: delv_staff || undefined,
+            podImage: pod_image || undefined,
+          };
+
+          await this.prisma.shipment.update({
+            where: { id: shipment.id },
+            data: {
+              status: normalizedStatus as any,
+              deliveredAt: isDelivered ? (trans_dtm ? new Date(trans_dtm) : new Date()) : shipment.deliveredAt,
+              trackingHistory: [...currentHistory, newEvent],
+            }
+          });
+
+          if (isDelivered && shipment.fulfillment?.order) {
+            await this.prisma.order.update({
+              where: { id: shipment.fulfillment.order.id },
+              data: { status: 'DELIVERED' }
+            });
+
+            this.marketingService.sendOrderNotification(shipment.fulfillment.order, 'ORDER_DELIVERED')
+              .catch(e => this.logger.error(`Failed to send delivery notification for order ${shipment.fulfillment.order.id}`, e));
+          }
+
+          results.push({ awbno, status: 'processed', normalizedStatus });
+        } else {
+          // If no shipment found, check order directly
+          const order = await this.prisma.order.findFirst({ where: { trackingId: String(awbno) } });
+          if (order && isDelivered) {
+            await this.prisma.order.update({
+              where: { id: order.id },
+              data: { status: 'DELIVERED' }
+            });
+          }
+          results.push({ awbno, status: 'order_updated_only' });
+        }
+      } catch (err: any) {
+        this.logger.error(`Error processing ST Courier AWB ${awbno}: ${err.message}`);
+        results.push({ awbno, status: 'error', error: err.message });
+      }
+    }
+
+    return { received: apiData.length, processed: results };
+  }
+
   async syncTrackingStatus(trackingId: string, providerName?: string) {
     const provider = this.getProvider(providerName);
     const tracking = await provider.trackShipment(trackingId);
@@ -487,12 +688,13 @@ export class LogisticsService {
   // --- TRACKING ---
 
   async getTracking(id: string) {
-    // Try by tracking ID or Shipment ID
+    // Try by tracking ID, Shipment ID, or Order ID
     const shipment = await this.prisma.shipment.findFirst({
       where: { 
         OR: [
           { id: id },
-          { trackingId: id }
+          { trackingId: id },
+          { fulfillment: { orderId: id } }
         ]
       },
       include: { 
@@ -502,8 +704,11 @@ export class LogisticsService {
             order: {
               select: {
                 id: true,
+                formattedOrderNumber: true,
                 customerName: true,
                 status: true,
+                carrierName: true,
+                trackingId: true,
                 createdAt: true
               }
             }
@@ -512,13 +717,73 @@ export class LogisticsService {
       }
     });
 
-    if (!shipment) throw new NotFoundException('Tracking is not ready yet. Please check back later.');
+    if (!shipment) {
+      // Check if order exists directly
+      const order = await this.prisma.order.findFirst({
+        where: {
+          OR: [
+            { id: id },
+            { trackingId: id },
+            { formattedOrderNumber: id }
+          ]
+        }
+      });
+
+      if (!order) {
+        throw new NotFoundException('Tracking is not ready yet. Please check back later.');
+      }
+
+      const carrierName = order.carrierName || 'Standard Logistics';
+      const trackingId = order.trackingId || id;
+      let trackingUrl = '';
+
+      if (carrierName.toLowerCase().includes('st courier') || carrierName.toLowerCase().includes('st_courier')) {
+        trackingUrl = `https://stcourier.com/track/shipment?awb=${encodeURIComponent(trackingId)}`;
+      } else if (carrierName.toLowerCase().includes('india post') || carrierName.toLowerCase().includes('speed post')) {
+        trackingUrl = 'https://www.indiapost.gov.in/_layouts/15/dop.portal.tracking/trackconsignment.aspx';
+      }
+
+      return {
+        id: order.id,
+        trackingId: trackingId,
+        status: order.status,
+        courier: carrierName,
+        trackingUrl,
+        estimatedDelivery: order.estimatedDelivery,
+        shippedAt: order.fulfilledAt || order.createdAt,
+        history: [
+          {
+            status: order.status === 'DELIVERED' ? 'DELIVERED' : (order.status === 'SHIPPED' ? 'SHIPPED' : 'CONFIRMED'),
+            message: `Order is currently in ${order.status.toLowerCase().replace('_', ' ')} state via ${carrierName}`,
+            timestamp: order.fulfilledAt || order.createdAt,
+            location: 'Raaghas Fulfillment Studio'
+          }
+        ],
+        order: {
+          id: order.id,
+          customerName: order.customerName,
+          status: order.status,
+          createdAt: order.createdAt
+        }
+      };
+    }
+
+    const carrierName = shipment.courier?.name || shipment.fulfillment?.order?.carrierName || 'Standard Logistics';
+    const trackingId = shipment.trackingId || id;
+    let trackingUrl = '';
+
+    if (carrierName.toLowerCase().includes('st courier') || carrierName.toLowerCase().includes('st_courier')) {
+      trackingUrl = `https://stcourier.com/track/shipment?awb=${encodeURIComponent(trackingId)}`;
+    } else if (carrierName.toLowerCase().includes('india post') || carrierName.toLowerCase().includes('speed post')) {
+      trackingUrl = 'https://www.indiapost.gov.in/_layouts/15/dop.portal.tracking/trackconsignment.aspx';
+    }
 
     return {
       id: shipment.id,
       trackingId: shipment.trackingId,
       status: shipment.status,
-      courier: shipment.courier?.name || 'In Preparation',
+      courier: carrierName,
+      trackingUrl,
       estimatedDelivery: shipment.estimatedDelivery,
       shippedAt: shipment.shippedAt,
       deliveredAt: shipment.deliveredAt,

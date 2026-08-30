@@ -271,6 +271,31 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
     }
   };
 
+  const bookSTCourier = async () => {
+    if (!confirm("Are you sure you want to book this order automatically with ST Courier?")) return;
+    setIsUpdating(true);
+    try {
+      const res = await fetch(`${API_BASE}/logistics/book/st-courier/${id}`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}` 
+        },
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || "Failed to book with ST Courier");
+      }
+      const data = await res.json();
+      await fetchOrder();
+      alert(`🎉 Consignment Booked Successfully with ST Courier!\nAWB No: ${data.awb}`);
+    } catch (error: any) {
+      alert(error.message || "Unable to book with ST Courier. Please check connection.");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const syncTracking = async (trackingId: string, provider: string = 'shiprocket') => {
     setIsUpdating(true);
     try {
@@ -814,6 +839,32 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
                        ))}
                     </div>
 
+                    {/* Quick Carrier Preset Pills */}
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setCarrier("ST Courier")}
+                        className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
+                          carrier === "ST Courier"
+                            ? "bg-red-600 text-white shadow-sm"
+                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        }`}
+                      >
+                        ⚡ ST Courier
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCarrier("India Post")}
+                        className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
+                          carrier === "India Post"
+                            ? "bg-amber-600 text-white shadow-sm"
+                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        }`}
+                      >
+                        📮 India Post
+                      </button>
+                    </div>
+
                     <div className="space-y-2 pt-2">
                        <label className="text-[9px] font-bold uppercase tracking-widest text-gray-400 flex items-center gap-1"><Truck size={10} /> Logistics Carrier</label>
                        <select 
@@ -829,32 +880,34 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
                        <label className="text-[9px] font-bold uppercase tracking-widest text-gray-400 flex items-center gap-1"><Hash size={10} /> Tracking Identification</label>
                        <input 
                          type="text" 
-                         placeholder="Enter tracking ID..."
+                         placeholder="Enter tracking ID (e.g. EM123456789IN for India Post)..."
                          value={trackingId}
                          onChange={(e) => setTrackingId(e.target.value)}
                          className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-xs outline-none focus:border-wine/20 transition-all font-medium font-mono"
                        />
                     </div>
-                    <button 
-                      disabled={isUpdating || !carrier || !trackingId || selectedItemsForFulfillment.length === 0}
-                      onClick={createFulfillment}
-                      className="w-full bg-charcoal text-white py-4 rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-wine transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+
+                    {/* 1-Click Automated Booking with ST Courier */}
+                    <button
+                      disabled={isUpdating}
+                      onClick={bookSTCourier}
+                      className="w-full bg-gradient-to-r from-red-700 to-red-600 text-white py-4 rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:brightness-110 shadow-md shadow-red-900/10 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                     >
-                       {isUpdating ? <Loader2 size={14} className="animate-spin" /> : "Fulfill Selected Items"}
+                       {isUpdating ? <Loader2 size={14} className="animate-spin" /> : "⚡ 1-Click Book ST Courier (Auto-AWB)"}
                     </button>
 
-                    <div className="pt-4 flex items-center gap-2">
+                    <div className="pt-2 flex items-center gap-2">
                       <div className="flex-1 border-t border-gray-100"></div>
-                      <span className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">OR</span>
+                      <span className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">OR MANUAL DISPATCH</span>
                       <div className="flex-1 border-t border-gray-100"></div>
                     </div>
 
-                    <button
-                      disabled={isUpdating}
-                      onClick={() => automateShipment()}
-                      className="w-full bg-wine text-white py-4 rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-wine/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 mt-4"
+                    <button 
+                      disabled={isUpdating || !carrier || !trackingId || selectedItemsForFulfillment.length === 0}
+                      onClick={createFulfillment}
+                      className="w-full bg-charcoal text-white py-3.5 rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-wine transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                     >
-                       {isUpdating ? <Loader2 size={14} className="animate-spin" /> : "Auto-Fulfill with Shiprocket"}
+                       {isUpdating ? <Loader2 size={14} className="animate-spin" /> : "Fulfill Selected Items"}
                     </button>
                  </div>
                ) : (

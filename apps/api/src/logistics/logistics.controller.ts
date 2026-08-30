@@ -50,6 +50,13 @@ export class LogisticsController {
     return this.logisticsService.createAutomatedShipment(orderId, provider);
   }
 
+  @Post('book/st-courier/:orderId')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN', 'ADMIN', 'OPERATIONS', 'WAREHOUSE')
+  async bookSTCourier(@Param('orderId') orderId: string) {
+    return this.logisticsService.bookWithSTCourier(orderId);
+  }
+
   @Post('sync-tracking/:trackingId')
   @UseGuards(AuthGuard, RolesGuard)
   @Roles('SUPER_ADMIN', 'ADMIN', 'OPERATIONS', 'WAREHOUSE')
@@ -75,6 +82,17 @@ export class LogisticsController {
     if (data.awb) {
       return this.logisticsService.syncTrackingStatus(data.awb, 'shiprocket');
     }
+  }
+
+  /**
+   * ST Courier 30-Minute Status Push Webhook
+   * Receives batch tracking status updates from ST Courier V2 platform
+   */
+  @Public()
+  @Throttle({ default: { limit: 100, ttl: 60000 } })
+  @Post('webhooks/st-courier')
+  async stCourierWebhook(@Body() body: any) {
+    return this.logisticsService.handleSTCourierWebhook(body);
   }
 
   @Public()
