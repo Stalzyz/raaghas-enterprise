@@ -570,7 +570,9 @@ export class LogisticsService {
    */
   async handleSTCourierWebhook(body: any) {
     this.logger.log(`Received ST Courier 30-min status push: ${JSON.stringify(body)}`);
-    const apiData = Array.isArray(body?.apiData) ? body.apiData : [];
+    const apiData = Array.isArray(body?.apiData) 
+      ? body.apiData 
+      : (Array.isArray(body) ? body : (Array.isArray(body?.data) ? body.data : []));
     const results: any[] = [];
 
     for (const entry of apiData) {
