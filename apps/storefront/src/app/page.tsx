@@ -213,7 +213,9 @@ export default async function Home() {
                 image1: p.images?.[0]?.url || "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800",
                 image2: p.images?.[1]?.url || p.images?.[0]?.url || "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800",
                 label: p.type || "New Arrival",
-                badge: p.tags?.toLowerCase().includes('bestseller') ? 'Bestseller' : ((p.variants?.reduce((sum: number, v: any) => sum + (v.availableStock ?? v.inventory ?? v.inventoryQuantity ?? 0), 0) || 0) <= 0 ? 'Sold Out' : null),
+                badge: ((p.variants?.reduce((sum: number, v: any) => sum + (v.availableStock ?? v.inventory ?? v.inventoryQuantity ?? 0), 0) || 0) <= 0)
+                  ? 'Sold Out'
+                  : (p.tags?.toLowerCase().includes('bestseller') ? 'Bestseller' : null),
                 variants: (p.variants || []).map((v: any) => ({
                   id: v.id,
                   option1Name: v.option1Name,

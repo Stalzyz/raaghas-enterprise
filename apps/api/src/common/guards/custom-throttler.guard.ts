@@ -4,21 +4,15 @@ import * as os from 'os';
 
 @Injectable()
 export class CustomThrottlerGuard extends ThrottlerGuard {
-  private localIps = new Set<string>();
+  private localIps = this.initializeLocalIps();
 
-  // Use any for constructor arguments to avoid strict dependency injection signature issues
-  constructor(options: any, storageService: any, reflector: any) {
-    super(options, storageService, reflector);
-    this.refreshLocalIps();
-  }
-
-  private refreshLocalIps() {
-    this.localIps.clear();
-    this.localIps.add('127.0.0.1');
-    this.localIps.add('::1');
-    this.localIps.add('::ffff:127.0.0.1');
-    this.localIps.add('72.61.231.187');
-    this.localIps.add('::ffff:72.61.231.187');
+  private initializeLocalIps(): Set<string> {
+    const ips = new Set<string>();
+    ips.add('127.0.0.1');
+    ips.add('::1');
+    ips.add('::ffff:127.0.0.1');
+    ips.add('72.61.231.187');
+    ips.add('::ffff:72.61.231.187');
     
     // Add all local network interfaces (including VPS public IP attached to eth0)
     const interfaces = os.networkInterfaces();
@@ -26,13 +20,14 @@ export class CustomThrottlerGuard extends ThrottlerGuard {
       const ifaces = interfaces[name];
       if (ifaces) {
         for (const iface of ifaces) {
-          this.localIps.add(iface.address);
+          ips.add(iface.address);
           if (iface.family === 'IPv4') {
-            this.localIps.add(`::ffff:${iface.address}`);
+            ips.add(`::ffff:${iface.address}`);
           }
         }
       }
     }
+    return ips;
   }
 
   protected async getTracker(req: Record<string, any>): Promise<string> {

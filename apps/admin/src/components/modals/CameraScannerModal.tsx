@@ -1,25 +1,35 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { X, Camera, Flashlight, RefreshCw, CheckCircle2, AlertCircle } from "lucide-react";
+import { X, Camera, CheckCircle2, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface CameraScannerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onScanResult: (result: string) => void;
+  title?: string;
+  subtitle?: string;
 }
 
-export function CameraScannerModal({ isOpen, onClose, onScanResult }: CameraScannerModalProps) {
+export function CameraScannerModal({ 
+  isOpen, 
+  onClose, 
+  onScanResult,
+  title = "Live Barcode & QR Scanner",
+  subtitle = "Scan SKU or Tracking Code"
+}: CameraScannerModalProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [manualCode, setManualCode] = useState("");
   const [scannedCode, setScannedCode] = useState<string | null>(null);
+  const scanLoopRef = useRef<boolean>(false);
 
   useEffect(() => {
     if (!isOpen) {
       stopCamera();
+      setScannedCode(null);
       return;
     }
 
@@ -32,13 +42,18 @@ export function CameraScannerModal({ isOpen, onClose, onScanResult }: CameraScan
 
   const startCamera = async () => {
     setCameraError(null);
+    setScannedCode(null);
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: "environment" } }
+        video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }
       });
       setStream(mediaStream);
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play().catch(console.error);
+          startBarcodeDetection();
+        };
       }
     } catch (err: any) {
       console.error("Camera access error:", err);
@@ -46,7 +61,52 @@ export function CameraScannerModal({ isOpen, onClose, onScanResult }: CameraScan
     }
   };
 
+  const startBarcodeDetection = () => {
+    scanLoopRef.current = true;
+
+    if (typeof window !== "undefined" && "BarcodeDetector" in window) {
+      try {
+        const detector = new (window as any).BarcodeDetector({
+          formats: ["code_128", "code_39", "ean_13", "ean_8", "qr_code", "upc_a", "upc_e", "itf", "data_matrix"]
+        });
+
+        const scanFrame = async () => {
+          if (!scanLoopRef.current || !videoRef.current) return;
+
+          try {
+            if (videoRef.current.readyState >= 2) {
+              const barcodes = await detector.detect(videoRef.current);
+              if (barcodes && barcodes.length > 0) {
+                const code = barcodes[0].rawValue?.trim();
+                if (code) {
+                  scanLoopRef.current = false;
+                  setScannedCode(code);
+                  setTimeout(() => {
+                    onScanResult(code);
+                    onClose();
+                  }, 400);
+                  return;
+                }
+              }
+            }
+          } catch (e) {
+            // Frame detection error, continue next frame
+          }
+
+          if (scanLoopRef.current) {
+            requestAnimationFrame(scanFrame);
+          }
+        };
+
+        requestAnimationFrame(scanFrame);
+      } catch (e) {
+        console.warn("BarcodeDetector error, falling back to manual input:", e);
+      }
+    }
+  };
+
   const stopCamera = () => {
+    scanLoopRef.current = false;
     if (stream) {
       stream.getTracks().forEach((track) => track.stop());
       setStream(null);
@@ -78,8 +138,8 @@ export function CameraScannerModal({ isOpen, onClose, onScanResult }: CameraScan
                 <Camera size={20} className="text-pink-500" />
               </div>
               <div>
-                <h3 className="font-bold text-sm">Live Barcode & QR Scanner</h3>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Scan SKU or Tracking Code</p>
+                <h3 className="font-bold text-sm">{title}</h3>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{subtitle}</p>
               </div>
             </div>
             <button
@@ -92,7 +152,15 @@ export function CameraScannerModal({ isOpen, onClose, onScanResult }: CameraScan
 
           {/* Viewfinder Video Area */}
           <div className="relative w-full h-72 bg-black flex items-center justify-center overflow-hidden">
-            {cameraError ? (
+            {scannedCode ? (
+              <div className="p-6 text-center space-y-3 bg-green-950/80 w-full h-full flex flex-col items-center justify-center">
+                <CheckCircle2 size={48} className="text-green-400 animate-bounce" />
+                <p className="text-xs uppercase font-bold tracking-widest text-green-300">Barcode Captured</p>
+                <p className="text-base font-mono font-bold text-white bg-black/50 px-4 py-2 rounded-xl border border-green-500/40">
+                  {scannedCode}
+                </p>
+              </div>
+            ) : cameraError ? (
               <div className="p-6 text-center text-gray-400 space-y-3">
                 <AlertCircle size={32} className="mx-auto text-amber-500" />
                 <p className="text-xs font-medium">{cameraError}</p>
@@ -139,8 +207,8 @@ export function CameraScannerModal({ isOpen, onClose, onScanResult }: CameraScan
                 type="text"
                 value={manualCode}
                 onChange={(e) => setManualCode(e.target.value)}
-                placeholder="Or type SKU / Order ID manually..."
-                className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-xs text-white placeholder-gray-500 outline-none focus:border-wine transition-all"
+                placeholder="Or enter tracking ID manually..."
+                className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-xs text-white placeholder-gray-500 outline-none focus:border-wine transition-all font-mono"
               />
               <button
                 type="submit"

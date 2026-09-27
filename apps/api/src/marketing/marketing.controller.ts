@@ -32,6 +32,12 @@ export class MarketingController {
     return this.marketingService.generateFacebookXmlFeed();
   }
 
+  @Get('meta-feed/refresh')
+  async refreshMetaFeed() {
+    await this.marketingService.refreshFeedCache();
+    return { success: true, message: 'Meta feed cache refreshed.' };
+  }
+
   // ─── DISCOUNT VALIDATION ──────────────────────────────────────────────────
 
   @Public()
@@ -156,6 +162,21 @@ export class MarketingController {
     
     return { success: true };
   }
+
+  @Public()
+  @Post('capi/lead')
+  async trackCapiLead(@Body() body: any) {
+    const rawPayload = body.data ? body : { data: [body] };
+    return this.marketingService.sendRawMetaCapiPayload(rawPayload);
+  }
+
+  @Public()
+  @Post('capi/raw')
+  async trackCapiRaw(@Body() body: any) {
+    const rawPayload = body.data ? body : { data: [body] };
+    return this.marketingService.sendRawMetaCapiPayload(rawPayload);
+  }
+
 
   @Public()
   @Get('facebook-feed.xml')

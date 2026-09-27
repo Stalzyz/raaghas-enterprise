@@ -1,10 +1,14 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { GraftyService } from '../communication/grafty.service';
 
 @Injectable()
 export class SettingsService {
   private readonly logger = new Logger(SettingsService.name);
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private graftyService: GraftyService,
+  ) {}
 
   async getSettings() {
     let settings = await (this.prisma as any).storeSettings.findUnique({
@@ -64,5 +68,10 @@ export class SettingsService {
       this.logger.error(`[SettingsService] Update failed: ${error.message}`);
       throw error;
     }
+  }
+
+  async testWhatsApp(phone: string) {
+    if (!phone) throw new BadRequestException('Phone number is required');
+    return this.graftyService.testConnection(phone);
   }
 }

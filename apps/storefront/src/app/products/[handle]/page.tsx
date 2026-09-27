@@ -77,6 +77,10 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
     );
   }
 
+  const isOutOfStock = product.variants && product.variants.length > 0
+    ? !product.variants.some((v: any) => (v.availableStock ?? v.inventory ?? 0) > 0)
+    : (product.inventory != null ? product.inventory <= 0 : false);
+
   const stickyProps = {
     id: product.id,
     variantId: product.variants?.[0]?.id || "",
@@ -84,9 +88,7 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
     image: getAssetUrl(product.images?.[0]?.url),
     price: product.variants?.[0]?.price ? `₹${Number(product.variants[0].price).toLocaleString()}` : "Price on Request",
     handle: product.handle,
-    // BUG-004 FIX: Use availableStock (inventory - active reservations), not raw inventory
-    // The API must return availableStock. Fall back to inventory if missing (older API response).
-    isOutOfStock: (product.variants?.[0]?.availableStock ?? product.variants?.[0]?.inventory ?? 0) <= 0
+    isOutOfStock
   };
 
   const jsonLd = [
@@ -106,8 +108,16 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
         "url": `${process.env.NEXT_PUBLIC_APP_URL || 'https://raaghas.in'}/products/${product.handle}`,
         "priceCurrency": "INR",
         "price": product.variants?.[0]?.price,
-        "availability": (product.variants?.[0]?.availableStock ?? product.variants?.[0]?.inventory ?? 0) > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
-      }
+        "itemCondition": "https://schema.org/NewCondition",
+        "availability": !isOutOfStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+      },
+      ...(product.rating ? {
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": product.rating,
+          "reviewCount": product.reviewCount || 1
+        }
+      } : {})
     },
     {
       "@context": "https://schema.org",

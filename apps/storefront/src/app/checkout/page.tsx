@@ -70,6 +70,7 @@ export default function CheckoutPage() {
   const [autoOffer, setAutoOffer] = useState<{ id: string; name: string; amount: number } | null>(null);
   const [applicableOffers, setApplicableOffers] = useState<any[]>([]);
   const [showOffersDrawer, setShowOffersDrawer] = useState(false);
+  const [stockError, setStockError] = useState<string | null>(null);
   
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
   const [selectedSavedAddressId, setSelectedSavedAddressId] = useState<string>("");
@@ -131,9 +132,14 @@ export default function CheckoutPage() {
   };
 
   // ── Derived totals ────────────────────────────────────────────────────────
+  const totalItemDiscount = (promoState.amount || 0) + (autoOffer?.amount || 0);
+  const discountRatio = baseTotal > 0 ? Math.min(1, totalItemDiscount / baseTotal) : 0;
+
   const excludedTax = items.reduce((acc, item) => {
     if (item.taxInclusive === false) {
-      return acc + item.price * item.quantity * ((item.taxRate || 5) / 100);
+      const lineGross = item.price * item.quantity;
+      const lineNet = Math.max(0, lineGross - (lineGross * discountRatio));
+      return acc + (lineNet * ((item.taxRate || 5) / 100));
     }
     return acc;
   }, 0);
@@ -144,6 +150,19 @@ export default function CheckoutPage() {
         (baseTotal + excludedTax - (promoState.amount || 0) - (autoOffer?.amount || 0)) * (maxCreditUsagePercent / 100)
       )
     : 0;
+
+  const totalDeductions = totalItemDiscount + walletDeduction;
+  const fullDiscountRatio = baseTotal > 0 ? Math.min(1, totalDeductions / baseTotal) : 0;
+
+  const inclusiveTax = items.reduce((acc, item) => {
+    if (item.taxInclusive !== false) {
+      const rate = (item.taxRate || 5) / 100;
+      const lineGross = item.price * item.quantity;
+      const lineNet = Math.max(0, lineGross - (lineGross * fullDiscountRatio));
+      return acc + (lineNet - (lineNet / (1 + rate)));
+    }
+    return acc;
+  }, 0);
 
   const netPayable =
     baseTotal +
@@ -188,7 +207,7 @@ export default function CheckoutPage() {
         }, eventId);
       });
 
-      fetch(API_URL + "/api/v1/marketing/capi/track", {
+      fetch(API_URL + "/marketing/capi/track", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -199,13 +218,17 @@ export default function CheckoutPage() {
           contentIds: items.map(i => i.variantId),
           fbp: Cookies.get("_fbp"),
           fbc: Cookies.get("_fbc"),
-          email: user?.email,
-          phone: user?.phone,
-          name: user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user?.name,
+          email: user?.email || form.email,
+          phone: (user as any)?.phone || form.phone,
+          name: (user as any)?.firstName ? `${(user as any).firstName} ${(user as any).lastName || ''}`.trim() : `${form.firstName} ${form.lastName}`.trim(),
+          city: form.city,
+          state: form.state,
+          zip: form.pincode,
+          country: "in",
         })
       }).catch(() => {});
     }
-  }, [isCartReady, items, baseTotal]);
+  }, [isCartReady, items, baseTotal, form]);
 
   // ── syncLead helper ───────────────────────────────────────────────────────
   const syncLead = async (currentForm = form) => {
@@ -410,6 +433,7 @@ export default function CheckoutPage() {
 
   const handlePayment = async () => {
     if (!validateForm()) return;
+    setStockError(null);
 
     const token = await getToken();
     if (!token) {
@@ -541,17 +565,17 @@ export default function CheckoutPage() {
               const orderData = await vRes.json();
               setPaymentSuccess(true);
 
-              // Track Purchase with deduplication eventID
-              import("@/components/analytics/MetaPixel").then((m) => {
-                m.trackMetaEvent("Purchase", {
+              // Store Purchase data for Thank You page to fire
+              const purchaseData = {
                   value: Number(orderData.totalAmount || orderData.total || 0),
                   currency: "INR",
                   content_ids: items.map((i) => i.variantId),
                   content_type: "product",
                   num_items: items.reduce((sum, i) => sum + i.quantity, 0),
                   order_id: orderData.id,
-                }, purchaseEventId);
-              });
+                  eventId: purchaseEventId
+              };
+              sessionStorage.setItem("pending_purchase_pixel", JSON.stringify(purchaseData));
               if (token) {
                 if (saveNewAddress && !selectedSavedAddressId) {
                   fetch(`${API_URL}/api/v1/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
@@ -636,7 +660,7 @@ export default function CheckoutPage() {
           value: baseTotal,
         }, paymentEventId);
       });
-      fetch(API_URL + "/api/v1/marketing/capi/track", {
+      fetch(API_URL + "/marketing/capi/track", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -645,7 +669,14 @@ export default function CheckoutPage() {
           currency: "INR",
           metaEventId: paymentEventId,
           fbp: Cookies.get("_fbp"),
-          fbc: Cookies.get("_fbc")
+          fbc: Cookies.get("_fbc"),
+          email: user?.email || form.email,
+          phone: (user as any)?.phone || form.phone,
+          name: (user as any)?.firstName ? `${(user as any).firstName} ${(user as any).lastName || ''}`.trim() : `${form.firstName} ${form.lastName}`.trim(),
+          city: form.city,
+          state: form.state,
+          zip: form.pincode,
+          country: "in",
         })
       }).catch(() => {});
 
@@ -653,6 +684,7 @@ export default function CheckoutPage() {
     } catch (error: any) {
       console.error("Payment initiation error:", error);
       setProcessing(false);
+      setStockError(error.message || "Something went wrong. Please try again.");
       alert(error.message || "Something went wrong. Please try again.");
     }
   };
@@ -989,6 +1021,18 @@ export default function CheckoutPage() {
             )}
           </section>
 
+          {stockError && (
+            <div className="p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 rounded-xl text-xs text-red-700 dark:text-red-300 font-medium flex items-start gap-3 shadow-sm">
+              <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="font-semibold text-red-800 dark:text-red-200">{stockError}</p>
+                <Link href="/cart" className="inline-block text-xs font-bold underline hover:text-wine mt-1">
+                  Click here to view your bag &rarr;
+                </Link>
+              </div>
+            </div>
+          )}
+
           {/* Submit */}
           <div className="pt-6 flex justify-between items-center border-t border-theme-border">
             <Link href="/cart" className="text-sm text-wine flex items-center gap-2 hover:opacity-70">
@@ -1112,13 +1156,7 @@ export default function CheckoutPage() {
               <span>Subtotal</span><span>₹{baseTotal.toLocaleString()}</span>
             </div>
             <div className="flex justify-between text-[11px] text-theme-text-muted opacity-80">
-              <span>Incl. GST</span><span>₹{Math.round(items.reduce((acc, item) => {
-                if (item.taxInclusive !== false) {
-                  const rate = (item.taxRate || 5) / 100;
-                  return acc + (item.price * item.quantity) - (item.price * item.quantity / (1 + rate));
-                }
-                return acc;
-              }, 0)).toLocaleString()}</span>
+              <span>Incl. GST</span><span>₹{Math.round(inclusiveTax).toLocaleString()}</span>
             </div>
             {excludedTax > 0 && (
               <div className="flex justify-between text-sm text-theme-text-muted">

@@ -44,11 +44,7 @@ export function MobileBottomDock() {
       return;
     }
     if (item.label === "Search") {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      setTimeout(() => {
-        const searchInput = document.getElementById('smart-search-input');
-        if (searchInput) searchInput.focus();
-      }, 300);
+      router.push(item.href);
       return;
     }
     if (item.action) {

@@ -60,16 +60,29 @@ export default function SupportPage() {
                   <div>
                     <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Live Concierge</h4>
                     <p className="text-xl font-bold text-charcoal mt-1">Chat via WhatsApp</p>
-                    {settings?.supportPhone && (() => {
-                      const cleanPhone = settings.supportPhone.replace(/\D/g, '');
-                      const waPhone = cleanPhone.length <= 10 ? `91${cleanPhone}` : cleanPhone;
-                      return (
-                        <a href={`https://wa.me/${waPhone}`} className="text-sm text-wine font-bold hover:underline mt-1 block">
-                           +{waPhone}
-                        </a>
-                      );
-                    })()}
-                 </div>
+                     {settings?.supportPhone && (() => {
+                       const cleanPhone = settings.supportPhone.replace(/\D/g, '');
+                       const waPhone = cleanPhone.length <= 10 ? `91${cleanPhone}` : cleanPhone;
+                       return (
+                         <a href={`https://wa.me/${waPhone}`} className="text-sm text-wine font-bold hover:underline mt-1 block">
+                            +{waPhone}
+                         </a>
+                       );
+                     })()}
+                     <p className="text-xs text-gray-500 mt-2 leading-relaxed">
+                       WhatsApp automation powered by{" "}
+                       <a 
+                         href="https://www.grafty.pro" 
+                         target="_blank" 
+                         rel="noopener" 
+                         title="Grafty Pro - WhatsApp Automation Tool Tamil Nadu"
+                         className="text-wine font-bold hover:underline"
+                       >
+                         Grafty.pro
+                       </a>{" "}
+                       (WhatsApp Automation Tool, Tamil Nadu)
+                     </p>
+                  </div>
               </div>
 
               <div className="flex items-start gap-6 group">

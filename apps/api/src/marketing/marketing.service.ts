@@ -330,13 +330,37 @@ export class MarketingService {
         success = res.success;
       }
     } else if (template === 'ORDER_SHIPPED') {
+      const carrier = (order.carrierName || '').toLowerCase();
+      const trackingId = order.trackingId || order.id;
+      const orderIdentifier = order.formattedOrderNumber || order.orderNumber || order.id;
+      const storefrontUrl = process.env.STOREFRONT_URL || 'https://raaghas.in';
+      
+      let directTrackingUrl = `${storefrontUrl}/tracking/${order.id}`;
+      if (carrier.includes('st courier') || carrier.includes('st_courier')) {
+        directTrackingUrl = `https://stcourier.com/track/shipment?awb=${encodeURIComponent(trackingId)}`;
+      } else if (carrier.includes('india post') || carrier.includes('speed post')) {
+        directTrackingUrl = 'https://www.indiapost.gov.in/_layouts/15/dop.portal.tracking/trackconsignment.aspx';
+      }
+
       if (phone) {
-        const res = await this.graftyService.sendShippingUpdate(phone, name, order.id, order.trackingId || order.id);
+        const res = await this.graftyService.sendShippingUpdate(
+          phone, 
+          name, 
+          orderIdentifier, 
+          directTrackingUrl,
+          order.carrierName || 'Courier',
+          trackingId
+        );
         success = res.success;
       }
       if (email && order.trackingId) {
-        await this.mailService.sendTrackingEmail(email, name, order.id, order.trackingId, order.carrierName || 'Courier')
-          .catch(e => this.logger.error('Failed to send shipping email', e));
+        await this.mailService.sendTrackingEmail(
+          email, 
+          name, 
+          orderIdentifier, 
+          order.trackingId, 
+          order.carrierName || 'Courier'
+        ).catch(e => this.logger.error('Failed to send shipping email', e));
         success = true;
       }
     } else if (template === 'ORDER_DELIVERED') {
@@ -441,11 +465,15 @@ export class MarketingService {
   }
 
   async syncEventToMetaCapi(event: string, payload: {
-    orderId: string;
-    amount: number;
+    orderId?: string;
+    amount?: number;
     phone?: string;
     email?: string;
     name?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+    country?: string;
     currency?: string;
     metaEventId?: string;
     externalId?: string;
@@ -456,6 +484,7 @@ export class MarketingService {
     contentIds?: string[];
     contentType?: string;
     historicalLtv?: number;
+    actionSource?: string;
   }) {
     const settings = await this.prisma.storeSettings.findUnique({
       where: { id: 'global' },
@@ -474,6 +503,10 @@ export class MarketingService {
       let hashedEmail: string | undefined;
       let hashedFirstName: string | undefined;
       let hashedExternalId: string | undefined;
+      let hashedCity: string | undefined;
+      let hashedState: string | undefined;
+      let hashedZip: string | undefined;
+      let hashedCountry: string | undefined;
 
       if (payload.phone) {
         let cleanPhone = payload.phone.replace(/\D/g, '');
@@ -490,6 +523,13 @@ export class MarketingService {
         hashedFirstName = this.hashData(firstName);
       }
 
+      if (payload.city) hashedCity = this.hashData(payload.city);
+      if (payload.state) hashedState = this.hashData(payload.state);
+      if (payload.zip) hashedZip = this.hashData(payload.zip.toString());
+      if (payload.country || payload.city || payload.state) {
+        hashedCountry = this.hashData(payload.country || 'in');
+      }
+
       if (payload.externalId) {
         hashedExternalId = this.hashData(payload.externalId);
       } else if (payload.email) {
@@ -503,11 +543,15 @@ export class MarketingService {
             event_name: event,
             event_time: Math.floor(Date.now() / 1000),
             event_id: payload.metaEventId,
-            action_source: "website",
+            action_source: payload.actionSource || "website",
             user_data: {
               ...(hashedPhone ? { ph: [hashedPhone] } : {}),
               ...(hashedEmail ? { em: [hashedEmail] } : {}),
               ...(hashedFirstName ? { fn: [hashedFirstName] } : {}),
+              ...(hashedCity ? { ct: [hashedCity] } : {}),
+              ...(hashedState ? { st: [hashedState] } : {}),
+              ...(hashedZip ? { zp: [hashedZip] } : {}),
+              ...(hashedCountry ? { country: [hashedCountry] } : {}),
               ...(hashedExternalId ? { external_id: [hashedExternalId] } : {}),
               ...(payload.clientIpAddress ? { client_ip_address: payload.clientIpAddress } : {}),
               ...(payload.clientUserAgent ? { client_user_agent: payload.clientUserAgent } : {}),
@@ -515,9 +559,9 @@ export class MarketingService {
               ...(payload.fbc ? { fbc: payload.fbc } : {}),
             },
             custom_data: {
-              value: payload.amount,
+              ...(payload.amount !== undefined ? { value: payload.amount } : {}),
               currency: payload.currency || 'INR',
-              order_id: payload.orderId,
+              ...(payload.orderId ? { order_id: payload.orderId } : {}),
               ...(payload.contentIds?.length ? { content_ids: payload.contentIds } : {}),
               ...(payload.contentType ? { content_type: payload.contentType } : {}),
               ...(payload.historicalLtv ? { predictive_ltv: payload.historicalLtv } : {}),
@@ -525,6 +569,7 @@ export class MarketingService {
           }
         ]
       };
+
 
       const resp = await fetch(`https://graph.facebook.com/v19.0/${pixelId}/events?access_token=${token}`, {
         method: 'POST',
@@ -545,6 +590,44 @@ export class MarketingService {
       return false;
     }
   }
+
+  /**
+   * Send raw / custom Meta CAPI payload directly (e.g. Lead, CRM, system_generated events)
+   */
+  async sendRawMetaCapiPayload(rawPayload: { data: any[] }, customToken?: string, customPixelId?: string) {
+    const settings = await this.prisma.storeSettings.findUnique({
+      where: { id: 'global' },
+    });
+
+    const token = customToken || settings?.metaCapiToken;
+    const pixelId = customPixelId || settings?.metaPixelId;
+
+    if (!token || !pixelId) {
+      this.logger.warn(`Meta CAPI token or Pixel ID missing. Skipping raw CAPI event.`);
+      return { success: false, error: 'Meta CAPI token or Pixel ID missing' };
+    }
+
+    try {
+      const resp = await fetch(`https://graph.facebook.com/v19.0/${pixelId}/events?access_token=${token}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(rawPayload),
+      });
+
+      const responseData = await resp.json();
+      if (!resp.ok) {
+        this.logger.error(`Meta CAPI API raw dispatch error: ${JSON.stringify(responseData)}`);
+        return { success: false, error: responseData };
+      }
+
+      this.logger.log(`✅ Meta CAPI raw payload successfully sent to Pixel ${pixelId}`);
+      return { success: true, data: responseData };
+    } catch (err: any) {
+      this.logger.error(`Meta CAPI raw payload execution error: ${err?.message || err}`);
+      return { success: false, error: err?.message || 'Network error' };
+    }
+  }
+
 
   // ─── DISCOUNT ENGINE CRUD ───────────────────────────────────────────────────
 
@@ -641,14 +724,20 @@ export class MarketingService {
   }
 
   async generateFacebookXmlFeed(): Promise<string> {
-    if (this.cachedFeed) return this.cachedFeed;
+    // Only serve from cache if it actually contains items (not empty/stale)
+    if (this.cachedFeed && this.cachedFeed.includes('<item>')) return this.cachedFeed;
+    this.logger.log('[Meta Feed] Cache miss or empty — rebuilding feed...');
     this.cachedFeed = await this.buildFacebookXmlFeed();
+    this.logger.log(`[Meta Feed] Built. Contains items: ${this.cachedFeed.includes('<item>')}`);
     return this.cachedFeed;
   }
 
   private async buildFacebookXmlFeed(): Promise<string> {
+    try {
+    const count = await this.prisma.product.count();
+    this.logger.log(`[Meta Feed] Total products in DB: ${count}`);
     const products = await this.prisma.product.findMany({
-      where: { status: 'Active' },
+      where: { published: true },
       include: {
         variants: true,
         images: { orderBy: { position: 'asc' } }
@@ -674,9 +763,11 @@ export class MarketingService {
 
       const description = this.escapeXml(p.description || p.title);
       const link = this.escapeXml(`https://raaghas.in/products/${p.handle}`);
-      const primaryImage = p.images && p.images.length > 0 ? this.escapeXml(p.images[0].url) : 'https://raaghas.in/logo-dark.svg';
+      const API_BASE = 'https://api.raaghas.in';
+      const toAbsolute = (url: string) => url && url.startsWith('http') ? url : `${API_BASE}${url.startsWith('/') ? '' : '/'}${url}`;
+      const primaryImage = p.images && p.images.length > 0 ? this.escapeXml(toAbsolute(p.images[0].url)) : 'https://raaghas.in/logo-dark.svg';
       const additionalImages = (p.images || []).slice(1).map((img: any) =>
-        `      <g:additional_image_link>${this.escapeXml(img.url)}</g:additional_image_link>`
+        `      <g:additional_image_link>${this.escapeXml(toAbsolute(img.url))}</g:additional_image_link>`
       ).join('\n');
       const brand = 'Raaghas';
 
@@ -726,7 +817,8 @@ ${additionalImages}
       ${sizeTag}
       ${colorTag}
       ${materialTag}
-      <g:google_product_category>${getMetaCategoryId(p.category)}</g:google_product_category>
+      <g:google_product_category>Apparel &amp; Accessories &gt; Clothing &gt; Traditional &amp; Ethnic Clothing</g:google_product_category>
+      <g:fb_product_category>${getMetaCategoryId(p.category)}</g:fb_product_category>
       <g:item_group_id>${this.escapeXml(p.id)}</g:item_group_id>
     </item>`;
       }
@@ -741,6 +833,10 @@ ${additionalImages}
     ${itemsXml}
   </channel>
 </rss>`;
+    } catch (err: any) {
+      this.logger.error(`[Meta Feed] Error building feed: ${err.message}`, err.stack);
+      return `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>Raaghas</title></channel></rss>`;
+    }
   }
 
   private escapeXml(unsafe: any): string {

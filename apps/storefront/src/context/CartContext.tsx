@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from "react";
 import Cookies from "js-cookie";
 import { API_URL } from "@/lib/api";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -14,6 +14,7 @@ export interface CartItem {
   maxStock: number; // FIX: track available inventory to prevent overselling
   image: string;
   taxInclusive?: boolean; // added for tax
+  taxRate?: number;
   size?: string;
   color?: string;
   material?: string;
@@ -63,6 +64,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [items, isInitialized]);
 
+  const lastAddedRef = useRef<{ id: string, time: number }>({ id: "", time: 0 });
+
   const addItem = (newItem: CartItem) => {
     setItems((prev) => {
       const existing = prev.find((i) => i.id === newItem.id);
@@ -82,7 +85,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return [...prev, newItem];
     });
 
-    // Track Meta AddToCart Event (Pixel + CAPI Deduplication)
+    // Debounce track Meta AddToCart Event to prevent rapid double fires
+    const now = Date.now();
+    if (lastAddedRef.current.id === newItem.variantId && (now - lastAddedRef.current.time) < 2000) {
+       return; // skip duplicate firing within 2 seconds
+    }
+    lastAddedRef.current = { id: newItem.variantId, time: now };
+
     const eventId = "evt_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9);
     import("@/components/analytics/MetaPixel").then((m) => {
       m.trackMetaEvent("AddToCart", {

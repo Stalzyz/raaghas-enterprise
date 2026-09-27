@@ -3,7 +3,7 @@
 import { API_BASE } from "@/lib/api";
 
 import { useState, useEffect } from "react";
-import { Save, Globe, Phone, Mail, Link2, Share2, Loader2, CheckCircle2, MessageSquare, Shield, Eye, EyeOff, CreditCard, Receipt, MapPin, Landmark, Percent, ShieldCheck, Target, BarChart3, Sparkles, Hash } from "lucide-react";
+import { Save, Globe, Phone, Mail, Link2, Share2, Loader2, CheckCircle2, MessageSquare, Shield, Eye, EyeOff, CreditCard, Receipt, MapPin, Landmark, Percent, ShieldCheck, Target, BarChart3, Sparkles, Hash, Send, Smartphone } from "lucide-react";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
 
 export default function SettingsPage() {
@@ -82,6 +82,38 @@ export default function SettingsPage() {
   const [showSmtpPass, setShowSmtpPass] = useState(false);
   const [showOpenAiKey, setShowOpenAiKey] = useState(false);
   const [message, setMessage] = useState("");
+  const [testPhone, setTestPhone] = useState("");
+  const [isTestingWhatsApp, setIsTestingWhatsApp] = useState(false);
+  const [testWhatsAppStatus, setTestWhatsAppStatus] = useState<{ success: boolean; message: string } | null>(null);
+
+  const handleTestWhatsApp = async () => {
+    if (!testPhone.trim()) {
+      alert("Please enter a mobile number with country code (e.g. +919876543210)");
+      return;
+    }
+    setIsTestingWhatsApp(true);
+    setTestWhatsAppStatus(null);
+    try {
+      const res = await fetch(`${API_BASE}/settings/test-whatsapp`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ phone: testPhone.trim() })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setTestWhatsAppStatus({ success: true, message: "✅ Test template message dispatched successfully via Grafty!" });
+      } else {
+        setTestWhatsAppStatus({ success: false, message: `❌ Failed: ${data.error || data.reason || data.message || 'Check Grafty API key & URL'}` });
+      }
+    } catch (err: any) {
+      setTestWhatsAppStatus({ success: false, message: `❌ Error: ${err.message}` });
+    } finally {
+      setIsTestingWhatsApp(false);
+    }
+  };
 
   useEffect(() => {
     if (token) {
@@ -327,6 +359,39 @@ export default function SettingsPage() {
                   </button>
                 </div>
                 <p className="text-[10px] text-gray-400 mt-2 font-medium italic">Credentials are masked for security. This key enables automated order confirmations.</p>
+              </div>
+
+              {/* Live Connection Test Box */}
+              <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100 space-y-3">
+                <div className="flex justify-between items-center">
+                  <label className="block text-xs font-bold text-charcoal uppercase tracking-widest flex items-center gap-1.5">
+                    <Smartphone size={13} className="text-wine" /> Test Grafty Connection
+                  </label>
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400">Live API Ping</span>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Enter phone (+919876543210)"
+                    value={testPhone}
+                    onChange={(e) => setTestPhone(e.target.value)}
+                    className="flex-1 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-sans outline-none focus:border-wine"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleTestWhatsApp}
+                    disabled={isTestingWhatsApp || !testPhone}
+                    className="px-5 py-2.5 bg-wine text-white rounded-xl text-[10px] font-bold uppercase tracking-wider hover:bg-black transition-colors disabled:opacity-50 flex items-center gap-1.5 whitespace-nowrap shadow-sm"
+                  >
+                    {isTestingWhatsApp ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
+                    <span>{isTestingWhatsApp ? "Testing..." : "Send Test Ping"}</span>
+                  </button>
+                </div>
+                {testWhatsAppStatus && (
+                  <div className={`p-3 rounded-xl text-xs font-medium ${testWhatsAppStatus.success ? 'bg-emerald-50 text-emerald-800 border border-emerald-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
+                    {testWhatsAppStatus.message}
+                  </div>
+                )}
               </div>
 
               {/* Nudge Schedule Status */}

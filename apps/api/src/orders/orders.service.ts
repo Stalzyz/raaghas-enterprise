@@ -117,7 +117,8 @@ export class OrdersService {
           include: {
             variant: {
               include: { product: { include: { images: { take: 1 } } } }
-            }
+            },
+            returnExchanges: true
           }
         },
         fulfillments: { include: { items: true, shipments: true } },
@@ -138,7 +139,79 @@ export class OrdersService {
       }
     }
 
-    return order;
+    const enriched = this.enrichOrderWithRefunds(order);
+
+    // Fetch customer history across all previous orders
+    const customerFilters: any[] = [];
+    if (order.userId) customerFilters.push({ userId: order.userId });
+    if (order.customerEmail) customerFilters.push({ customerEmail: { equals: order.customerEmail, mode: 'insensitive' } });
+    if (order.customerPhone) {
+      const cleanPhone = order.customerPhone.replace(/\D/g, '').slice(-10);
+      if (cleanPhone.length >= 7) {
+        customerFilters.push({ customerPhone: { contains: cleanPhone } });
+      }
+    }
+
+    let customerHistory: any = {
+      totalOrders: 1,
+      previousOrdersCount: 0,
+      lifetimeSpend: Number(order.totalAmount || 0),
+      isFirstTimeCustomer: true,
+      previousOrders: []
+    };
+
+    if (customerFilters.length > 0) {
+      try {
+        const allOrders = await this.prisma.order.findMany({
+          where: {
+            OR: customerFilters,
+            status: { notIn: ['CANCELLED', 'FAILED'] }
+          },
+          include: {
+            items: {
+              include: {
+                variant: {
+                  include: {
+                    product: { select: { title: true } }
+                  }
+                }
+              }
+            }
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 25
+        });
+
+        const previousOrders = allOrders.filter(o => o.id !== order.id);
+        const totalAmountSpent = allOrders.reduce((sum, o) => sum + Number(o.totalAmount || 0), 0);
+
+        customerHistory = {
+          totalOrders: allOrders.length || 1,
+          previousOrdersCount: previousOrders.length,
+          lifetimeSpend: Math.round(totalAmountSpent * 100) / 100,
+          isFirstTimeCustomer: previousOrders.length === 0,
+          firstOrderDate: allOrders.length > 0 ? allOrders[allOrders.length - 1].createdAt : order.createdAt,
+          previousOrders: previousOrders.map(po => ({
+            id: po.id,
+            orderNumber: po.formattedOrderNumber || (po.orderNumber != null ? String(po.orderNumber + 1000) : po.id.slice(-8).toUpperCase()),
+            totalAmount: Number(po.totalAmount),
+            status: po.status,
+            financialStatus: po.financialStatus,
+            fulfillmentStatus: po.fulfillmentStatus,
+            createdAt: po.createdAt,
+            itemCount: po.items.reduce((s, i) => s + i.quantity, 0),
+            itemsSummary: po.items.map((i: any) => i.variant?.product?.title || 'Item').slice(0, 3).join(', ') + (po.items.length > 3 ? ` +${po.items.length - 3} more` : '')
+          }))
+        };
+      } catch (err: any) {
+        this.logger.warn(`Failed to retrieve customer history for order ${order.id}: ${err?.message}`);
+      }
+    }
+
+    return {
+      ...enriched,
+      customerHistory
+    };
   }
 
   async trackGuestOrder(orderId: string, email: string) {
@@ -149,7 +222,8 @@ export class OrdersService {
           include: {
             variant: {
               include: { product: { include: { images: { take: 1 } } } }
-            }
+            },
+            returnExchanges: true
           }
         },
         fulfillments: { include: { items: true, shipments: true } },
@@ -162,7 +236,59 @@ export class OrdersService {
       throw new NotFoundException('Order not found or email mismatch');
     }
 
-    return order;
+    return this.enrichOrderWithRefunds(order);
+  }
+
+  private enrichOrderWithRefunds(order: any) {
+    if (!order) return order;
+
+    // Collect all refunds from order.returns (OrderReturn)
+    const orderRefunds = (order.returns || []).map((r: any) => ({
+      id: r.id,
+      amount: Number(r.refundAmount || 0),
+      type: 'ORDER_REFUND',
+      method: r.notes?.toLowerCase().includes('wallet') ? 'WALLET' : 'SOURCE',
+      date: r.createdAt,
+      reason: r.reason || 'Direct Refund',
+      notes: r.notes,
+      status: r.status || r.refundStatus || 'COMPLETED',
+      itemName: undefined
+    }));
+
+    // Collect all refunds from item.returnExchanges
+    const itemRefunds: any[] = [];
+    (order.items || []).forEach((item: any) => {
+      const reList = (item as any).returnExchanges || (item as any).ReturnExchange || [];
+      if (Array.isArray(reList)) {
+        reList.forEach((re: any) => {
+          if (re.refundAmount && Number(re.refundAmount) > 0) {
+            itemRefunds.push({
+              id: re.id,
+              amount: Number(re.refundAmount),
+              type: re.type, // 'RETURN' | 'EXCHANGE'
+              method: re.refundMethod || 'WALLET',
+              date: re.createdAt,
+              reason: re.notes || `${re.type} processed for item`,
+              notes: re.notes,
+              status: 'COMPLETED',
+              itemName: item.variant?.product?.title || 'Item',
+              orderItemId: item.id
+            });
+          }
+        });
+      }
+    });
+
+    const allRefunds = [...orderRefunds, ...itemRefunds];
+    const totalRefunded = allRefunds.reduce((sum, r) => sum + r.amount, 0);
+    const netPaid = Math.max(0, Number(order.totalAmount || 0) - totalRefunded);
+
+    return {
+      ...order,
+      totalRefunded,
+      netPaid,
+      allRefunds
+    };
   }
 
   private buildOrderWhereClause(filters: {
@@ -290,16 +416,33 @@ export class OrdersService {
                   } 
                 } 
               }
-            }
+            },
+            returnExchanges: { select: { refundAmount: true, type: true } }
           }
         },
+        returns: { select: { refundAmount: true, status: true } },
         assignedStaff: { select: { name: true, email: true } }
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    await this.cacheManager.set(cacheKey, orders, 60000); // 1 minute TTL
-    return orders;
+    const enrichedOrders = (orders as any[]).map((o: any) => {
+      const orderReturnsSum = o.returns?.reduce((s: number, r: any) => s + (Number(r.refundAmount) || 0), 0) || 0;
+      const itemReturnsSum = o.items?.reduce((s: number, it: any) => {
+        const reList = it.returnExchanges || it.ReturnExchange || [];
+        const itemRefund = reList.reduce((is: number, re: any) => is + (Number(re.refundAmount) || 0), 0);
+        return s + itemRefund;
+      }, 0) || 0;
+      const totalRefunded = orderReturnsSum + itemReturnsSum;
+      return {
+        ...o,
+        totalRefunded,
+        netPaid: Math.max(0, Number(o.totalAmount || 0) - totalRefunded)
+      };
+    });
+
+    await this.cacheManager.set(cacheKey, enrichedOrders, 60000); // 1 minute TTL
+    return enrichedOrders;
   }
 
   async getAdminOrdersExport(filters: any) {
@@ -367,6 +510,12 @@ export class OrdersService {
       if (status === 'CONFIRMED') {
         this.marketingService.sendOrderNotification(updatedOrder, 'ORDER_CONFIRMED')
           .catch((e: any) => this.logger.error(`WhatsApp notification failed for order ${id}`, e));
+      } else if (status === 'SHIPPED') {
+        this.marketingService.sendOrderNotification(updatedOrder, 'ORDER_SHIPPED')
+          .catch((e: any) => this.logger.error(`WhatsApp shipping notification failed for order ${id}`, e));
+      } else if (status === 'DELIVERED') {
+        this.marketingService.sendOrderNotification(updatedOrder, 'ORDER_DELIVERED')
+          .catch((e: any) => this.logger.error(`WhatsApp delivery notification failed for order ${id}`, e));
       }
 
       return updatedOrder;
@@ -535,10 +684,12 @@ export class OrdersService {
     });
 
     const order = await this.prisma.order.findUnique({ where: { id } });
-    if (order?.customerEmail && data.trackingId && data.carrierName) {
-      await this.mailService.sendTrackingEmail(
-        order.customerEmail, order.customerName, id, data.trackingId, data.carrierName
-      ).catch(err => this.logger.error('Failed to send tracking email:', err));
+    if (order && data.trackingId && data.carrierName) {
+      this.marketingService.sendOrderNotification({
+        ...order,
+        carrierName: data.carrierName,
+        trackingId: data.trackingId,
+      }, 'ORDER_SHIPPED').catch(err => this.logger.error('Failed to send shipping WhatsApp/email notification:', err));
     }
 
     return fulfillment;
@@ -1137,6 +1288,31 @@ export class OrdersService {
     const settings = await this.prisma.storeSettings.findUnique({ where: { id: 'global' } });
 
     // Generate Invoice PDF
+    const totalOrderTax = Number(order.taxes || 0);
+    const totalDiscount = Number(order.discountAmount || 0) + Number(order.walletCreditUsed || 0);
+    const shipping = Number(order.shipping || 0);
+    const grandTotal = Number(order.totalAmount || 0);
+
+    let buyerState = '';
+    try {
+      const addr = typeof order.shippingAddress === 'string' ? JSON.parse(order.shippingAddress) : order.shippingAddress;
+      buyerState = addr?.state || '';
+    } catch (e) {}
+
+    const sellerState = settings?.businessState || 'Tamil Nadu';
+    const isInterstate = Boolean(buyerState && sellerState && buyerState.trim().toLowerCase() !== sellerState.trim().toLowerCase());
+
+    const taxBreakdown: Array<{ name: string; amount: number }> = [];
+    if (totalOrderTax > 0) {
+      if (isInterstate) {
+        taxBreakdown.push({ name: 'IGST', amount: Math.round(totalOrderTax * 100) / 100 });
+      } else {
+        const halfTax = Math.round((totalOrderTax / 2) * 100) / 100;
+        taxBreakdown.push({ name: 'CGST', amount: halfTax });
+        taxBreakdown.push({ name: 'SGST', amount: Math.round((totalOrderTax - halfTax) * 100) / 100 });
+      }
+    }
+
     const formattedInvoice = {
       type: 'RETAIL',
       invoiceNumber: (order.formattedOrderNumber || `INV-${order.id.slice(-6).toUpperCase()}`),
@@ -1144,7 +1320,7 @@ export class OrdersService {
       seller: { 
         name: settings?.storeName || 'Raaghas', 
         address: settings?.businessAddress || 'Salem, India', 
-        state: settings?.businessState || 'Telangana', 
+        state: sellerState, 
         gst: settings?.gstNumber || '33AABCU9603R1ZX', 
         email: settings?.supportEmail || 'info@raaghas.com' 
       },
@@ -1155,19 +1331,35 @@ export class OrdersService {
         gst: 'N/A', 
         phone: order.customerPhone || 'N/A' 
       },
-      items: order.items.map(it => ({
-        description: it.variant?.product?.title || 'Item',
-        hsn: it.variant?.product?.hsnCode || 'TEXTILE-00',
-        taxPercent: 5,
-        quantity: it.quantity,
-        unitPrice: Number(it.price),
-        taxableValue: Number(it.price) * it.quantity
-      })),
+      items: order.items.map(it => {
+        const isTaxInclusive = it.variant?.product?.taxInclusive ?? true;
+        const taxRate = Number(it.variant?.product?.taxRate ?? 5);
+        const itemGross = Number(it.price) * it.quantity;
+        const taxableVal = isTaxInclusive
+          ? (itemGross / (1 + (taxRate / 100)))
+          : itemGross;
+
+        return {
+          description: it.variant?.product?.title || 'Item',
+          hsn: it.hsnCode || it.variant?.product?.hsnCode || 'TEXTILE-00',
+          taxPercent: taxRate,
+          quantity: it.quantity,
+          unitPrice: Number(it.price),
+          taxableValue: Math.round(taxableVal * 100) / 100
+        };
+      }),
       summary: { 
-        subtotal: Number(order.totalAmount), 
-        taxes: [], 
-        grandTotal: Number(order.totalAmount), 
-        totalGst: 0 
+        subtotal: Math.round(order.items.reduce((acc, it) => {
+          const isTaxInclusive = it.variant?.product?.taxInclusive ?? true;
+          const taxRate = Number(it.variant?.product?.taxRate ?? 5);
+          const itemGross = Number(it.price) * it.quantity;
+          return acc + (isTaxInclusive ? (itemGross / (1 + (taxRate / 100))) : itemGross);
+        }, 0) * 100) / 100, 
+        discount: totalDiscount,
+        shipping,
+        taxes: taxBreakdown, 
+        grandTotal, 
+        totalGst: totalOrderTax 
       },
       bankDetails: { 
         bankName: 'HDFC Bank', 

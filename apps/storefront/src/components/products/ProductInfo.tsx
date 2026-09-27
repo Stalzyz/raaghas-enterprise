@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, Truck, ShieldCheck, RefreshCw, Loader2, Heart, Tag, Check, AlertCircle, ChevronDown, X, Share2, Copy, Sparkles, Star } from "lucide-react";
+import { ShoppingBag, Truck, ShieldCheck, RefreshCw, Loader2, Heart, Tag, Check, AlertCircle, ChevronDown, X, Share2, Copy, Sparkles, Star, MessageCircle } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -16,6 +16,7 @@ interface Variant {
   sku?: string;
   price: number;
   compareAtPrice?: number;
+  mrp?: number | string;
   option1Name?: string;
   option1Value?: string;
   option2Name?: string;
@@ -65,10 +66,19 @@ export default function ProductInfo({ product }: ProductInfoProps) {
 
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [copiedRef, setCopiedRef] = useState(false);
+  const [supportPhone, setSupportPhone] = useState<string>("+919944747040");
 
   useEffect(() => {
     // Generate random viewers on client-side only to avoid hydration mismatch
     setViewers(Math.floor(Math.random() * 22) + 12);
+
+    // Fetch store settings for concierge WhatsApp number
+    fetch(`${API_URL}/api/v1/cms/settings`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.supportPhone) setSupportPhone(data.supportPhone);
+      })
+      .catch(() => {});
 
     // Track view for interests
     if (authUser?.id && product.id) {
@@ -259,11 +269,23 @@ export default function ProductInfo({ product }: ProductInfoProps) {
               <motion.div 
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="flex items-center gap-2 bg-red-50 px-3 py-1.5 rounded-full"
+                className="flex items-center gap-2 bg-red-50 dark:bg-red-950/40 px-3 py-1.5 rounded-full"
               >
                 <div className="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse" />
-                <span className="text-[10px] font-bold uppercase text-red-600 tracking-wider">
+                <span className="text-[10px] font-bold uppercase text-red-600 dark:text-red-400 tracking-wider">
                   Only {selectedVariant.inventory} left in stock
+                </span>
+              </motion.div>
+            )}
+            {selectedVariant && selectedVariant.inventory <= 0 && (
+              <motion.div 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex items-center gap-2 bg-zinc-900 text-zinc-100 dark:bg-zinc-800 dark:text-zinc-200 px-3 py-1.5 rounded-full shadow-sm"
+              >
+                <div className="w-1.5 h-1.5 bg-zinc-400 rounded-full" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">
+                  Sold Out
                 </span>
               </motion.div>
             )}
@@ -424,6 +446,29 @@ export default function ProductInfo({ product }: ProductInfoProps) {
         className="w-full bg-charcoal text-white py-4 rounded-2xl text-[10px] uppercase font-bold tracking-[0.3em] hover:bg-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {(selectedVariant?.inventory ?? 0) > 0 ? "Buy Now" : "Sold Out"}
+      </button>
+
+      {/* WhatsApp Quick Order & Inquiry */}
+      <button
+        type="button"
+        onClick={() => {
+          const cleanPhone = (supportPhone || "919944747040").replace(/[^0-9]/g, '');
+          const variantDesc = selectedVariant
+            ? [
+                selectedOptions.option1 ? `Size: ${selectedOptions.option1}` : '',
+                selectedOptions.option2 ? `Color: ${selectedOptions.option2}` : '',
+              ].filter(Boolean).join(', ')
+            : '';
+          const priceText = selectedVariant ? ` (₹${Number(selectedVariant.price).toLocaleString('en-IN')})` : '';
+          const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
+
+          const text = `Hello Raaghas Concierge,\n\nI would like to order / inquire about: *${product.title}*${priceText}.\n${variantDesc ? `Selected Variant: ${variantDesc}\n` : ''}Link: ${currentUrl}\n\nPlease assist me with placing this order.`;
+          window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`, '_blank');
+        }}
+        className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl border border-emerald-600/30 bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 text-[10px] uppercase font-bold tracking-[0.25em] transition-all shadow-sm group"
+      >
+        <MessageCircle size={16} className="text-emerald-600 group-hover:scale-110 transition-transform" />
+        <span>Order & Inquire via WhatsApp</span>
       </button>
 
       {/* Coupon Check Section */}

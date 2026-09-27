@@ -11,7 +11,9 @@ build
 
 # Large cache/temp directories - never commit these
 .npm-cache/
+.local_npm_cache/
 .npm/
+*.tsbuildinfo
 scratch/
 certification-suite/
 *.exp
@@ -38,3 +40,12 @@ scripts/.env.backup
 
 # Reports and playwright artifacts
 playwright-report/
+
+# Temporary scratch and test scripts
+test-*.js
+test-*.ts
+test_*.js
+fix-urls.*
+apps/api/*.js
+*.sh
+!scripts/*.sh

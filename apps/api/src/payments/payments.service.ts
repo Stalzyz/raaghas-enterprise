@@ -168,9 +168,14 @@ export class PaymentsService implements OnModuleInit {
 
     // 2. Validate Items & Prices
     let baseTotal = 0;
-    let totalTaxAmount = 0;
-    let extraTaxToCharge = 0;
-    const orderItems: any[] = [];
+    const rawItems: Array<{
+      variantId: string;
+      quantity: number;
+      price: number;
+      isTaxInclusive: boolean;
+      taxRate: number;
+    }> = [];
+
     for (const item of data.items) {
       const variant = await this.prisma.variant.findUnique({
         where: { id: item.variantId },
@@ -180,30 +185,16 @@ export class PaymentsService implements OnModuleInit {
       if (!variant || !variant.product?.published) throw new BadRequestException(`Product ${variant?.sku || item.variantId} is unavailable.`);
       
       const itemPrice = Number(variant.price);
-      let itemTaxForLedger = 0;
-      let itemExtraTax = 0;
-      
       const isTaxInclusive = variant.product.taxInclusive ?? true;
       const taxRate = Number(variant.product.taxRate ?? 5);
-      
-      if (taxRate > 0) {
-        if (isTaxInclusive) {
-          itemTaxForLedger = itemPrice - (itemPrice / (1 + (taxRate / 100)));
-        } else {
-          itemTaxForLedger = itemPrice * (taxRate / 100);
-          itemExtraTax = itemTaxForLedger;
-        }
-      }
-      
+
       baseTotal += itemPrice * item.quantity;
-      extraTaxToCharge += itemExtraTax * item.quantity;
-      totalTaxAmount += itemTaxForLedger * item.quantity;
-      
-      orderItems.push({ 
-        variantId: item.variantId, 
-        quantity: item.quantity, 
+      rawItems.push({
+        variantId: item.variantId,
+        quantity: item.quantity,
         price: itemPrice,
-        taxAmount: itemTaxForLedger 
+        isTaxInclusive,
+        taxRate
       });
     }
 
@@ -264,6 +255,50 @@ export class PaymentsService implements OnModuleInit {
       const fallbackOptions = await this.logisticsService.getShippingOptions(data.shippingAddress?.state || 'Unknown', baseTotal, data.items);
       validatedShippingCost = fallbackOptions.length > 0 ? Number(fallbackOptions[0].cost) : 0;
     }
+
+    // 3c. Calculate Post-Discount Taxes & Apportionment (GST Section 15(3) Compliance)
+    const totalDeductions = discountAmount + walletCreditUsed;
+    const discountRatio = baseTotal > 0 ? Math.min(1, totalDeductions / baseTotal) : 0;
+
+    let totalTaxAmount = 0;
+    let extraTaxToCharge = 0;
+    const orderItems: any[] = [];
+
+    for (const raw of rawItems) {
+      const lineGross = raw.price * raw.quantity;
+      const lineDiscount = lineGross * discountRatio;
+      const lineNet = Math.max(0, lineGross - lineDiscount);
+
+      let lineTax = 0;
+      let lineExtraTax = 0;
+
+      if (raw.taxRate > 0) {
+        if (raw.isTaxInclusive) {
+          // Backward GST extraction on net discounted value: Net - (Net / (1 + Rate))
+          const preTax = lineNet / (1 + (raw.taxRate / 100));
+          lineTax = lineNet - preTax;
+        } else {
+          // Forward GST addition on net discounted value: Net * Rate
+          lineTax = lineNet * (raw.taxRate / 100);
+          lineExtraTax = lineTax;
+        }
+      }
+
+      totalTaxAmount += lineTax;
+      extraTaxToCharge += lineExtraTax;
+
+      const perUnitTax = raw.quantity > 0 ? lineTax / raw.quantity : 0;
+
+      orderItems.push({
+        variantId: raw.variantId,
+        quantity: raw.quantity,
+        price: raw.price,
+        taxAmount: Math.round(perUnitTax * 100) / 100
+      });
+    }
+
+    totalTaxAmount = Math.round(totalTaxAmount * 100) / 100;
+    extraTaxToCharge = Math.round(extraTaxToCharge * 100) / 100;
 
     const netPayable = Math.max(0, baseTotal - discountAmount - walletCreditUsed) + extraTaxToCharge + validatedShippingCost;
 

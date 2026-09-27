@@ -57,7 +57,8 @@ export default function RelatedProducts({ productId }: { productId: string }) {
               price: product.variants?.[0]?.price || "0",
               compareAtPrice: product.variants?.[0]?.compareAtPrice,
               imageUrl: product.images?.[0]?.url || "",
-              category: product.type
+              category: product.type,
+              variants: product.variants
             }} />
           </div>
         ))}

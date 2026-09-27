@@ -133,7 +133,7 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                   </div>
                   <div className="flex justify-between text-[10px] uppercase font-bold tracking-[0.2em] text-charcoal/40 italic">
                     <span>Shipping estim.</span>
-                    <span className="text-wine">Complimentary</span>
+                    <span className="text-charcoal/60 lowercase">Calculated at checkout</span>
                   </div>
                 </div>
 

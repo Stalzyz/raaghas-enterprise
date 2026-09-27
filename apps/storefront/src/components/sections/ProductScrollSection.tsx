@@ -52,7 +52,9 @@ export function ProductScrollSection({ content, style }: { content: Record<strin
               image1: p.images?.[0]?.url || "",
               image2: p.images?.[1]?.url || p.images?.[0]?.url || "",
               label: p.type || "New Arrival",
-              badge: p.tags?.toLowerCase().includes("bestseller") ? "Bestseller" : ((p.variants?.reduce((s: number, vv: any) => s + (vv.availableStock ?? vv.inventory ?? vv.inventoryQuantity ?? 0), 0) || 0) <= 0 ? "Sold Out" : null),
+              badge: ((p.variants?.reduce((s: number, vv: any) => s + (vv.availableStock ?? vv.inventory ?? vv.inventoryQuantity ?? 0), 0) || 0) <= 0)
+                ? "Sold Out"
+                : (p.tags?.toLowerCase().includes("bestseller") ? "Bestseller" : null),
               variants: (p.variants || []).map((vv: any) => ({
                 id: vv.id,
                 option1Name: vv.option1Name,
@@ -281,7 +283,7 @@ function ScrollProductCard({ product }: { product: any }) {
             }`}
           >
             {isOutOfStock ? (
-              <><ShoppingBag size={13} /> Out of Stock</>
+              <><ShoppingBag size={13} /> Sold Out</>
             ) : hasOptions ? (
               <><SlidersHorizontal size={13} /><ShoppingBag size={13} /></>
             ) : (

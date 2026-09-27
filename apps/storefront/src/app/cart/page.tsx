@@ -152,7 +152,7 @@ export default function CartPage() {
                   </div>
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-charcoal/60">Shipping</span>
-                    <span className="text-[10px] uppercase tracking-widest font-bold text-green-600">Complimentary</span>
+                    <span className="text-[10px] uppercase tracking-widest font-bold text-charcoal/60 lowercase">Calculated at checkout</span>
                   </div>
                 </div>
 

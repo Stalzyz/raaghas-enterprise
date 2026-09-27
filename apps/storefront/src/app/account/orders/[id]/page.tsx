@@ -168,14 +168,12 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
                    {/* Quick Actions (In-Card) */}
                    <div className="pt-10 border-t border-charcoal/5 flex flex-wrap gap-4">
                       {order.trackingId && (
-                         <a 
-                           href={`https://www.google.com/search?q=${order.carrierName}+tracking+${order.trackingId}`}
-                           target="_blank"
-                           rel="noopener noreferrer"
+                         <Link 
+                           href={`/tracking?id=${encodeURIComponent(order.formattedOrderNumber || order.id)}`}
                            className="flex items-center gap-2 px-6 py-3 bg-charcoal text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-wine transition-all"
                          >
-                            <ExternalLink size={14} /> Track via {order.carrierName}
-                         </a>
+                            <Truck size={14} /> Track Shipment ({order.carrierName || 'Courier'})
+                         </Link>
                       )}
                       <button className="flex items-center gap-2 px-6 py-3 bg-white border border-charcoal/10 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:border-charcoal transition-all">
                          <Printer size={14} /> Print Invoice
@@ -257,11 +255,21 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
                       <div className="w-64 space-y-4">
                          <div className="flex justify-between text-[10px] font-bold text-charcoal/40 uppercase tracking-widest">
                             <span>Subtotal</span>
-                            <span>₹{Number(order.totalAmount).toLocaleString()}</span>
+                            <span>₹{order.items.reduce((sum: number, item: any) => sum + (Number(item.price) * item.quantity), 0).toLocaleString()}</span>
                          </div>
+                         {Number(order.discountAmount || 0) > 0 && (
+                            <div className="flex justify-between text-[10px] font-bold text-wine/80 uppercase tracking-widest">
+                               <span>Discount</span>
+                               <span>-₹{Number(order.discountAmount).toLocaleString()}</span>
+                            </div>
+                         )}
                          <div className="flex justify-between text-[10px] font-bold text-charcoal/40 uppercase tracking-widest">
                             <span>Shipping</span>
-                            <span className="text-green-600">Complimentary</span>
+                            {Number(order.shipping || 0) === 0 ? (
+                               <span className="text-green-600">Complimentary</span>
+                            ) : (
+                               <span className="text-charcoal font-sans text-sm font-bold">₹{Number(order.shipping).toLocaleString()}</span>
+                            )}
                          </div>
                          <div className="pt-4 border-t border-charcoal/10 flex justify-between items-center">
                             <span className="text-[10px] font-bold text-charcoal uppercase tracking-widest">Total Settle</span>

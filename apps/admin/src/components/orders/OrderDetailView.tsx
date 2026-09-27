@@ -24,7 +24,12 @@ import {
   X,
   Plus,
   Edit2,
-  RefreshCw
+  RefreshCw,
+  Camera,
+  UserCheck,
+  History,
+  Sparkles,
+  ExternalLink
 } from "lucide-react";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
 import { motion } from "framer-motion";
@@ -32,6 +37,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PackingSlipModal } from "@/components/modals/PackingSlipModal";
 import { ReturnExchangeModal } from "@/components/modals/ReturnExchangeModal";
+import { CameraScannerModal } from "@/components/modals/CameraScannerModal";
 
 const CARRIERS = ["Delhivery", "BlueDart", "Pickrr", "Professional Couriers", "Express", "DHL", "FedEx", "DTDC", "India Post", "ST Courier", "Others"];
 
@@ -83,6 +89,10 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
   const [selectedItemsForFulfillment, setSelectedItemsForFulfillment] = useState<string[]>([]);
   const [noteText, setNoteText] = useState("");
 
+  // Camera Barcode Scanner State
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [scannerMode, setScannerMode] = useState<'FILL_INPUT' | 'AUTO_FULFILL' | 'UPDATE_TRACKING'>('AUTO_FULFILL');
+
   // Return Modal State
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
   const [returnItems, setReturnItems] = useState<{variantId: string, quantity: number}[]>([]);
@@ -126,6 +136,62 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
       } catch (e) {}
     }
   }, [id, token]);
+
+  const getTotalRefunded = () => {
+    if (!order) return 0;
+    if (order.totalRefunded != null) return Number(order.totalRefunded);
+    const orderReturnsSum = order.returns ? order.returns.reduce((sum: number, r: any) => sum + (Number(r.refundAmount) || 0), 0) : 0;
+    const itemReturnsSum = order.items ? order.items.reduce((sum: number, it: any) => {
+      const reList = it.returnExchanges || it.ReturnExchange || [];
+      return sum + reList.reduce((s: number, re: any) => s + (Number(re.refundAmount) || 0), 0);
+    }, 0) : 0;
+    return orderReturnsSum + itemReturnsSum;
+  };
+
+  const getAllRefunds = () => {
+    if (!order) return [];
+    if (Array.isArray(order.allRefunds) && order.allRefunds.length > 0) return order.allRefunds;
+
+    const list: any[] = [];
+    if (Array.isArray(order.returns)) {
+      order.returns.forEach((r: any, idx: number) => {
+        if (Number(r.refundAmount) > 0) {
+          list.push({
+            id: r.id || `ret_${idx}`,
+            amount: Number(r.refundAmount),
+            type: 'Order Refund',
+            method: r.notes?.toLowerCase().includes('wallet') ? 'WALLET' : 'SOURCE',
+            date: r.createdAt,
+            reason: r.reason || 'Direct Refund',
+            status: r.status || 'COMPLETED',
+            itemName: null
+          });
+        }
+      });
+    }
+
+    if (Array.isArray(order.items)) {
+      order.items.forEach((it: any) => {
+        const reList = it.returnExchanges || it.ReturnExchange || [];
+        reList.forEach((re: any) => {
+          if (Number(re.refundAmount) > 0) {
+            list.push({
+              id: re.id,
+              amount: Number(re.refundAmount),
+              type: re.type === 'EXCHANGE' ? 'Exchange Refund' : 'Item Return',
+              method: re.refundMethod || 'WALLET',
+              date: re.createdAt,
+              reason: re.notes || `${re.type} processed for item`,
+              status: 'COMPLETED',
+              itemName: it.variant?.product?.title || it.title || 'Item'
+            });
+          }
+        });
+      });
+    }
+
+    return list;
+  };
 
   const fetchOrder = async () => {
     if (!token) return;
@@ -247,6 +313,119 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
     }
   };
 
+  const handleBarcodeScanResult = async (scannedCode: string) => {
+    const code = scannedCode.trim();
+    if (!code) return;
+
+    // Smart Carrier Auto-Detection
+    let carrierToUse = carrier;
+    if (!carrierToUse) {
+      if (/^[A-Z]{2}\d{9}IN$/i.test(code)) {
+        carrierToUse = "India Post";
+      } else if (/^ST/i.test(code) || /^\d{10,12}$/.test(code)) {
+        carrierToUse = "ST Courier";
+      } else if (/^14\d{9}/.test(code) || /^98\d{9}/.test(code)) {
+        carrierToUse = "Delhivery";
+      } else {
+        carrierToUse = "India Post";
+      }
+      setCarrier(carrierToUse);
+    }
+
+    setTrackingId(code);
+
+    if (scannerMode === 'FILL_INPUT') {
+      return;
+    }
+
+    if (scannerMode === 'UPDATE_TRACKING') {
+      setIsUpdating(true);
+      try {
+        const res = await fetch(`${API_BASE}/orders/admin/${id}/fulfillment`, {
+          method: "PATCH",
+          headers: { 
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}` 
+          },
+          body: JSON.stringify({ carrierName: carrierToUse, trackingId: code })
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.message || 'Failed to update tracking details');
+        }
+        await fetchOrder();
+        alert(`✅ Tracking details updated: ${carrierToUse} (${code})`);
+      } catch (err: any) {
+        alert(err.message || "Unable to update tracking details.");
+      } finally {
+        setIsUpdating(false);
+      }
+      return;
+    }
+
+    if (scannerMode === 'AUTO_FULFILL') {
+      const unfulfilled = order.items.filter((item: any) => {
+        const fulfilledQty = (order.fulfillments || [])
+          .flatMap((f: any) => f.items)
+          .filter((fi: any) => fi.variantId === item.variantId)
+          .reduce((sum: number, fi: any) => sum + fi.quantity, 0);
+        return item.quantity > fulfilledQty;
+      });
+
+      const itemsToFulfill = (selectedItemsForFulfillment.length > 0
+        ? order.items.filter((item: any) => selectedItemsForFulfillment.includes(item.id))
+        : unfulfilled
+      ).map((item: any) => ({ variantId: item.variantId, quantity: item.quantity }));
+
+      if (itemsToFulfill.length === 0) {
+        setIsUpdating(true);
+        try {
+          const res = await fetch(`${API_BASE}/orders/admin/${id}/fulfillment`, {
+            method: "PATCH",
+            headers: { 
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}` 
+            },
+            body: JSON.stringify({ carrierName: carrierToUse, trackingId: code })
+          });
+          if (!res.ok) throw new Error("Failed to update tracking");
+          await fetchOrder();
+          alert(`✅ Tracking details updated: ${carrierToUse} (${code})`);
+        } catch (err: any) {
+          alert(err.message || "Failed to update tracking details.");
+        } finally {
+          setIsUpdating(false);
+        }
+        return;
+      }
+
+      setIsUpdating(true);
+      try {
+        const res = await fetch(`${API_BASE}/orders/admin/${id}/fulfillments`, {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}` 
+          },
+          body: JSON.stringify({ carrierName: carrierToUse, trackingId: code, items: itemsToFulfill })
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.message || 'Failed to create fulfillment');
+        }
+        await fetchOrder();
+        setSelectedItemsForFulfillment([]);
+        setCarrier("");
+        setTrackingId("");
+        alert(`✅ Order fulfilled with ${carrierToUse} (Tracking: ${code})! Customer notification sent.`);
+      } catch (error: any) {
+        alert(error.message || "Failed to auto-fulfill order with scanned barcode.");
+      } finally {
+        setIsUpdating(false);
+      }
+    }
+  };
+
   const automateShipment = async (provider: string = 'shiprocket') => {
     setIsUpdating(true);
     try {
@@ -343,7 +522,7 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
   const createReturn = async () => {
     if (returnItems.length === 0) return alert("Please select items to return.");
     
-    const totalRefunded = order?.returns ? order.returns.reduce((sum: number, r: any) => sum + (Number(r.refundAmount) || 0), 0) : 0;
+    const totalRefunded = getTotalRefunded();
     const remainingRefundable = Number(order?.totalAmount || 0) - totalRefunded;
 
     if (refundAmount > remainingRefundable) {
@@ -422,7 +601,7 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
   const submitRefund = async () => {
     if (!refundFormAmount || refundFormAmount <= 0) return alert("Please enter a valid refund amount.");
     
-    const totalRefunded = order?.returns ? order.returns.reduce((sum: number, r: any) => sum + (Number(r.refundAmount) || 0), 0) : 0;
+    const totalRefunded = getTotalRefunded();
     const remainingRefundable = Number(order?.totalAmount || 0) - totalRefunded;
 
     if (refundFormAmount > remainingRefundable) {
@@ -510,6 +689,13 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
             </div>
           )}
          <div className="flex gap-2">
+            <button
+              onClick={() => { setScannerMode('AUTO_FULFILL'); setIsScannerOpen(true); }}
+              className="flex items-center gap-2 px-4 py-2 bg-wine text-white rounded-lg text-sm font-semibold hover:bg-wine-dark transition-all shadow-sm"
+              title="Scan AWB / Tracking Barcode with Camera"
+            >
+               <Camera size={16} /> Scan Tracking
+            </button>
             <button
               onClick={handlePrintSlip}
               className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-all shadow-sm"
@@ -697,7 +883,28 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
                            <p className="text-sm font-bold text-wine">₹{Number(item.price).toLocaleString()}</p>
                            {item.discount > 0 && <p className="text-[10px] text-green-600 font-bold">-₹{Number(item.discount).toLocaleString()} off</p>}
                            
-                           {item.status && item.status !== 'FULFILLED' ? (
+                           {item.status === 'RETURNED' ? (
+                              (() => {
+                                const reList = item.returnExchanges || item.ReturnExchange || [];
+                                const refund = reList.find((r: any) => Number(r.refundAmount) > 0);
+                                return (
+                                  <div className="mt-2 inline-flex flex-col items-end gap-1">
+                                    <span className="px-2 py-0.5 bg-orange-50 text-orange-700 border border-orange-200 rounded text-[9px] font-bold uppercase tracking-widest">
+                                      Returned
+                                    </span>
+                                    {refund && (
+                                      <span className="text-[10px] font-bold text-orange-600">
+                                        ₹{Number(refund.refundAmount).toLocaleString()} Refunded ({refund.refundMethod || 'WALLET'})
+                                      </span>
+                                    )}
+                                  </div>
+                                );
+                              })()
+                            ) : item.status === 'EXCHANGED' ? (
+                              <span className="inline-block mt-2 px-2 py-0.5 bg-blue-50 text-blue-600 border border-blue-200 rounded text-[9px] font-bold uppercase tracking-widest">
+                                Exchanged
+                              </span>
+                            ) : item.status && item.status !== 'FULFILLED' ? (
                               <span className="inline-block mt-2 px-2 py-1 bg-gray-100 text-gray-500 rounded text-[9px] font-bold uppercase tracking-widest">
                                 {item.status}
                               </span>
@@ -758,14 +965,20 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
                        </div>
                      )}
                      <div className="pt-3 border-t border-gray-100 flex justify-between items-center">
-                        <span className="text-xs font-bold text-charcoal uppercase tracking-widest">Total</span>
+                        <span className="text-xs font-bold text-charcoal uppercase tracking-widest">Total Paid</span>
                         <span className="text-xl font-bold text-charcoal">₹{Number(order.totalAmount).toLocaleString()}</span>
                      </div>
-                     {order.returns && order.returns.reduce((sum: number, r: any) => sum + (Number(r.refundAmount) || 0), 0) > 0 && (
-                       <div className="flex justify-between text-xs font-bold text-orange-600 border-t border-gray-100 pt-2">
-                          <span>TOTAL REFUNDED</span>
-                          <span>-₹{Number(order.returns.reduce((sum: number, r: any) => sum + (Number(r.refundAmount) || 0), 0)).toLocaleString()}</span>
-                       </div>
+                     {getTotalRefunded() > 0 && (
+                       <>
+                          <div className="flex justify-between text-xs font-bold text-orange-600 border-t border-gray-100 pt-2">
+                             <span>TOTAL REFUNDED</span>
+                             <span>-₹{Number(getTotalRefunded()).toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between text-xs font-bold text-gray-800">
+                             <span>NET RETAINED</span>
+                             <span>₹{Math.max(0, Number(order.totalAmount) - getTotalRefunded()).toLocaleString()}</span>
+                          </div>
+                       </>
                      )}
                      <div className="flex justify-between text-[9px] font-bold text-gray-400 uppercase tracking-widest">
                         <span>Currency</span><span>{order.currency || 'INR'}</span>
@@ -796,6 +1009,13 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
                         <div className="flex justify-between items-center">
                           <span className="text-xs font-bold uppercase tracking-widest">Shipment #{idx + 1}</span>
                           <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => { setScannerMode('UPDATE_TRACKING'); setIsScannerOpen(true); }}
+                              className="p-1 hover:bg-gray-200 rounded text-gray-500 hover:text-wine transition-colors"
+                              title="Scan barcode to update tracking ID"
+                            >
+                              <Camera size={13} />
+                            </button>
                             {f.shipments[0]?.trackingId && (
                               <button 
                                 onClick={() => syncTracking(f.shipments[0]?.trackingId)} 
@@ -877,14 +1097,35 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
                        </select>
                     </div>
                     <div className="space-y-2">
-                       <label className="text-[9px] font-bold uppercase tracking-widest text-gray-400 flex items-center gap-1"><Hash size={10} /> Tracking Identification</label>
-                       <input 
-                         type="text" 
-                         placeholder="Enter tracking ID (e.g. EM123456789IN for India Post)..."
-                         value={trackingId}
-                         onChange={(e) => setTrackingId(e.target.value)}
-                         className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-xs outline-none focus:border-wine/20 transition-all font-medium font-mono"
-                       />
+                       <div className="flex justify-between items-center">
+                         <label className="text-[9px] font-bold uppercase tracking-widest text-gray-400 flex items-center gap-1">
+                           <Hash size={10} /> Tracking Identification
+                         </label>
+                         <button
+                           type="button"
+                           onClick={() => { setScannerMode('FILL_INPUT'); setIsScannerOpen(true); }}
+                           className="text-[9px] font-bold uppercase tracking-wider text-wine hover:underline flex items-center gap-1"
+                         >
+                           <Camera size={12} /> Scan Barcode
+                         </button>
+                       </div>
+                       <div className="relative flex items-center">
+                         <input 
+                           type="text" 
+                           placeholder="Enter tracking ID (or scan barcode)..."
+                           value={trackingId}
+                           onChange={(e) => setTrackingId(e.target.value)}
+                           className="w-full bg-gray-50 border border-gray-100 rounded-xl pl-4 pr-11 py-3 text-xs outline-none focus:border-wine/20 transition-all font-medium font-mono"
+                         />
+                         <button
+                           type="button"
+                           onClick={() => { setScannerMode('FILL_INPUT'); setIsScannerOpen(true); }}
+                           className="absolute right-2 p-1.5 bg-gray-100 hover:bg-wine hover:text-white text-gray-600 rounded-lg transition-all"
+                           title="Scan Barcode using Camera"
+                         >
+                           <Camera size={15} />
+                         </button>
+                       </div>
                     </div>
 
                     {/* 1-Click Automated Booking with ST Courier */}
@@ -894,6 +1135,15 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
                       className="w-full bg-gradient-to-r from-red-700 to-red-600 text-white py-4 rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:brightness-110 shadow-md shadow-red-900/10 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                        {isUpdating ? <Loader2 size={14} className="animate-spin" /> : "⚡ 1-Click Book ST Courier (Auto-AWB)"}
+                    </button>
+
+                    <button 
+                      type="button"
+                      disabled={isUpdating}
+                      onClick={() => { setScannerMode('AUTO_FULFILL'); setIsScannerOpen(true); }}
+                      className="w-full bg-wine/10 hover:bg-wine text-wine hover:text-white py-3.5 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 border border-wine/20 shadow-xs"
+                    >
+                       <Camera size={14} /> Scan Label & Auto-Fulfill
                     </button>
 
                     <div className="pt-2 flex items-center gap-2">
@@ -911,9 +1161,15 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
                     </button>
                  </div>
                ) : (
-                 <div className="p-4 bg-green-50 text-green-700 rounded-xl border border-green-100 text-center space-y-2">
+                 <div className="p-4 bg-green-50 text-green-700 rounded-xl border border-green-100 text-center space-y-3">
                     <CheckCircle2 size={24} className="mx-auto" />
                     <p className="text-xs font-bold uppercase tracking-widest">All Items Fulfilled</p>
+                    <button
+                      onClick={() => { setScannerMode('UPDATE_TRACKING'); setIsScannerOpen(true); }}
+                      className="mx-auto px-4 py-2 bg-white text-charcoal hover:bg-wine hover:text-white border border-gray-200 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-2 shadow-xs"
+                    >
+                      <Camera size={14} /> Scan / Update Tracking Barcode
+                    </button>
                  </div>
                )}
 
@@ -945,21 +1201,27 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
                   </div>
                </div>
 
-               {order.returns && order.returns.length > 0 && (
-                 <div className="space-y-4 mb-6">
-                    <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-400">Processed Returns</h4>
-                    {order.returns.map((r: any, idx: number) => (
-                      <div key={idx} className="bg-gray-50 rounded-xl p-4 border border-gray-100 space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs font-bold uppercase tracking-widest">Return #{idx + 1}</span>
-                          <span className="px-2 py-1 bg-purple-50 text-purple-600 rounded text-[9px] font-bold uppercase tracking-widest">{r.status}</span>
-                        </div>
-                        <p className="text-xs text-gray-500">Reason: <span className="font-medium text-charcoal">{r.reason}</span></p>
-                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Refund: ₹{r.refundAmount}</p>
-                      </div>
-                    ))}
-                 </div>
-               )}
+               {getAllRefunds().length > 0 && (
+                  <div className="space-y-4 mb-6">
+                     <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-400">Processed Returns & Refunds</h4>
+                     {getAllRefunds().map((r: any, idx: number) => (
+                       <div key={idx} className="bg-orange-50/60 rounded-xl p-4 border border-orange-100 space-y-2">
+                         <div className="flex justify-between items-center">
+                           <span className="text-xs font-bold uppercase tracking-widest text-charcoal">{r.type}</span>
+                           <span className="px-2 py-0.5 bg-orange-100 text-orange-700 rounded text-[9px] font-bold uppercase tracking-widest">{r.status}</span>
+                         </div>
+                         {r.itemName && (
+                           <p className="text-xs font-semibold text-charcoal">Item: {r.itemName}</p>
+                         )}
+                         <p className="text-xs text-gray-600">Reason: <span className="font-medium text-charcoal">{r.reason}</span></p>
+                         <div className="flex justify-between items-center pt-1 border-t border-orange-100 text-[10px]">
+                           <span className="font-bold text-orange-700 uppercase tracking-wider">Refund: ₹{Number(r.amount).toLocaleString()} ({r.method})</span>
+                           {r.date && <span className="text-gray-400">{new Date(r.date).toLocaleDateString('en-GB')}</span>}
+                         </div>
+                       </div>
+                     ))}
+                  </div>
+                )}
 
                <div className="flex gap-3">
                  {!(order.status === 'CANCELLED' || order.status === 'FAILED') && (
@@ -993,7 +1255,23 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
                      </div>
                      <div>
                         <h4 className="font-bold text-charcoal">{order.customerName}</h4>
-                        <p className="text-xs text-gray-400 font-medium tracking-tight">VIP / Verified Buyer</p>
+                        {order.customerHistory ? (
+                           order.customerHistory.isFirstTimeCustomer ? (
+                              <div className="flex items-center gap-1 mt-1">
+                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded-full text-[10px] font-bold tracking-tight">
+                                    <Sparkles size={11} className="text-emerald-500" /> First-Time Buyer
+                                 </span>
+                              </div>
+                           ) : (
+                              <div className="flex items-center gap-1 mt-1">
+                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-wine/10 text-wine border border-wine/20 rounded-full text-[10px] font-bold tracking-tight">
+                                    <UserCheck size={11} className="text-wine" /> Returning Customer ({order.customerHistory.totalOrders} Orders)
+                                 </span>
+                              </div>
+                           )
+                        ) : (
+                           <p className="text-xs text-gray-400 font-medium tracking-tight">VIP / Verified Buyer</p>
+                        )}
                      </div>
                   </div>
                   <div className="space-y-4 pt-4 border-t border-gray-50">
@@ -1087,6 +1365,118 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
                       {metadata.location && <p className="text-[10px] text-gray-400 font-bold">Location: {metadata.location}</p>}
                     </div>
                  </div>
+               )}
+            </div>
+
+            {/* Customer Order History Card */}
+            <div className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm space-y-6">
+               <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                     <div className="w-8 h-8 rounded-xl bg-wine/5 flex items-center justify-center text-wine">
+                        <History size={16} />
+                     </div>
+                     <div>
+                        <h3 className="text-[11px] font-bold uppercase tracking-widest text-charcoal">Customer History</h3>
+                        <p className="text-[10px] text-gray-400 font-medium">Prior purchases by this customer</p>
+                     </div>
+                  </div>
+                  {order.customerHistory && (
+                     <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
+                        order.customerHistory.isFirstTimeCustomer 
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' 
+                          : 'bg-wine/10 text-wine border border-wine/20'
+                     }`}>
+                        {order.customerHistory.isFirstTimeCustomer ? '1st Order' : `${order.customerHistory.totalOrders} Total Orders`}
+                     </span>
+                  )}
+               </div>
+
+               {/* Quick Stats Summary */}
+               {order.customerHistory && (
+                  <div className="grid grid-cols-2 gap-3 p-3.5 bg-gray-50/70 rounded-2xl border border-gray-100/80">
+                     <div className="space-y-0.5">
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 block">Lifetime Spend</span>
+                        <span className="text-sm font-bold text-charcoal font-sans">
+                           ₹{Number(order.customerHistory.lifetimeSpend || 0).toLocaleString()}
+                        </span>
+                     </div>
+                     <div className="space-y-0.5">
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 block">Past Orders</span>
+                        <span className="text-sm font-bold text-charcoal font-sans">
+                           {order.customerHistory.previousOrdersCount} {order.customerHistory.previousOrdersCount === 1 ? 'order' : 'orders'}
+                        </span>
+                     </div>
+                  </div>
+               )}
+
+               {/* Orders list or First-Time empty state */}
+               {order.customerHistory?.previousOrders && order.customerHistory.previousOrders.length > 0 ? (
+                  <div className="space-y-3">
+                     <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-gray-400 px-1">
+                        <span>Past Orders ({order.customerHistory.previousOrders.length})</span>
+                        <span>Click to view</span>
+                     </div>
+                     <div className="space-y-2.5 max-h-[320px] overflow-y-auto pr-1">
+                        {order.customerHistory.previousOrders.map((pastOrder: any) => (
+                           <div
+                              key={pastOrder.id}
+                              onClick={() => router.push(`/orders/${pastOrder.id}`)}
+                              className="group p-3.5 bg-gray-50/60 hover:bg-wine/[0.03] border border-gray-100 hover:border-wine/20 rounded-2xl cursor-pointer transition-all duration-200"
+                           >
+                              <div className="flex items-start justify-between gap-2">
+                                 <div className="space-y-1 min-w-0">
+                                    <div className="flex items-center gap-1.5">
+                                       <span className="text-xs font-bold text-charcoal group-hover:text-wine transition-colors">
+                                          {pastOrder.orderNumber}
+                                       </span>
+                                       <ExternalLink size={11} className="text-gray-400 group-hover:text-wine opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    </div>
+                                    <div className="flex items-center gap-2 text-[10px] text-gray-400">
+                                       <Calendar size={10} />
+                                       <span>{new Date(pastOrder.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                                    </div>
+                                 </div>
+                                 <div className="text-right space-y-1 shrink-0">
+                                    <span className="text-xs font-bold text-charcoal font-sans block">
+                                       ₹{Number(pastOrder.totalAmount).toLocaleString()}
+                                    </span>
+                                    <div className="flex items-center gap-1 justify-end">
+                                       <span className={`text-[8px] font-bold uppercase px-1.5 py-0.5 rounded-md ${
+                                          pastOrder.financialStatus === 'paid' ? 'bg-green-50 text-green-700' :
+                                          pastOrder.financialStatus === 'refunded' ? 'bg-purple-50 text-purple-700' :
+                                          'bg-yellow-50 text-yellow-700'
+                                       }`}>
+                                          {pastOrder.financialStatus}
+                                       </span>
+                                       <span className={`text-[8px] font-bold uppercase px-1.5 py-0.5 rounded-md ${
+                                          pastOrder.fulfillmentStatus === 'fulfilled' ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-600'
+                                       }`}>
+                                          {pastOrder.fulfillmentStatus}
+                                       </span>
+                                    </div>
+                                 </div>
+                              </div>
+                              {pastOrder.itemsSummary && (
+                                 <p className="mt-2 text-[11px] text-gray-500 line-clamp-1 border-t border-gray-100/60 pt-2">
+                                    <span className="font-semibold text-gray-600">{pastOrder.itemCount} {pastOrder.itemCount === 1 ? 'item' : 'items'}:</span> {pastOrder.itemsSummary}
+                                 </p>
+                              )}
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+               ) : (
+                  <div className="p-5 bg-emerald-50/40 border border-emerald-100/60 rounded-2xl flex items-start gap-3.5">
+                     <div className="w-8 h-8 rounded-xl bg-emerald-100/80 flex items-center justify-center text-emerald-700 shrink-0 mt-0.5">
+                        <Sparkles size={16} />
+                     </div>
+                     <div className="space-y-1 text-left">
+                        <h4 className="text-xs font-bold text-emerald-950">First-Time Customer</h4>
+                        <p className="text-[11px] text-emerald-800/80 leading-relaxed font-sans">
+                           This is the customer&apos;s 1st order with Raaghas. No previous purchase history found.
+                        </p>
+                     </div>
+                  </div>
                )}
             </div>
 
@@ -1346,6 +1736,15 @@ export function OrderDetailView({ id, onClose }: { id: string, onClose?: () => v
         onClose={() => setIsPackingSlipModalOpen(false)}
         orders={[order]}
         storeSettings={storeSettings}
+      />
+
+      {/* Camera Barcode Scanner Modal for Tracking / AWB */}
+      <CameraScannerModal
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onScanResult={handleBarcodeScanResult}
+        title={scannerMode === 'UPDATE_TRACKING' ? "Scan Barcode to Update Tracking" : "Scan Shipping Barcode / AWB"}
+        subtitle={`Order #${order.formattedOrderNumber || (order.orderNumber != null ? String(order.orderNumber + 1000) : order.id.slice(-8).toUpperCase())}`}
       />
 
       {isReturnExchangeModalOpen && selectedReturnExchangeItem && (

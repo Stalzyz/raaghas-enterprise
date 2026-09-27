@@ -93,6 +93,36 @@ function MyOrdersPageContent() {
     }
   }, [authLoading, isAuthenticated, isPreview]);
 
+  // Track pending purchase pixel if we just returned from checkout
+  useEffect(() => {
+    const pendingPurchase = sessionStorage.getItem("pending_purchase_pixel");
+    if (!pendingPurchase) return;
+    sessionStorage.removeItem("pending_purchase_pixel");
+    try {
+      const pd = JSON.parse(pendingPurchase);
+      // Retry until fbq is ready (pixel script may still be loading)
+      let attempts = 0;
+      const fire = () => {
+        if (typeof window !== "undefined" && (window as any).fbq) {
+          import("@/components/analytics/MetaPixel").then((m) => {
+            m.trackMetaEvent("Purchase", {
+              value: pd.value,
+              currency: pd.currency,
+              content_ids: pd.content_ids,
+              content_type: pd.content_type,
+              num_items: pd.num_items,
+              order_id: pd.order_id
+            }, pd.eventId);
+          });
+        } else if (attempts < 20) {
+          attempts++;
+          setTimeout(fire, 300);
+        }
+      };
+      fire();
+    } catch (e) {}
+  }, []);
+
   const fetchOrders = async () => {
     setIsLoading(true);
     try {

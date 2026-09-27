@@ -779,8 +779,11 @@ export class CmsController {
        throw new BadRequestException('File not uploaded');
     }
      
-    let baseUrl = process.env.API_URL || (process.env.NODE_ENV === 'development' ? "http://localhost:6005" : "https://api.raaghas.in");
-    baseUrl = baseUrl.replace(/\/$/, "");
+    // CRITICAL: Always store a full absolute public URL — never localhost.
+    // API_URL on VPS is internal (localhost:6005); browsers cannot reach it.
+    const baseUrl = process.env.NODE_ENV === 'production'
+      ? 'https://api.raaghas.in'
+      : 'http://localhost:6005';
     
     // Perform "Monster Level" optimization
     let finalFilename = file.filename;
@@ -789,7 +792,7 @@ export class CmsController {
       finalFilename = path.basename(optimizedPath);
     }
 
-    const url = `/uploads/${finalFilename}`;
+    const url = `${baseUrl}/uploads/${finalFilename}`;
     const fileType = extname(file.originalname).match(/\.(mp4|webm|ogg)$/i) ? 'video' : 'image';
 
     // Persist to database

@@ -185,9 +185,21 @@ export class WholesalePdfService {
 
       drawTotalLine('Taxable Subtotal', `Rs. ${invoice.summary.subtotal.toLocaleString('en-IN')}`);
       
-      invoice.summary.taxes.forEach((tax: any) => {
-        drawTotalLine(tax.name, `Rs. ${tax.amount.toLocaleString('en-IN')}`);
-      });
+      if (invoice.summary.discount && invoice.summary.discount > 0) {
+        drawTotalLine('Discount', `- Rs. ${invoice.summary.discount.toLocaleString('en-IN')}`, false, true);
+      }
+
+      if (invoice.summary.shipping && invoice.summary.shipping > 0) {
+        drawTotalLine('Shipping Charges', `Rs. ${invoice.summary.shipping.toLocaleString('en-IN')}`);
+      }
+
+      if (Array.isArray(invoice.summary.taxes)) {
+        invoice.summary.taxes.forEach((tax: any) => {
+          if (tax.amount > 0) {
+            drawTotalLine(tax.name, `Rs. ${tax.amount.toLocaleString('en-IN')}`);
+          }
+        });
+      }
 
       doc.moveTo(totalsX, totalsY).lineTo(545, totalsY).strokeColor('#EEEEEE').stroke();
       totalsY += 10;

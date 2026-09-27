@@ -128,12 +128,8 @@ export class InventoryService {
     });
     if (productInfo) {
       const totalInventory = productInfo.variants.reduce((sum: number, v: any) => sum + v.inventory, 0);
-      if (totalInventory <= 0 && productInfo.status !== 'DRAFT') {
-        this.logger.log(`Auto-drafting product ${productInfo.id} because all variants are out of stock.`);
-        await prisma.product.update({
-          where: { id: productInfo.id },
-          data: { status: 'DRAFT', published: false }
-        });
+      if (totalInventory <= 0) {
+        this.logger.log(`Product ${productInfo.id} inventory is zero (all variants out of stock) — remaining published as Sold Out.`);
       }
     }
 
@@ -180,6 +176,7 @@ export class InventoryService {
     const variant = await tx.variant.findUnique({
       where: { id: data.variantId },
       include: {
+        product: { select: { title: true } },
         reservations: {
           where: { expiresAt: { gt: new Date() } }, 
         },
@@ -189,12 +186,26 @@ export class InventoryService {
     if (!variant) throw new NotFoundException(`Variant ${data.variantId} not found`);
 
     const currentReserved = (variant.reservations as any[]).reduce((s: number, r: any) => s + r.quantity, 0);
-    const availableStock = variant.inventory - currentReserved;
+    const availableStock = Math.max(0, variant.inventory - currentReserved);
 
     if (availableStock < data.quantity) {
-      throw new BadRequestException(
-        `Oversell Prevented: Only ${availableStock} unit(s) available for SKU "${variant.sku || data.variantId}". Requested: ${data.quantity}.`
-      );
+      const optionDetails = [variant.option1Value, variant.option2Value, variant.option3Value]
+        .filter(Boolean)
+        .filter(v => v !== 'Default' && v !== 'Default Title')
+        .join(' / ');
+      
+      const productTitle = (variant as any).product?.title || 'This item';
+      const displayName = optionDetails ? `${productTitle} (${optionDetails})` : productTitle;
+
+      if (availableStock <= 0) {
+        throw new BadRequestException(
+          `Sorry, "${displayName}" was just purchased by another customer and is now sold out. Please remove it from your bag to continue.`
+        );
+      } else {
+        throw new BadRequestException(
+          `Only ${availableStock} piece${availableStock === 1 ? '' : 's'} remaining for "${displayName}". Please adjust your bag quantity to proceed.`
+        );
+      }
     }
 
     const expiresAt = new Date();
@@ -265,12 +276,8 @@ export class InventoryService {
       });
       if (productInfo) {
         const totalInventory = productInfo.variants.reduce((sum: number, v: any) => sum + v.inventory, 0);
-        if (totalInventory <= 0 && productInfo.status !== 'DRAFT') {
-          this.logger.log(`Auto-drafting product ${productInfo.id} because all variants are out of stock.`);
-          await prisma.product.update({
-            where: { id: productInfo.id },
-            data: { status: 'DRAFT', published: false }
-          });
+        if (totalInventory <= 0) {
+          this.logger.log(`Product ${productInfo.id} inventory is zero following order commit — remaining published as Sold Out.`);
         }
       }
     }

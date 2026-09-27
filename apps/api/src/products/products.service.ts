@@ -355,14 +355,21 @@ export class ProductService {
     };
 
     // BUG-9 FIX: Normalize image URLs — relative /uploads/ paths get absolute URL
-    const publicApiBase = process.env.API_URL 
-      ? process.env.API_URL.replace(/\/api\/v1\/?$/, '').replace(/\/$/, '')
-      : (process.env.NODE_ENV === 'production' ? 'https://api.raaghas.in' : 'http://localhost:6005');
+    // CRITICAL: Always use the public domain. Never use localhost — it can't be
+    // resolved by browsers visiting the live site. API_URL on the VPS is internal.
+    const publicApiBase = 'https://api.raaghas.in';
 
     const normalizeImageUrl = (url: string | null | undefined): string | null => {
       if (!url || !url.trim()) return null;
       const trimmed = url.trim();
-      if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
+      // Replace any localhost URL with the public domain
+      if (trimmed.includes('localhost')) {
+        try {
+          const urlObj = new URL(trimmed);
+          return `${publicApiBase}${urlObj.pathname}`;
+        } catch { return null; }
+      }
+      if (trimmed.startsWith('https://')) return trimmed;
       if (trimmed.startsWith('/uploads/')) return `${publicApiBase}${trimmed}`;
       // Unknown format — still store as-is, frontend getAssetUrl will handle
       return trimmed;
@@ -932,20 +939,10 @@ export class ProductService {
         }
       }
 
-      // Auto-Draft if Out of Stock
       const productInfo = await tx.product.findUnique({
         where: { id },
         include: { variants: true }
       });
-      if (productInfo) {
-        const totalInventory = productInfo.variants.reduce((sum: number, v: any) => sum + v.inventory, 0);
-        if (totalInventory <= 0 && productInfo.status !== 'DRAFT') {
-          await tx.product.update({
-            where: { id },
-            data: { status: 'DRAFT', published: false }
-          });
-        }
-      }
 
       return productInfo || product;
     });

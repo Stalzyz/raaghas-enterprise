@@ -18,8 +18,16 @@ function getPublicAssetBase(): string {
 
 export function getAssetUrl(path: string | null | undefined): string {
   if (!path) return "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800";
-  if (path.startsWith("http")) return path;
+  
+  // Fix for URLs stored in the database as localhost
+  let cleanPath = path;
+  if (cleanPath.includes("localhost:6005") || cleanPath.includes("localhost:3000")) {
+    const urlObj = new URL(cleanPath);
+    cleanPath = urlObj.pathname; // extracts just the /uploads/... part
+  }
+
+  if (cleanPath.startsWith("http")) return cleanPath;
   // Ensure path starts with a slash
-  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  cleanPath = cleanPath.startsWith("/") ? cleanPath : `/${cleanPath}`;
   return `${getPublicAssetBase()}${cleanPath}`;
 }

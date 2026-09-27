@@ -66,7 +66,9 @@ export function ProductGridSection({ content, style }: { content: Record<string,
               image1: p.images?.[0]?.url || "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800",
               image2: p.images?.[1]?.url || p.images?.[0]?.url || "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=800",
               label: p.type || "New Arrival",
-              badge: p.tags?.toLowerCase().includes('bestseller') ? 'Bestseller' : ((p.variants?.reduce((sum: number, v: any) => sum + (v.availableStock ?? v.inventory ?? v.inventoryQuantity ?? 0), 0) || 0) <= 0 ? 'Sold Out' : null),
+              badge: ((p.variants?.reduce((sum: number, v: any) => sum + (v.availableStock ?? v.inventory ?? v.inventoryQuantity ?? 0), 0) || 0) <= 0)
+                ? 'Sold Out'
+                : (p.tags?.toLowerCase().includes('bestseller') ? 'Bestseller' : null),
               variants: (p.variants || []).map((v: any) => ({
                 id: v.id,
                 option1Name: v.option1Name,
@@ -337,7 +339,7 @@ function ProductCard({ product }: { product: any }) {
               }`}
            >
                {isOutOfStock ? (
-                 <><ShoppingBag size={14} strokeWidth={2.5} /> Out of Stock</>
+                 <><ShoppingBag size={14} strokeWidth={2.5} /> Sold Out</>
                ) : optionGroups.length > 0 ? (
                  <><SlidersHorizontal size={14} strokeWidth={2.5} /> <ShoppingBag size={14} strokeWidth={2.5} /></>
                ) : (
@@ -419,11 +421,11 @@ function ProductCard({ product }: { product: any }) {
                     {/* Stock indicator */}
                     {selectedVariant && (
                       <p className={`text-[10px] font-bold uppercase tracking-widest mt-2 ${
-                        selectedVariant.inventory <= 0 ? 'text-red-500' :
-                        selectedVariant.inventory <= 5 ? 'text-orange-500' : 'text-green-600'
+                        ((selectedVariant.availableStock ?? selectedVariant.inventory ?? 0) <= 0) ? 'text-red-500' :
+                        ((selectedVariant.availableStock ?? selectedVariant.inventory ?? 0) <= 5) ? 'text-orange-500' : 'text-green-600'
                       }`}>
-                        {selectedVariant.inventory <= 0 ? '✕ Out of Stock' :
-                         selectedVariant.inventory <= 5 ? `⚡ Only ${selectedVariant.inventory} left` : '✓ In Stock'}
+                        {((selectedVariant.availableStock ?? selectedVariant.inventory ?? 0) <= 0) ? '✕ Sold Out' :
+                         ((selectedVariant.availableStock ?? selectedVariant.inventory ?? 0) <= 5) ? `⚡ Only ${selectedVariant.availableStock ?? selectedVariant.inventory} left` : '✓ In Stock'}
                       </p>
                     )}
                   </div>
@@ -495,7 +497,7 @@ function ProductCard({ product }: { product: any }) {
                     }`}
                   >
                     <ShoppingBag size={16} />
-                    {!quickViewInStock ? 'Out of Stock' : 'Add to Bag'}
+                    {!quickViewInStock ? 'Sold Out' : 'Add to Bag'}
                   </button>
                   <Link
                     href={`/products/${product.handle || product.id}`}

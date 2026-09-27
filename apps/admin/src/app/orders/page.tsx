@@ -39,7 +39,6 @@ import { InvoiceModal } from "@/components/modals/InvoiceModal";
 import { BulkFulfillModal } from "@/components/modals/BulkFulfillModal";
 import { PackingSlipModal } from "@/components/modals/PackingSlipModal";
 import { OrderDetailView } from "@/components/orders/OrderDetailView";
-import { CameraScannerModal } from "@/components/modals/CameraScannerModal";
 import { ImageLightboxModal } from "@/components/modals/ImageLightboxModal";
 import { SplitOrderView } from "@/components/orders/SplitOrderView";
 import { format } from "date-fns";
@@ -106,7 +105,6 @@ export default function OrdersPage() {
 
   // Tablet Advanced Features State
   const [viewMode, setViewMode] = useState<'table' | 'split'>('table');
-  const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [lightboxImageUrl, setLightboxImageUrl] = useState<string | null>(null);
   const [lightboxTitle, setLightboxTitle] = useState<string | undefined>();
   const [selectedSplitOrderId, setSelectedSplitOrderId] = useState<string | null>(null);
@@ -529,13 +527,6 @@ export default function OrdersPage() {
                       onChange={(e) => setFilters({...filters, search: e.target.value})}
                     />
                   </div>
-                  <button
-                    onClick={() => setIsScannerOpen(true)}
-                    className="p-2.5 bg-gray-100 hover:bg-wine hover:text-white text-gray-600 rounded-xl transition-all"
-                    title="Scan Barcode / QR Code"
-                  >
-                    <Camera size={18} />
-                  </button>
                 </div>
               </div>
 
@@ -677,8 +668,13 @@ export default function OrdersPage() {
                       </td>
                       <td className="px-6 py-5">
                         <div className="flex flex-col gap-1">
-                          <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest w-fit border ${order.financialStatus === 'paid' ? 'bg-green-50 text-green-600 border-green-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
-                            {order.financialStatus}
+                          <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest w-fit border ${
+                            order.financialStatus === 'paid' ? 'bg-green-50 text-green-600 border-green-100' :
+                            order.financialStatus === 'refunded' ? 'bg-purple-50 text-purple-600 border-purple-100' :
+                            order.financialStatus === 'partially_refunded' ? 'bg-orange-50 text-orange-600 border-orange-100' :
+                            'bg-amber-50 text-amber-600 border-amber-100'
+                          }`}>
+                            {order.financialStatus?.replace('_', ' ') || 'pending'}
                           </span>
                           <span className="text-[9px] text-gray-400">{order.paymentMethod}</span>
                         </div>
@@ -686,8 +682,15 @@ export default function OrdersPage() {
                       <td className="px-6 py-5">
                         <span className="text-[10px] font-mono text-gray-500">{order.paymentId || order.paymentIntentId || "—"}</span>
                       </td>
-                      <td className="px-6 py-5 text-xs font-bold text-gray-900">
-                        ₹{Number(order.totalAmount).toLocaleString()}
+                      <td className="px-6 py-5">
+                        <div className="flex flex-col">
+                          <span className="text-xs font-bold text-gray-900">₹{Number(order.totalAmount).toLocaleString()}</span>
+                          {Number(order.totalRefunded || 0) > 0 && (
+                            <span className="text-[10px] font-semibold text-orange-600">
+                              -₹{Number(order.totalRefunded).toLocaleString()} ref.
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-5">
                          <div className="flex items-center gap-2">
@@ -935,13 +938,6 @@ export default function OrdersPage() {
         onClose={() => setIsPackingSlipOpen(false)}
         orders={packingSlipOrders}
         storeSettings={storeSettings}
-      />
-
-      {/* Camera Barcode Scanner Modal */}
-      <CameraScannerModal
-        isOpen={isScannerOpen}
-        onClose={() => setIsScannerOpen(false)}
-        onScanResult={(code) => setFilters(prev => ({ ...prev, search: code }))}
       />
 
       {/* Image QC Lightbox Modal */}

@@ -48,6 +48,12 @@ export class SettingsController {
     return this.settingsService.updateSettings(data);
   }
 
+  @Post('test-whatsapp')
+  @UseGuards(AuthGuard)
+  testWhatsApp(@Body('phone') phone: string) {
+    return this.settingsService.testWhatsApp(phone);
+  }
+
   // --- SHIPPING ZONES ---
 
   @Get('shipping-zones')

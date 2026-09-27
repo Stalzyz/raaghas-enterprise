@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   ShoppingCart, Users, MessageSquare, BarChart3, MessageCircle,
   Truck, ClipboardList, Sparkles, LayoutDashboard, Package, Image, Settings, Zap,
-  LogOut, Wallet, FileText, Landmark, RefreshCw, LayoutGrid, Mail, HardDrive
+  LogOut, Wallet, FileText, Landmark, RefreshCw, LayoutGrid, Mail, HardDrive, Clock
 } from "lucide-react";
 import { useAdminAuth } from "@/components/providers/AuthProvider";
 
@@ -184,6 +184,14 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse, isMobileOpen = 
           <SidebarLink href="/logistics/shipments" icon={<Truck size={18} />} label="Track Shipments" permission="module:logistics" isCollapsed={isCollapsed} onLinkClick={onCloseMobile} />
           <SidebarLink href="/logistics/returns" icon={<RefreshCw size={18} />} label="Returns" permission="module:logistics" isCollapsed={isCollapsed} onLinkClick={onCloseMobile} />
           <SidebarLink href="/logistics/shipping" icon={<Settings size={18} />} label="Shipping Settings" permission="module:logistics" isCollapsed={isCollapsed} onLinkClick={onCloseMobile} />
+
+          {!isCollapsed ? (
+            <div className="pt-4 pb-2 px-3 text-[10px] font-bold uppercase tracking-widest text-gray-400/60">Staff Management</div>
+          ) : (
+            <div className="my-3 border-t border-gray-100" />
+          )}
+          <SidebarLink href="/staff/attendance" icon={<Clock size={18} />} label="Staff Attendance" isCollapsed={isCollapsed} onLinkClick={onCloseMobile} />
+          <SidebarLink href="/staff/expenses" icon={<Wallet size={18} />} label="Expense Claims" isCollapsed={isCollapsed} onLinkClick={onCloseMobile} />
 
           {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'OPERATIONS' || user?.role === 'ACCOUNTANT' || user?.role === 'FINANCE' || user?.permissions?.includes('module:finance')) && (
             <>

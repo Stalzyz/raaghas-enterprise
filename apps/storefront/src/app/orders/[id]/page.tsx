@@ -65,6 +65,35 @@ function OrderTrackingDetailPageInner() {
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
 
+  // Track pending purchase pixel if we just returned from checkout
+  useEffect(() => {
+    const pendingPurchase = sessionStorage.getItem("pending_purchase_pixel");
+    if (!pendingPurchase) return;
+    sessionStorage.removeItem("pending_purchase_pixel");
+    try {
+      const pd = JSON.parse(pendingPurchase);
+      let attempts = 0;
+      const fire = () => {
+        if (typeof window !== "undefined" && (window as any).fbq) {
+          import("@/components/analytics/MetaPixel").then((m) => {
+            m.trackMetaEvent("Purchase", {
+              value: pd.value,
+              currency: pd.currency,
+              content_ids: pd.content_ids,
+              content_type: pd.content_type,
+              num_items: pd.num_items,
+              order_id: pd.order_id
+            }, pd.eventId);
+          });
+        } else if (attempts < 20) {
+          attempts++;
+          setTimeout(fire, 300);
+        }
+      };
+      fire();
+    } catch (e) {}
+  }, []);
+
   useEffect(() => {
     if (!authLoading) {
       fetchOrderDetails();
@@ -166,6 +195,23 @@ function OrderTrackingDetailPageInner() {
                <span className="text-[10px] bg-wine text-white px-3 py-1 rounded-full font-bold uppercase tracking-[0.3em]">{order.status}</span>
                <h1 className="text-5xl md:text-7xl font-serif text-charcoal">The Life of Your <span className="italic">Ensemble</span></h1>
             </div>
+
+            {/* Refund Notification Banner */}
+            {Number(order.totalRefunded || 0) > 0 && (
+              <div className="bg-wine/[0.03] border border-wine/15 p-6 rounded-3xl flex items-start gap-4 shadow-sm">
+                <div className="w-10 h-10 rounded-full bg-wine/10 flex items-center justify-center text-wine shrink-0 mt-0.5">
+                  <Sparkles size={18} />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-charcoal">
+                    {order.financialStatus === 'refunded' ? 'Full Refund Processed' : 'Partial Refund Processed'}
+                  </h4>
+                  <p className="text-sm font-serif italic text-charcoal/70 leading-relaxed">
+                    A refund of <strong className="text-wine not-italic font-bold">₹{Number(order.totalRefunded).toLocaleString()}</strong> has been credited to your {order.allRefunds?.[0]?.method === 'WALLET' ? 'Raaghas Luxe Wallet' : 'original payment method'}.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Sabyasachi Style Vertical Timeline */}
             <div className="relative pl-12 space-y-20">
@@ -278,6 +324,11 @@ function OrderTrackingDetailPageInner() {
                         <div>
                           <p className="text-[10px] uppercase font-bold tracking-[0.3em] text-wine mb-1">{item.variant.product.type || "RAAGHAS LUXE"}</p>
                           <h4 className="text-sm font-bold text-charcoal tracking-widest uppercase line-clamp-2 leading-tight">{item.variant.product.title}</h4>
+                          {item.status === 'RETURNED' && (
+                            <span className="inline-block mt-1 px-2.5 py-0.5 bg-orange-50 text-orange-700 border border-orange-200 rounded-full text-[8px] font-bold uppercase tracking-widest">
+                              Returned · Refunded
+                            </span>
+                          )}
                         </div>
                         <div className="flex justify-between items-end border-t border-charcoal/5 pt-3 mt-1">
                           <p className="text-[10px] text-charcoal/40 font-bold tracking-widest">Qty: {item.quantity} · {item.variant.option1Name}: {item.variant.option1Value}</p>
@@ -291,7 +342,7 @@ function OrderTrackingDetailPageInner() {
              <div className="pt-10 border-t border-charcoal/5 space-y-4">
                 <div className="flex justify-between text-[10px] uppercase font-bold tracking-widest text-charcoal/30">
                    <span>Subtotal Valued</span>
-                   <span>₹{(Number(order.totalAmount) + Number(order.discountAmount || 0)).toLocaleString()}</span>
+                   <span>₹{order.items.reduce((sum: number, item: any) => sum + (Number(item.price) * item.quantity), 0).toLocaleString()}</span>
                 </div>
                 {order.discountAmount > 0 && (
                   <div className="flex justify-between text-[10px] uppercase font-bold tracking-widest text-wine underline decoration-wine/20 underline-offset-4 font-serif italic">
@@ -301,11 +352,25 @@ function OrderTrackingDetailPageInner() {
                 )}
                 <div className="flex justify-between text-[10px] uppercase font-bold tracking-widest text-charcoal/30">
                    <span>Luxury Shipment</span>
-                   <span className="text-wine">Complimentary</span>
+                   {Number(order.shipping || 0) === 0 ? (
+                      <span className="text-wine">Complimentary</span>
+                   ) : (
+                      <span className="text-wine font-serif italic text-sm">₹{Number(order.shipping).toLocaleString()}</span>
+                   )}
                 </div>
+                {Number(order.totalRefunded || 0) > 0 && (
+                  <div className="flex justify-between text-[10px] uppercase font-bold tracking-widest text-orange-600 font-serif italic">
+                     <span>Refund Processed</span>
+                     <span>-₹{Number(order.totalRefunded).toLocaleString()}</span>
+                  </div>
+                )}
                 <div className="flex justify-between pt-6 border-t border-charcoal/5 items-baseline">
-                   <span className="text-[10px] uppercase font-bold tracking-[0.5em] text-charcoal/20">Net Artifact Value</span>
-                   <span className="text-wine text-3xl font-serif italic">₹{Number(order.totalAmount).toLocaleString()}</span>
+                   <span className="text-[10px] uppercase font-bold tracking-[0.5em] text-charcoal/20">
+                     {Number(order.totalRefunded || 0) > 0 ? "Net Amount Paid" : "Net Artifact Value"}
+                   </span>
+                   <span className="text-wine text-3xl font-serif italic">
+                     ₹{Number(order.netPaid != null ? order.netPaid : (Number(order.totalAmount) - Number(order.totalRefunded || 0))).toLocaleString()}
+                   </span>
                 </div>
              </div>
           </div>

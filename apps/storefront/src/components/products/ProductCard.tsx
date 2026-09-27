@@ -20,6 +20,7 @@ interface ProductCardProps {
     isOutOfStock?: boolean;
     variantId?: string;
     variants?: any[];
+    taxInclusive?: boolean;
   };
 }
 
@@ -36,6 +37,12 @@ export default function ProductCard({ product }: ProductCardProps) {
   const isWishlisted = isInWishlist(product.id);
   const hasVariants = product.variants && product.variants.length > 0;
   const variants: any[] = product.variants || [];
+
+  const isOutOfStock = product.isOutOfStock != null
+    ? product.isOutOfStock
+    : (variants.length > 0
+        ? !variants.some(v => (v.availableStock ?? v.inventory ?? (v as any).inventoryQuantity ?? 0) > 0)
+        : ((product as any).inventory != null ? (product as any).inventory <= 0 : false));
   
   const price = Number(product.price || variants[0]?.price || 0);
   const rawCompare = product.compareAtPrice || (product as any).mrp || variants[0]?.mrp || variants[0]?.compareAtPrice;
@@ -65,7 +72,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     return match1 && match2 && match3;
   }) || variants[0];
 
-  const quickViewInStock = selectedVariant ? (selectedVariant.inventory > 0) : false;
+  const quickViewInStock = selectedVariant ? ((selectedVariant.availableStock ?? selectedVariant.inventory ?? 0) > 0) : false;
 
   const openQuickView = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -80,7 +87,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const handleQuickBagClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (product.isOutOfStock) return;
+    if (isOutOfStock) return;
     if (hasVariants && variants.length > 1) {
       setShowInlineVariants(true);
     } else {
@@ -170,14 +177,14 @@ export default function ProductCard({ product }: ProductCardProps) {
         />
         
         {/* Badges */}
-        {savings > 0 && !product.isOutOfStock && (
+        {savings > 0 && !isOutOfStock && (
           <div className="absolute top-4 left-4 z-20">
              <span className="bg-wine text-ivory text-[8px] font-bold px-3 py-1.5 uppercase tracking-[0.2em] shadow-2xl">
                 -{Math.round((savings/compareAtPrice!)*100)}% Off
              </span>
           </div>
         )}
-        {product.isOutOfStock && (
+        {isOutOfStock && (
           <div className="absolute top-4 left-4 z-20">
              <span className="bg-zinc-800 text-white text-[8px] font-bold px-3 py-1.5 uppercase tracking-[0.3em] shadow-2xl">
                 Sold Out
@@ -254,15 +261,15 @@ export default function ProductCard({ product }: ProductCardProps) {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   onClick={handleQuickBagClick}
-                  disabled={product.isOutOfStock}
+                  disabled={isOutOfStock}
                   className={`w-full py-3.5 backdrop-blur-md text-[13px] font-semibold shadow-[0_10px_30px_rgba(0,0,0,0.4)] transition-all rounded-xl flex items-center justify-center gap-2 border border-white/20 ${
-                    product.isOutOfStock 
+                    isOutOfStock 
                       ? 'bg-gray-900/70 text-gray-400 cursor-not-allowed' 
                       : 'bg-black/70 text-white hover:bg-wine active:scale-95'
                   }`}
                >
-                   {product.isOutOfStock ? (
-                     <><ShoppingBag size={14} strokeWidth={2.5} /> Out of Stock</>
+                   {isOutOfStock ? (
+                     <><ShoppingBag size={14} strokeWidth={2.5} /> Sold Out</>
                    ) : hasVariants && variants.length > 1 ? (
                      <><SlidersHorizontal size={14} strokeWidth={2.5} /> Select Options</>
                    ) : (
@@ -338,11 +345,11 @@ export default function ProductCard({ product }: ProductCardProps) {
                     </div>
                     {selectedVariant && (
                       <p className={`text-[10px] font-bold uppercase tracking-widest mt-2 ${
-                        selectedVariant.inventory <= 0 ? 'text-red-500' :
-                        selectedVariant.inventory <= 5 ? 'text-orange-500' : 'text-green-600'
+                        ((selectedVariant.availableStock ?? selectedVariant.inventory ?? 0) <= 0) ? 'text-red-500' :
+                        ((selectedVariant.availableStock ?? selectedVariant.inventory ?? 0) <= 5) ? 'text-orange-500' : 'text-green-600'
                       }`}>
-                        {selectedVariant.inventory <= 0 ? '✕ Out of Stock' :
-                         selectedVariant.inventory <= 5 ? `⚡ Only ${selectedVariant.inventory} left` : '✓ In Stock'}
+                        {((selectedVariant.availableStock ?? selectedVariant.inventory ?? 0) <= 0) ? '✕ Sold Out' :
+                         ((selectedVariant.availableStock ?? selectedVariant.inventory ?? 0) <= 5) ? `⚡ Only ${selectedVariant.availableStock ?? selectedVariant.inventory} left` : '✓ In Stock'}
                       </p>
                     )}
                   </div>
@@ -410,7 +417,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                     }`}
                   >
                     <ShoppingBag size={16} />
-                    {!quickViewInStock ? 'Out of Stock' : 'Add to Bag'}
+                    {!quickViewInStock ? 'Sold Out' : 'Add to Bag'}
                   </button>
                   <Link
                     href={`/products/${product.handle}`}

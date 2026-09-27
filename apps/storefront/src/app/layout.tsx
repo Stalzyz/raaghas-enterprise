@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-// Removed Google Fonts for build stability
+import { Inter, Playfair_Display } from "next/font/google";
+// Removed legacy font loading, using next/font/google for optimization
 export const dynamic = "force-dynamic";
 
 import { clsx, type ClassValue } from "clsx";
@@ -15,6 +16,7 @@ import { WholesaleProvider } from "@/components/providers/WholesaleProvider";
 import { CartProvider } from "@/context/CartContext";
 import { StorefrontShell } from "@/components/layout/StorefrontShell";
 import MetaPixel from "@/components/analytics/MetaPixel";
+import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import { Suspense } from "react";
 import { API_URL } from "@/lib/api";
 
@@ -61,8 +63,11 @@ const MOCK_HELP_MENU = {
   ],
 };
 
-const fontInter = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-const fontPlayfair = 'Georgia, "Times New Roman", serif';
+const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-inter' });
+const playfair = Playfair_Display({ subsets: ['latin'], display: 'swap', variable: '--font-playfair' });
+
+const fontInter = 'var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+const fontPlayfair = 'var(--font-playfair), Georgia, "Times New Roman", serif';
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://raaghas.in"),
@@ -308,11 +313,24 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
-              "@type": "Organization",
+              "@type": "Store",
               "name": "Raaghas",
               "url": "https://raaghas.in",
               "logo": "https://raaghas.in/logo.png",
               "description": "Raaghas is India's leading luxury brand for premium casual and office wear.",
+              "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "Raaghas Fashion House",
+                "addressLocality": "Chennai",
+                "addressRegion": "Tamil Nadu",
+                "postalCode": "600001",
+                "addressCountry": "IN"
+              },
+              "contactPoint": {
+                "@type": "ContactPoint",
+                "telephone": "+91-9876543210",
+                "contactType": "Customer Service"
+              },
               "sameAs": [
                 "https://www.facebook.com/raaghas",
                 "https://www.instagram.com/raaghas"
@@ -323,7 +341,7 @@ export default async function RootLayout({
       </head>
       <body 
         suppressHydrationWarning
-        className="antialiased min-h-screen flex flex-col relative font-[family-name:var(--body-font)] transition-colors duration-500 bg-[var(--bg)] text-[var(--text-primary)]"
+        className={`antialiased min-h-screen flex flex-col relative font-[family-name:var(--body-font)] transition-colors duration-500 bg-[var(--bg)] text-[var(--text-primary)] ${inter.variable} ${playfair.variable}`}
       >
         <ThemeProvider>
           <AuthProvider googleClientId={settings.googleClientId || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}>
@@ -331,6 +349,7 @@ export default async function RootLayout({
             <CartProvider>
               <Suspense fallback={null}>
                 <MetaPixel pixelId={settings.metaPixelId} />
+                <GoogleAnalytics measurementId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
               </Suspense>
               <StorefrontShell 
                 settings={settings} 

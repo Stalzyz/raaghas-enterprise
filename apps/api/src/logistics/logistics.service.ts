@@ -690,13 +690,19 @@ export class LogisticsService {
   // --- TRACKING ---
 
   async getTracking(id: string) {
+    const cleanId = (id || '').trim();
+    const noHashId = cleanId.replace(/^#/, '');
+
     // Try by tracking ID, Shipment ID, or Order ID
     const shipment = await this.prisma.shipment.findFirst({
       where: { 
         OR: [
-          { id: id },
-          { trackingId: id },
-          { fulfillment: { orderId: id } }
+          { id: cleanId },
+          { id: noHashId },
+          { trackingId: cleanId },
+          { trackingId: noHashId },
+          { fulfillment: { orderId: cleanId } },
+          { fulfillment: { orderId: noHashId } }
         ]
       },
       include: { 
@@ -724,9 +730,13 @@ export class LogisticsService {
       const order = await this.prisma.order.findFirst({
         where: {
           OR: [
-            { id: id },
-            { trackingId: id },
-            { formattedOrderNumber: id }
+            { id: cleanId },
+            { id: noHashId },
+            { trackingId: cleanId },
+            { trackingId: noHashId },
+            { formattedOrderNumber: cleanId },
+            { formattedOrderNumber: noHashId },
+            { formattedOrderNumber: { contains: noHashId, mode: 'insensitive' } }
           ]
         }
       });
