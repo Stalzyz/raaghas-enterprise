@@ -11,28 +11,40 @@ export default function WalletManagement() {
   const [wallets, setWallets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCustomers, setTotalCustomers] = useState(0);
   const [selectedWallet, setSelectedWallet] = useState<any>(null);
   const [selectedRole, setSelectedRole] = useState("CUSTOMER");
   const [adjustment, setAdjustment] = useState({ amount: 0, type: "CREDIT", reason: "MANUAL_ADJUSTMENT", notes: "" });
 
   const fetchWallets = async () => {
+    if (!token) return;
+    setLoading(true);
     try {
       const baseUrl = API_BASE;
-      const res = await fetch(`${baseUrl}/customers?role=${selectedRole}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await fetch(
+        `${baseUrl}/customers?role=${selectedRole}&search=${encodeURIComponent(search)}&page=${page}&limit=20`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       if (res.ok) {
-        const customers = await res.json();
-        const customerIds = customers.slice(0, 50).map((c: any) => c.id).join(',');
+        const responseData = await res.json();
+        const customers = Array.isArray(responseData) ? responseData : (responseData.data || []);
+        const total = responseData.total || customers.length;
+        const totalP = responseData.totalPages || 1;
+
+        setTotalCustomers(total);
+        setTotalPages(totalP);
+
+        const customerIds = customers.map((c: any) => c.id).join(',');
         
         if (customerIds) {
-          const baseUrl = API_BASE;
           const wRes = await fetch(`${baseUrl}/growth/wallet/bulk?userIds=${customerIds}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           const walletsData = wRes.ok ? await wRes.json() : [];
           
-          const merged = customers.slice(0, 50).map((c: any) => {
+          const merged = customers.map((c: any) => {
             const wallet = walletsData.find((w: any) => w.userId === c.id) || { balance: 0, transactions: [] };
             return { ...c, wallet };
           });
@@ -41,11 +53,20 @@ export default function WalletManagement() {
           setWallets([]);
         }
       }
-    } catch (err) { console.error(err); }
-    finally { setLoading(false); }
+    } catch (err) { 
+      console.error(err); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
-  useEffect(() => { fetchWallets(); }, [token, selectedRole]);
+  useEffect(() => { 
+    setPage(1); 
+  }, [search, selectedRole]);
+
+  useEffect(() => { 
+    fetchWallets(); 
+  }, [token, selectedRole, search, page]);
 
   const handleAdjust = async () => {
     if (!selectedWallet) return;
@@ -112,7 +133,7 @@ export default function WalletManagement() {
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Search by name or email..."
+                placeholder="Search across all accounts by name or email..."
                 className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm outline-none focus:border-wine"
               />
             </div>
@@ -142,8 +163,10 @@ export default function WalletManagement() {
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {loading ? (
-                  <tr><td colSpan={3} className="p-10 text-center"><Loader2 className="animate-spin text-wine mx-auto" size={24} /></td></tr>
-                ) : wallets.filter(w => w.email.toLowerCase().includes(search.toLowerCase()) || w.name?.toLowerCase().includes(search.toLowerCase())).map(w => (
+                  <tr><td colSpan={4} className="p-10 text-center"><Loader2 className="animate-spin text-wine mx-auto" size={24} /></td></tr>
+                ) : wallets.length === 0 ? (
+                  <tr><td colSpan={4} className="p-10 text-center text-xs text-gray-400 font-medium">No customer accounts found matching your query.</td></tr>
+                ) : wallets.map(w => (
                   <tr key={w.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="p-4">
                       <p className="text-sm font-bold text-charcoal">{w.name || 'Anonymous'}</p>
@@ -171,6 +194,29 @@ export default function WalletManagement() {
                 ))}
               </tbody>
             </table>
+
+            {/* Pagination Controls */}
+            <div className="p-4 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between">
+              <p className="text-xs text-gray-500 font-medium">
+                Showing page <span className="font-bold text-charcoal">{page}</span> of <span className="font-bold text-charcoal">{totalPages}</span> ({totalCustomers} total accounts)
+              </p>
+              <div className="flex gap-2">
+                <button
+                  disabled={page <= 1 || loading}
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold uppercase tracking-widest text-charcoal hover:border-wine hover:text-wine disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm"
+                >
+                  Previous
+                </button>
+                <button
+                  disabled={page >= totalPages || loading}
+                  onClick={() => setPage(p => p + 1)}
+                  className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold uppercase tracking-widest text-charcoal hover:border-wine hover:text-wine disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 

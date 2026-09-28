@@ -11,31 +11,66 @@ export class CustomersController {
   constructor(private prisma: PrismaService) {}
 
   @Get()
-  async findAll(@Query('role') role?: string) {
-    const where: any = { role: 'CUSTOMER' };
+  async findAll(
+    @Query('role') role?: string,
+    @Query('search') search?: string,
+    @Query('page') pageStr?: string,
+    @Query('limit') limitStr?: string,
+  ) {
+    const where: any = {};
     if (role && role !== 'ALL') {
       where.role = role;
     }
 
-    return this.prisma.user.findMany({
-      where,
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        phone: true,
-        role: true,
-        lastActiveAt: true,
-        interests: true,
-        createdAt: true,
-        updatedAt: true,
-        wallet: { select: { id: true, balance: true } },
-        _count: {
-          select: { orders: true }
-        }
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    if (search && search.trim() !== '') {
+      const q = search.trim();
+      where.OR = [
+        { name: { contains: q, mode: 'insensitive' } },
+        { email: { contains: q, mode: 'insensitive' } },
+        { phone: { contains: q, mode: 'insensitive' } },
+      ];
+    }
+
+    const page = Math.max(1, parseInt(pageStr || '1', 10));
+    const limit = Math.max(1, Math.min(100, parseInt(limitStr || '50', 10)));
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await Promise.all([
+      this.prisma.user.findMany({
+        where,
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          phone: true,
+          role: true,
+          lastActiveAt: true,
+          interests: true,
+          createdAt: true,
+          updatedAt: true,
+          wallet: { select: { id: true, balance: true } },
+          _count: {
+            select: { orders: true }
+          }
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: pageStr || limitStr ? skip : undefined,
+        take: pageStr || limitStr ? limit : undefined,
+      }),
+      this.prisma.user.count({ where }),
+    ]);
+
+    if (pageStr || limitStr || search) {
+      return {
+        data: items,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
+    }
+
+    return items;
   }
 
   @Get('prospects')

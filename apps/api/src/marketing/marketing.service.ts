@@ -340,6 +340,8 @@ export class MarketingService {
         directTrackingUrl = `https://stcourier.com/track/shipment?awb=${encodeURIComponent(trackingId)}`;
       } else if (carrier.includes('india post') || carrier.includes('speed post')) {
         directTrackingUrl = 'https://www.indiapost.gov.in/_layouts/15/dop.portal.tracking/trackconsignment.aspx';
+      } else if (carrier.includes('professional') || carrier.includes('tpc')) {
+        directTrackingUrl = `https://www.tpcindia.com/tracking.aspx?strAwb=${encodeURIComponent(trackingId)}`;
       }
 
       if (phone) {

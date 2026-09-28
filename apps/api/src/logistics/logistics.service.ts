@@ -753,6 +753,44 @@ export class LogisticsService {
         trackingUrl = `https://stcourier.com/track/shipment?awb=${encodeURIComponent(trackingId)}`;
       } else if (carrierName.toLowerCase().includes('india post') || carrierName.toLowerCase().includes('speed post')) {
         trackingUrl = 'https://www.indiapost.gov.in/_layouts/15/dop.portal.tracking/trackconsignment.aspx';
+      } else if (carrierName.toLowerCase().includes('professional') || carrierName.toLowerCase().includes('tpc')) {
+        trackingUrl = `https://www.tpcindia.com/tracking.aspx?strAwb=${encodeURIComponent(trackingId)}`;
+      }
+
+      const historyEvents = [
+        {
+          status: 'CONFIRMED',
+          message: 'Order confirmed.',
+          timestamp: order.createdAt,
+          location: 'Raaghas Fulfillment Center'
+        }
+      ];
+
+      if (['PACKED', 'SHIPPED', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(order.status) || order.fulfilledAt) {
+        historyEvents.push({
+          status: 'PACKED',
+          message: 'Order packaged and ready for dispatch.',
+          timestamp: order.fulfilledAt || order.createdAt,
+          location: 'Fulfillment Center'
+        });
+      }
+
+      if (['SHIPPED', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(order.status) || order.fulfilledAt) {
+        historyEvents.push({
+          status: 'SHIPPED',
+          message: `Handed over to ${carrierName} for transit.`,
+          timestamp: order.fulfilledAt || order.createdAt,
+          location: 'Sorting Facility'
+        });
+      }
+
+      if (order.status === 'DELIVERED') {
+        historyEvents.push({
+          status: 'DELIVERED',
+          message: 'Package delivered to recipient.',
+          timestamp: order.fulfilledAt || order.createdAt,
+          location: 'Destination'
+        });
       }
 
       return {
@@ -763,14 +801,7 @@ export class LogisticsService {
         trackingUrl,
         estimatedDelivery: order.estimatedDelivery,
         shippedAt: order.fulfilledAt || order.createdAt,
-        history: [
-          {
-            status: order.status === 'DELIVERED' ? 'DELIVERED' : (order.status === 'SHIPPED' ? 'SHIPPED' : 'CONFIRMED'),
-            message: `Order is currently in ${order.status.toLowerCase().replace('_', ' ')} state via ${carrierName}`,
-            timestamp: order.fulfilledAt || order.createdAt,
-            location: 'Raaghas Fulfillment Studio'
-          }
-        ],
+        history: historyEvents,
         order: {
           id: order.id,
           customerName: order.customerName,
@@ -788,6 +819,8 @@ export class LogisticsService {
       trackingUrl = `https://stcourier.com/track/shipment?awb=${encodeURIComponent(trackingId)}`;
     } else if (carrierName.toLowerCase().includes('india post') || carrierName.toLowerCase().includes('speed post')) {
       trackingUrl = 'https://www.indiapost.gov.in/_layouts/15/dop.portal.tracking/trackconsignment.aspx';
+    } else if (carrierName.toLowerCase().includes('professional') || carrierName.toLowerCase().includes('tpc')) {
+      trackingUrl = `https://www.tpcindia.com/tracking.aspx?strAwb=${encodeURIComponent(trackingId)}`;
     }
 
     return {

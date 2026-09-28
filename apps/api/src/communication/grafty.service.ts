@@ -128,7 +128,7 @@ export class GraftyService {
         orderId,
         `₹${amount.toLocaleString('en-IN')}`
       ],
-      buttonVariables: [`track/${orderId}`]
+      buttonVariables: [`orders/${orderId}`]
     });
   }
 
@@ -140,6 +140,7 @@ export class GraftyService {
     carrierName: string = 'Courier', 
     trackingId?: string
   ) {
+    const cleanTrackingId = trackingId || orderId;
     return this.sendWhatsAppNudge({
       recipientPhone: phone,
       recipientName: name,
@@ -149,9 +150,9 @@ export class GraftyService {
         name,
         orderId,
         carrierName,
-        trackingId || orderId,
+        cleanTrackingId,
       ],
-      buttonVariables: [trackingLink]
+      buttonVariables: [cleanTrackingId]
     });
   }
 
